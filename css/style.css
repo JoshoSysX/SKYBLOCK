@@ -1,0 +1,135 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #000000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Aura azul metálico */
+body::before {
+    content: '';
+    position: absolute;
+    width: min(600px, 90vw);
+    height: min(600px, 90vw);
+    background: radial-gradient(circle, rgba(0, 80, 200, 0.12) 0%, rgba(0, 30, 80, 0.03) 50%, rgba(0, 0, 0, 0) 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Contenedor principal */
+.main-container {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 480px;
+    padding: clamp(16px, 5vw, 32px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(24px, 5vw, 35px);
+}
+
+/* Logo */
+.logo-wrapper {
+    width: 100%;
+    max-width: clamp(100px, 35vw, 180px);
+    display: flex;
+    justify-content: center;
+}
+
+.logo-wrapper svg {
+    width: 100%;
+    height: auto;
+    fill: #ffffff;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.05));
+}
+
+.logo-img {
+    width: 100%;
+    max-width: clamp(160px, 55vw, 260px);
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 0 12px rgba(255,255,255,0.06));
+}
+
+/* Barra de búsqueda */
+.search-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50px;
+    padding: 5px 5px 5px 18px;
+    box-shadow: 0 0 20px rgba(0, 80, 200, 0.05);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-container:focus-within {
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 20px rgba(0, 120, 255, 0.15);
+}
+
+.search-input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font-size: clamp(14px, 4vw, 16px);
+    padding-right: 10px;
+}
+
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.search-button {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border-radius: 50px;
+    padding: clamp(8px, 2vw, 10px) clamp(16px, 4vw, 24px);
+    font-size: clamp(11px, 3vw, 13px);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.search-button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.search-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Responsive extra pequeño (< 360px) */
+@media (max-width: 360px) {
+    .search-container {
+        padding: 4px 4px 4px 12px;
+    }
+    .search-button {
+        padding: 7px 13px;
+    }
+}

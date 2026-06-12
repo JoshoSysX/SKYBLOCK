@@ -1,0 +1,179 @@
+/* ─────────────────────────────────────────────
+   ESTILOS PÁGINAS DE RESULTADO — SkB
+───────────────────────────────────────────── */
+
+.result-container {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 480px;
+    padding: clamp(28px, 8vw, 48px) clamp(16px, 6vw, 32px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(14px, 3vw, 20px);
+    text-align: center;
+    animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Icono sello ── */
+.seal-icon {
+    font-size: clamp(28px, 7vw, 36px);
+    color: #ffffff;
+    animation: pulse 2.5s ease-in-out infinite;
+}
+
+.seal-icon.dim {
+    color: rgba(255,255,255,0.2);
+    animation: none;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; text-shadow: 0 0 12px rgba(255,255,255,0.4); }
+    50%       { opacity: 0.6; text-shadow: none; }
+}
+
+/* ── Títulos ── */
+.result-title {
+    font-family: "Impact", sans-serif;
+    font-size: clamp(16px, 5vw, 26px);
+    letter-spacing: clamp(1px, 1vw, 3px);
+    color: #ffffff;
+    font-weight: 900;
+}
+
+.result-title.muted {
+    color: rgba(255,255,255,0.35);
+}
+
+/* ── Divisor ── */
+.result-divider {
+    width: 60px;
+    height: 1px;
+    background: rgba(255,255,255,0.5);
+}
+
+.result-divider.dim {
+    background: rgba(255,255,255,0.1);
+}
+
+/* ── Cuerpo ── */
+.result-body {
+    font-size: clamp(12px, 3.5vw, 14px);
+    line-height: 1.75;
+    color: rgba(255,255,255,0.75);
+    max-width: 360px;
+}
+
+.result-body.italic {
+    font-style: italic;
+    color: rgba(255,255,255,0.5);
+    font-size: clamp(11px, 3vw, 13px);
+}
+
+.result-body.muted {
+    color: rgba(255,255,255,0.3);
+}
+
+/* ── Badges ── */
+.badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 8px 0;
+}
+
+.badge {
+    padding: clamp(4px, 1.5vw, 5px) clamp(10px, 3vw, 14px);
+    border-radius: 4px;
+    font-size: clamp(9px, 2.5vw, 11px);
+    font-weight: 700;
+    letter-spacing: clamp(0.5px, 0.5vw, 1.5px);
+    border: 1px solid;
+}
+
+.badge-green {
+    color: #4fffb0;
+    border-color: rgba(79,255,176,0.35);
+    background: rgba(79,255,176,0.05);
+}
+
+.badge-red {
+    color: rgba(255,80,80,0.7);
+    border-color: rgba(255,80,80,0.25);
+    background: rgba(255,80,80,0.04);
+}
+
+/* ── Bienvenida ── */
+.result-welcome {
+    font-size: clamp(11px, 3vw, 13px);
+    font-style: italic;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.5px;
+}
+
+.result-welcome.muted {
+    color: rgba(255,255,255,0.2);
+}
+
+/* ── Botón volver ── */
+.back-button {
+    margin-top: 12px;
+    display: inline-block;
+    padding: clamp(8px, 2vw, 10px) clamp(20px, 5vw, 28px);
+    border-radius: 50px;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+    font-size: clamp(10px, 2.5vw, 12px);
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.back-button:hover {
+    border-color: rgba(255,255,255,0.4);
+    color: #ffffff;
+}
+
+/* ── Serie N° ── */
+.serie-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: clamp(10px, 3vw, 14px) clamp(20px, 6vw, 32px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.03);
+}
+
+.serie-label {
+    font-size: clamp(9px, 2.5vw, 10px);
+    letter-spacing: 3px;
+    color: rgba(255,255,255,0.35);
+    font-weight: 700;
+}
+
+.serie-number {
+    font-family: "Impact", sans-serif;
+    font-size: clamp(22px, 6vw, 28px);
+    letter-spacing: 4px;
+    color: #ffffff;
+}
+
+/* ── Frase calle ── */
+.result-calle {
+    font-size: clamp(9px, 2.5vw, 11px);
+    letter-spacing: clamp(1px, 1vw, 2.5px);
+    color: rgba(255,255,255,0.3);
+    font-style: italic;
+    text-align: center;
+    margin-top: 4px;
+}

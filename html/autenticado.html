@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkB — Autenticado</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/resultado.css">
+</head>
+<body>
+
+    <div class="result-container authentic">
+
+        <div class="seal-icon">✦</div>
+
+        <h1 class="result-title">AUTENTICIDAD CONFIRMADA</h1>
+        <div class="result-divider"></div>
+
+        <p class="result-body">
+            El sello de nuestra marca ha sido reconocido.<br>
+            La pieza que tienes en tus manos pertenece a una edición legítima
+            y ha sido registrada dentro de nuestros archivos privados.
+        </p>
+
+        <p class="result-body italic">
+            Cada detalle cuenta. Cada prenda tiene una historia.
+        </p>
+
+        <div class="badges">
+            <span class="badge badge-green">VERIFICACIÓN: ORIGINAL</span>
+            <span class="badge badge-green">COLECCIÓN: AUTORIZADA</span>
+        </div>
+
+        <!-- Serie dinámica -->
+        <div class="serie-block">
+            <span class="serie-label">SERIE N°</span>
+            <span class="serie-number" id="serieNumero">—</span>
+        </div>
+
+        <p class="result-welcome">
+            Bienvenido al círculo de lo auténtico.
+        </p>
+
+        <p class="result-calle">
+            ✦ LA CALLE TAMBIÉN CREA PERSONAJES GRANDES ✦
+        </p>
+
+        <a href="index.html" class="back-button">← VOLVER</a>
+    </div>
+
+    <script>
+        const serie = sessionStorage.getItem("skb_serie") || "—";
+        document.getElementById("serieNumero").textContent = serie;
+    </script>
+</body>
+</html>
