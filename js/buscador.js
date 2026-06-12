@@ -27,9 +27,9 @@ async function buscarCodigo() {
 
   if (serie) {
     sessionStorage.setItem("skb_serie", serie);
-    window.location.href = "html/autenticado.html";
+    window.location.href = "autenticado.html";
   } else {
-    window.location.href = "html/no-autenticado.html";
+    window.location.href = "no-autenticado.html";
   }
 }
 
