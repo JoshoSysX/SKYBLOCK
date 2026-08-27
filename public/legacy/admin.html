@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Panel administrativo de SKYBLOCK STUDIO.">
+  <title>Panel administrativo | SKYBLOCK STUDIO</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script>if(window.top===window.self)window.location.replace('/')</script>
+</head>
+<body class="admin-page">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-brand"><a href="inicio.html">SKYBLOCK<small>STUDIO</small></a><span>Administración</span></div>
+    <nav class="admin-menu" aria-label="Navegación administrativa">
+      <button class="active" data-admin-view="resumen"><i>01</i>Resumen</button>
+      <button data-admin-view="productos"><i>02</i>Productos <span id="adminProductCount">4</span></button>
+      <button data-admin-view="colecciones"><i>03</i>Colecciones <span>3</span></button>
+      <button data-admin-view="verificacion"><i>04</i>Verificación <span id="adminCodeCount">0</span></button>
+      <button data-admin-view="posts"><i>05</i>Posts <span id="adminPostCount">2</span></button>
+      <button data-admin-view="correos"><i>06</i>Correos</button>
+      <button data-admin-view="mensajes"><i>07</i>Mensajes <span>6</span></button>
+    </nav>
+    <div class="admin-sidebar-foot"><a href="inicio.html">← Ver tienda</a><button id="logoutDemo">Cerrar sesión</button></div>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-topbar"><button class="admin-menu-toggle" id="adminMenuToggle" aria-label="Abrir menú">☰</button><div><span>Panel de control</span><strong id="adminDate"></strong></div><div class="admin-user"><span>Administrador</span><b>JS</b></div></header>
+
+    <section class="admin-view active" data-view="resumen">
+      <div class="admin-title"><div><span>Estudio creativo</span><h1>Buenas tardes.</h1><p>Proyectos, productos e historias activas en SKYBLOCK STUDIO.</p></div><button class="admin-primary" data-open-product>+ Nuevo producto</button></div>
+      <div class="admin-stats">
+        <article><span>Páginas publicadas</span><strong>08</strong><small>Todas visibles y actualizadas</small></article>
+        <article><span>Mensajes nuevos</span><strong>06</strong><small>3 consultas sin responder</small></article>
+        <article><span>Productos publicados</span><strong id="adminPublishedProducts">04</strong><small>Inventario administrado por talla</small></article>
+        <article><span>Visitas al archivo</span><strong>1,284</strong><small>↑ 9.2% esta semana</small></article>
+      </div>
+      <div class="admin-dashboard-grid">
+        <section class="admin-card admin-orders"><div class="admin-card-head"><div><span>Actividad reciente</span><h2>Últimos cambios</h2></div></div><div class="admin-table"><div class="admin-table-row admin-table-label"><span>Sección</span><span>Contenido</span><span>Fecha</span><span>Estado</span></div><div class="admin-table-row"><b>Colecciones</b><span>SKB — Nébula</span><span>Hoy</span><em class="status done">Publicado</em></div><div class="admin-table-row"><b>Productos</b><span>Sudadera Skyblock</span><span>Hoy</span><em class="status sent">Editado</em></div><div class="admin-table-row"><b>Nosotros</b><span>Historia de la marca</span><span>Ayer</span><em class="status done">Publicado</em></div><div class="admin-table-row"><b>Contacto</b><span>Información del estudio</span><span>Ayer</span><em class="status sent">Editado</em></div></div></section>
+        <section class="admin-card admin-stock"><div class="admin-card-head"><div><span>Inventario</span><h2>Por revisar</h2></div></div><article><img src="https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?auto=format&fit=crop&w=180&q=80" alt="Beanie Grid"><div><b>Beanie Grid</b><span>Stock bajo</span></div><button data-admin-view="productos">Editar</button></article><article><img src="https://images.unsplash.com/photo-1534215754734-18e55d13e346?auto=format&fit=crop&w=180&q=80" alt="Gorra Architect"><div><b>Gorra Architect</b><span>Falta imagen secundaria</span></div><button data-admin-view="productos">Editar</button></article><a href="#" data-admin-view="productos">Administrar productos →</a></section>
+      </div>
+    </section>
+
+    <section class="admin-view" data-view="productos">
+      <div class="admin-title"><div><span>Inventario del estudio</span><h1>Productos.</h1><p>Administra información, precio, imágenes, tallas, stock y ediciones limitadas.</p></div><div class="admin-title-actions"><button class="admin-secondary" id="editProductTypes" type="button">Editar tipos</button><button class="admin-primary" data-open-product>+ Nuevo producto</button></div></div>
+      <div class="admin-card admin-management"><div class="admin-toolbar"><label>Buscar producto<input id="adminProductSearch" type="search" placeholder="Nombre o colección"></label><select id="adminProductFilter"><option value="all">Todos los productos</option><option value="stock">Con stock</option><option value="low">Stock bajo</option><option value="limited">Edición limitada</option></select></div><div id="adminProductList" class="admin-product-list admin-product-inventory"></div></div>
+    </section>
+
+    <section class="admin-view" data-view="colecciones">
+      <div class="admin-title"><div><span>Archivo editorial</span><h1>Colecciones.</h1><p>Crea y edita cada colección, su historia, portada, estado y productos asociados.</p></div><button class="admin-primary" id="newCollection">+ Nueva colección</button></div>
+      <div class="admin-collection-grid" id="adminCollectionGrid"></div>
+    </section>
+
+    <section class="admin-view" data-view="verificacion">
+      <div class="admin-title"><div><span>Registro de autenticidad</span><h1>Verificación.</h1><p>Administra códigos, series, propietarios, estado y colección de cada pieza.</p></div><button class="admin-primary" id="newVerificationCode">+ Nuevo código</button></div>
+      <div class="admin-card admin-management"><div class="admin-toolbar"><label>Buscar código<input id="adminCodeSearch" type="search" placeholder="Serie, colección o propietario"></label><select id="adminCodeFilter"><option value="all">Todos los códigos</option><option value="active">Activos</option><option value="blocked">Bloqueados</option></select></div><div id="adminCodeList" class="admin-code-list"></div></div>
+    </section>
+
+    <section class="admin-view" data-view="posts">
+      <div class="admin-title"><div><span>Diario del estudio</span><h1>Posts.</h1><p>Publica fotografías, procesos y novedades en el feed de SKYBLOCK STUDIO.</p></div><a class="admin-secondary admin-link-button" href="posts.html">Ver página pública →</a></div>
+      <div class="admin-post-layout">
+        <form class="admin-card admin-post-form" id="adminPostForm"><input id="postEditId" type="hidden">
+          <div class="admin-card-head"><div><span>Nueva publicación</span><h2>Crear post</h2></div></div>
+          <div class="admin-post-fields"><label>Título<input id="postTitle" required maxlength="80" placeholder="Ej. Detrás de la nueva colección"></label><label>Descripción<textarea id="postDescription" required maxlength="600" rows="6" placeholder="Cuenta la historia detrás de esta fotografía..."></textarea></label><label>Descripción de la imagen <small>Para accesibilidad</small><input id="postAlt" required maxlength="140" placeholder="Describe brevemente lo que aparece"></label><label class="admin-upload" for="postImage"><span id="postUploadText">Seleccionar fotografía</span><small>JPG, PNG o WEBP · Máximo 2 MB</small><input id="postImage" type="file" accept="image/jpeg,image/png,image/webp"></label><div class="admin-post-actions"><button class="admin-secondary" id="cancelPostEdit" type="button" hidden>Cancelar edición</button><button class="admin-primary" id="savePostButton" type="submit">Publicar post</button></div><p class="admin-post-status" id="postStatus"></p></div>
+        </form>
+        <section class="admin-post-preview"><span>Vista previa</span><article class="studio-post"><header><div class="post-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>AHORA</span></div><i>•••</i></header><div class="post-copy"><h2 id="previewPostTitle">Título de la publicación</h2><p id="previewPostDescription">La descripción del post aparecerá aquí mientras escribes.</p></div><div class="post-preview-image" id="postImagePreview"><span>Vista previa de la fotografía</span></div><footer><button type="button">♡ <span>Me gusta</span></button><button type="button">↗ <span>Compartir</span></button></footer></article></section>
+      </div>
+      <section class="admin-card admin-post-manager"><div class="admin-card-head"><div><span>Publicaciones</span><h2>Administrar posts</h2></div></div><div class="admin-post-list" id="adminPostList"></div></section>
+    </section>
+
+    <section class="admin-view" data-view="correos">
+      <div class="admin-title"><div><span>Mensajería transaccional</span><h1>Correos.</h1><p>Configura Resend y administra los mensajes automáticos de SKYBLOCK STUDIO.</p></div><a class="admin-secondary admin-link-button" href="https://resend.com/domains" target="_blank" rel="noreferrer">Abrir Resend →</a></div>
+
+      <div class="admin-email-overview">
+        <form class="admin-card admin-email-settings" id="emailSettingsForm">
+          <div class="admin-card-head"><div><span>Configuración</span><h2>Remitente</h2></div><em class="admin-email-badge" id="emailConnectionBadge">Pendiente</em></div>
+          <div class="admin-email-fields">
+            <label>Subdominio verificado<input id="emailDomain" type="text" maxlength="120" placeholder="mail.tudominio.com"></label>
+            <div class="admin-form-row"><label>Nombre del remitente<input id="emailSenderName" type="text" maxlength="80" placeholder="SKYBLOCK STUDIO"></label><label>Correo del remitente<input id="emailSenderAddress" type="email" maxlength="150" placeholder="hola@mail.tudominio.com"></label></div>
+            <label>Responder a<input id="emailReplyTo" type="email" maxlength="150" placeholder="contacto@tudominio.com"></label>
+            <div class="admin-email-actions"><button class="admin-primary" type="submit">Guardar configuración</button><span id="emailSettingsStatus" role="status"></span></div>
+          </div>
+        </form>
+        <section class="admin-card admin-email-checklist">
+          <div class="admin-card-head"><div><span>Activación</span><h2>Lista de conexión</h2></div></div>
+          <ol><li><b>Verifica el subdominio</b><span>Agrega en Spaceship los registros SPF y DKIM que entrega Resend.</span></li><li><b>Guarda la API key en el servidor</b><span>Usa la variable <code>RESEND_API_KEY</code>; nunca la escribas en este panel.</span></li><li><b>Conecta el endpoint</b><span>La prueba utiliza <code>/api/send-email</code> y espera una respuesta segura del backend.</span></li></ol>
+        </section>
+      </div>
+
+      <div class="admin-email-builder">
+        <form class="admin-card admin-email-template" id="emailTemplateForm">
+          <div class="admin-card-head"><div><span>Contenido</span><h2>Plantillas</h2></div></div>
+          <div class="admin-email-fields">
+            <label>Tipo de correo<select id="emailTemplateType"><option value="verification">Verificación de cuenta</option><option value="welcome">Bienvenida</option><option value="reset">Recuperar contraseña</option><option value="authenticity">Código de autenticidad</option></select></label>
+            <label>Asunto<input id="emailTemplateSubject" required maxlength="140"></label>
+            <label>Texto previo<input id="emailTemplatePreheader" maxlength="180"></label>
+            <label>Mensaje<textarea id="emailTemplateBody" required rows="8" maxlength="1800"></textarea></label>
+            <small class="admin-email-variables">Variables disponibles: <code>{{nombre}}</code>, <code>{{codigo}}</code> y <code>{{enlace}}</code>.</small>
+            <div class="admin-email-actions"><button class="admin-primary" type="submit">Guardar plantilla</button><span id="emailTemplateStatus" role="status"></span></div>
+          </div>
+        </form>
+        <section class="admin-email-preview-wrap"><span>Vista previa</span><article class="admin-email-preview"><header><b>SKYBLOCK</b><small>STUDIO</small></header><main><span id="emailPreviewPreheader"></span><h2 id="emailPreviewSubject"></h2><div id="emailPreviewBody"></div><a id="emailPreviewButton">Continuar →</a></main><footer>SKYBLOCK STUDIO · TARAPOTO</footer></article></section>
+      </div>
+
+      <form class="admin-card admin-email-test" id="emailTestForm">
+        <div><span>Prueba de integración</span><h2>Enviar correo de prueba</h2><p>El envío saldrá desde tu servidor. La API key de Resend nunca se comparte con el navegador.</p></div>
+        <label>Destinatario<input id="emailTestRecipient" type="email" required placeholder="tu@correo.com"></label><button class="admin-primary" id="emailTestButton" type="submit">Enviar prueba</button><p id="emailTestStatus" role="status"></p>
+      </form>
+    </section>
+
+    <section class="admin-view" data-view="mensajes">
+      <div class="admin-title"><div><span>Bandeja de entrada</span><h1>Mensajes.</h1><p>Consultas recibidas desde el formulario de contacto.</p></div></div>
+      <div class="admin-inbox"><div class="admin-message-list"><button class="active"><b>AR</b><span><strong>Andrea Ruiz</strong><small>Consulta sobre colaboración</small></span><time>14:35</time></button><button><b>CM</b><span><strong>Carlos Mendoza</strong><small>Propuesta audiovisual</small></span><time>Ayer</time></button><button><b>LV</b><span><strong>Lucía Vargas</strong><small>Información sobre la marca</small></span><time>Ayer</time></button></div><article class="admin-message"><span>Contacto / Colaboraciones</span><h2>Consulta sobre colaboración</h2><div><b>Andrea Ruiz</b><small>andrea@example.com · Hoy, 14:35</small></div><p>Hola, tengo una propuesta creativa para una futura colección de SKYBLOCK STUDIO. Me gustaría compartirles el concepto y algunas referencias visuales para evaluar una colaboración.</p><button class="admin-primary">Responder</button></article></div>
+    </section>
+  </main>
+
+  <div class="admin-modal admin-product-modal" id="productModal" aria-hidden="true">
+    <form class="admin-modal-card admin-product-editor" id="adminProductForm">
+      <button type="button" class="admin-modal-close" id="closeProductModal" aria-label="Cerrar">×</button>
+      <span>Inventario SKYBLOCK</span><h2 id="productModalTitle">Nuevo producto</h2><input id="productId" type="hidden">
+      <div class="admin-product-editor-grid">
+        <section class="admin-product-fields">
+          <label>Nombre del producto<input id="productName" required maxlength="90" placeholder="Ej. Camiseta Extragrande Void"></label>
+          <div class="admin-form-row"><label>Tipo<select id="productType" required></select></label><label>Colección<select id="productCollection" required><option value="">Primero crea una colección</option></select></label></div>
+          <div class="admin-form-row"><label>Costo / Precio<input id="productPrice" type="number" required min="0" step="0.01" placeholder="39.99"></label><label>Stock total<input id="productTotalStock" type="number" readonly value="0"></label></div>
+          <label>Descripción<textarea id="productDescription" required maxlength="600" rows="4" placeholder="Describe el diseño, materiales y concepto del producto"></textarea></label>
+          <fieldset class="admin-size-stock"><legend>Tallas disponibles y stock</legend>
+            <label class="admin-size-option"><span><input id="sizeXSAvailable" type="checkbox">XS</span><input id="stockXS" type="number" min="0" value="0" disabled aria-label="Stock talla XS"></label>
+            <label class="admin-size-option"><span><input id="sizeSAvailable" type="checkbox">S</span><input id="stockS" type="number" min="0" value="0" disabled aria-label="Stock talla S"></label>
+            <label class="admin-size-option"><span><input id="sizeMAvailable" type="checkbox">M</span><input id="stockM" type="number" min="0" value="0" disabled aria-label="Stock talla M"></label>
+            <label class="admin-size-option"><span><input id="sizeLAvailable" type="checkbox">L</span><input id="stockL" type="number" min="0" value="0" disabled aria-label="Stock talla L"></label>
+            <label class="admin-size-option"><span><input id="sizeXLAvailable" type="checkbox">XL</span><input id="stockXL" type="number" min="0" value="0" disabled aria-label="Stock talla XL"></label>
+            <label class="admin-size-option"><span><input id="sizeXXLAvailable" type="checkbox">XXL</span><input id="stockXXL" type="number" min="0" value="0" disabled aria-label="Stock talla XXL"></label>
+            <label class="admin-size-option"><span><input id="sizeOneAvailable" type="checkbox">Única</span><input id="stockOne" type="number" min="0" value="0" disabled aria-label="Stock talla única"></label>
+          </fieldset>
+          <label class="admin-check-row"><input id="productLimited" type="checkbox"><span><b>Prenda limitada</b><small>Marcar como edición limitada y sin reposición.</small></span></label>
+        </section>
+        <section class="admin-product-media">
+          <label class="admin-product-upload" for="productMainImage"><span>Imagen principal</span><small>JPG, PNG o WEBP · Máximo 2 MB</small><input id="productMainImage" type="file" accept="image/jpeg,image/png,image/webp"></label>
+          <div class="admin-main-image-preview" id="productMainPreview"><span>Vista previa principal</span></div>
+          <label class="admin-product-upload" for="productGallery"><span>Imágenes adicionales</span><small>Selecciona varias fotografías para la galería</small><input id="productGallery" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>
+          <div class="admin-gallery-preview" id="productGalleryPreview"></div>
+        </section>
+      </div>
+      <div class="admin-product-editor-actions"><button class="admin-secondary" id="cancelProductEdit" type="button">Cancelar</button><button class="admin-primary" type="submit">Guardar producto</button></div><p id="adminFormStatus"></p>
+    </form>
+  </div>
+  <div class="admin-modal" id="productTypeModal" aria-hidden="true"><section class="admin-modal-card admin-type-modal-card"><button class="admin-modal-close" id="closeProductTypes" type="button" aria-label="Cerrar tipos">×</button><span>Configuración de catálogo</span><h2>Tipos de producto</h2><div class="admin-type-add"><input id="newProductType" maxlength="30" placeholder="Ej. Chaleco"><button id="addProductType" type="button">Agregar</button></div><div class="admin-type-list" id="productTypeList"></div><small>Los cambios se guardan automáticamente y aparecerán en el formulario de productos.</small></section></div>
+  <div class="admin-modal admin-collection-modal" id="collectionModal" aria-hidden="true"><form class="admin-modal-card admin-collection-editor" id="adminCollectionForm"><button class="admin-modal-close" id="closeCollectionModal" type="button" aria-label="Cerrar colección">×</button><span>Archivo editorial</span><h2 id="collectionModalTitle">Nueva colección</h2><input id="collectionId" type="hidden"><div class="admin-collection-editor-grid"><section><label>Nombre de la colección<input id="collectionName" required maxlength="80" placeholder="Ej. Faith Collection"></label><div class="admin-form-row"><label>Identificador / URL<input id="collectionSlug" required maxlength="50" placeholder="faith-collection"></label><label>Número de edición<input id="collectionEdition" required maxlength="10" placeholder="001"></label></div><div class="admin-form-row"><label>Estado<select id="collectionStatus"><option value="published">Publicada</option><option value="draft">Borrador</option><option value="upcoming">Próximamente</option></select></label><label class="admin-check-row admin-collection-limited"><input id="collectionLimited" type="checkbox"><span><b>Edición limitada</b><small>Sin reposición.</small></span></label></div><label>Descripción corta<textarea id="collectionDescription" required maxlength="240" rows="3" placeholder="Resumen que aparecerá en el carrusel"></textarea></label><label>Historia de la colección<textarea id="collectionStory" required maxlength="1400" rows="7" placeholder="Cuenta el origen, concepto y proceso de la colección"></textarea></label></section><section class="admin-collection-media"><label class="admin-product-upload" for="collectionCoverImage"><span>Imagen de portada</span><small>JPG, PNG o WEBP · Máximo 2 MB</small><input id="collectionCoverImage" type="file" accept="image/jpeg,image/png,image/webp"></label><div class="admin-collection-cover-preview" id="collectionCoverPreview"><span>Vista previa de portada</span></div><div class="admin-collection-note"><span>Productos vinculados automáticamente</span><p>Los productos aparecerán en esta colección cuando la selecciones desde el editor de Productos.</p></div></section></div><div class="admin-product-editor-actions"><button class="admin-secondary" id="cancelCollectionEdit" type="button">Cancelar</button><button class="admin-primary" type="submit">Guardar colección</button></div><p id="collectionFormStatus"></p></form></div>
+  <div class="admin-modal" id="verificationModal" aria-hidden="true"><form class="admin-modal-card admin-verification-editor" id="verificationForm"><button class="admin-modal-close" id="closeVerificationModal" type="button" aria-label="Cerrar código">×</button><span>Registro de autenticidad</span><h2 id="verificationModalTitle">Nuevo código</h2><input id="verificationId" type="hidden"><label>Código de autenticidad<input id="verificationCode" required maxlength="32" placeholder="SKB-XXXX-XXXX" autocomplete="off"></label><div class="admin-form-row"><label>Número de serie<input id="verificationSeries" required maxlength="20" placeholder="01/25"></label><label>Colección<select id="verificationCollection" required></select></label></div><label>Propietario<input id="verificationOwner" maxlength="100" placeholder="Sin registrar"></label><label>Estado<select id="verificationStatus"><option value="active">Activo</option><option value="blocked">Bloqueado</option></select></label><small class="admin-verification-note">El código quedará asociado a la colección seleccionada y se protegerá mediante SHA-256.</small><div class="admin-product-editor-actions"><button class="admin-secondary" id="cancelVerificationEdit" type="button">Cancelar</button><button class="admin-primary" type="submit">Guardar código</button></div><p id="verificationFormStatus"></p></form></div>
+  <div class="admin-confirm" id="adminConfirm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="adminConfirmTitle" aria-describedby="adminConfirmMessage"><section class="admin-confirm-card"><div class="admin-confirm-mark" aria-hidden="true">!</div><span>Confirmar acción</span><h2 id="adminConfirmTitle">¿Estás seguro?</h2><p id="adminConfirmMessage"></p><div class="admin-confirm-actions"><button class="admin-secondary" id="adminConfirmCancel" type="button">Cancelar</button><button class="admin-confirm-danger" id="adminConfirmAccept" type="button">Eliminar</button></div></section></div>
+  <div class="toast" id="adminToast" role="status"></div>
+  <script src="js/admin.js"></script><script src="js/admin-empty-state.js"></script>
+</body>
+</html>

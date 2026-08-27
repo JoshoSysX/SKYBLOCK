@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Catálogo SKYBLOCK STUDIO — prendas urbanas de edición limitada.">
+  <title>Catálogo | SKYBLOCK STUDIO</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="catalog-page">
+    <header class="nav catalog-nav" id="nav">
+    <a class="brand" href="inicio.html" aria-label="Ir al inicio de SKYBLOCK STUDIO">SKYBLOCK<small>STUDIO</small></a>
+    <nav class="desktop-nav"><a href="inicio.html">Inicio</a><a class="active" href="catalogo.html">Catálogo</a><a href="colecciones.html">Colecciones</a><a href="posts.html">Posts</a><a href="nosotros.html">Nosotros</a><a href="verificar.html">Autenticidad</a><a href="admin.html">Admin</a></nav>
+    <div class="nav-actions"><a class="auth-action" href="login.html" aria-label="Iniciar sesión"><i class="auth-icon"></i><span>Login</span></a><a class="auth-action" href="registro.html" aria-label="Crear cuenta"><i class="auth-icon auth-icon-plus"></i><span>Registro</span></a><button id="menuBtn" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span></button></div>
+  </header>
+  <nav class="mobile-nav" id="mobileNav"><a href="inicio.html">Inicio</a><a class="active" href="catalogo.html">Catálogo</a><a href="colecciones.html">Colecciones</a><a href="posts.html">Posts</a><a href="nosotros.html">Nosotros</a><a href="verificar.html">Autenticidad</a><a href="admin.html">Admin</a><a href="login.html">Iniciar sesión</a><a href="registro.html">Crear cuenta</a></nav>
+
+  <main>
+    <section class="catalog-hero">
+      <div><span>Edición / 001</span><h1>Todos los<br>productos.</h1></div>
+      <p>Piezas esenciales. Producción limitada.<br>Diseñadas para construir tu propio lenguaje.</p>
+    </section>
+
+    <section class="catalog-shell">
+      <div class="catalog-toolbar">
+        <div class="categories" aria-label="Filtrar por categoría">
+          <button class="active" data-filter="all">Todo <sup>08</sup></button>
+          <button data-filter="camisetas">Camisetas <sup>03</sup></button>
+          <button data-filter="sudaderas">Sudaderas <sup>02</sup></button>
+          <button data-filter="accesorios">Accesorios <sup>03</sup></button>
+        </div>
+        <div class="catalog-tools">
+          <label class="search"><span>Buscar</span><input id="searchInput" type="search" placeholder="Nombre del producto" autocomplete="off"></label>
+          <label class="sort">Ordenar<select id="sortSelect"><option value="featured">Destacados</option><option value="low">Precio: menor</option><option value="high">Precio: mayor</option><option value="name">Nombre A–Z</option></select></label>
+        </div>
+      </div>
+
+      <div class="catalog-meta"><p><span id="resultCount">0</span> productos</p><p>Lanzamiento limitado · No restock</p></div>
+      <div class="catalog-grid" id="catalogGrid"></div>
+      <div class="empty-state show" id="emptyState"><h2>Nada por aquí.</h2><p>Los productos publicados desde el panel aparecerán aquí.</p></div>
+    </section>
+  </main>
+
+      <footer>
+    <div class="footer-brand"><a class="brand" href="inicio.html">SKYBLOCK<small>STUDIO</small></a><p>CONSTRUYE. CREA. DOMINA.</p><div class="social">◎ ♪ ▷ ◇</div></div>
+    <div class="footer-col"><h4>Tienda</h4><a href="catalogo.html">Todos los productos</a></div>
+    <div class="footer-col"><h4>Colecciones</h4><a href="colecciones.html">Colaboraciones</a><a href="colecciones.html">Recién llegados</a><a href="colecciones.html">Edición limitada</a><a href="colecciones.html">Archivo</a></div>
+    <div class="footer-col"><h4>Empresa</h4><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a><a href="privacidad.html">Privacidad</a><a href="terminos.html">Términos</a></div>
+    <div class="footer-col"><h4>Síguenos</h4><a href="#">Instagram</a><a href="#">TikTok</a><a href="#">Facebook</a></div>
+    <p class="copyright">© 2026 SKYBLOCK STUDIO<br>Todos los derechos reservados.<br><br>Diseñado y desarrollado<br>con pasión en Tarapoto.</p>
+  </footer>
+  <script src="js/catalogo.js"></script><script src="js/supabase-bridge.js"></script>
+</body>
+</html>
+

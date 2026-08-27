@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Verifica la autenticidad y el número de serie de tu pieza SKYBLOCK STUDIO.">
+  <title>Autenticidad | SKYBLOCK STUDIO</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="verify-page">
+    <header class="nav catalog-nav" id="nav">
+    <a class="brand" href="inicio.html" aria-label="Ir al inicio de SKYBLOCK STUDIO">SKYBLOCK<small>STUDIO</small></a>
+    <nav class="desktop-nav"><a href="inicio.html">Inicio</a><a href="catalogo.html">Catálogo</a><a href="colecciones.html">Colecciones</a><a href="posts.html">Posts</a><a href="nosotros.html">Nosotros</a><a class="active" href="verificar.html">Autenticidad</a><a href="admin.html">Admin</a></nav>
+    <div class="nav-actions"><a class="auth-action" href="login.html" aria-label="Iniciar sesión"><i class="auth-icon"></i><span>Login</span></a><a class="auth-action" href="registro.html" aria-label="Crear cuenta"><i class="auth-icon auth-icon-plus"></i><span>Registro</span></a><button id="menuBtn" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span></button></div>
+  </header>
+  <nav class="mobile-nav" id="mobileNav"><a href="inicio.html">Inicio</a><a href="catalogo.html">Catálogo</a><a href="colecciones.html">Colecciones</a><a href="posts.html">Posts</a><a href="nosotros.html">Nosotros</a><a class="active" href="verificar.html">Autenticidad</a><a href="admin.html">Admin</a><a href="login.html">Iniciar sesión</a><a href="registro.html">Crear cuenta</a></nav>
+
+  <main class="verify-main">
+    <section class="verify-hero">
+      <div class="verify-orbit" aria-hidden="true"><span>SKB</span></div>
+      <div class="verify-copy">
+        <p class="verify-kicker">Archivo oficial / Protocolo 001</p>
+        <h1>LO REAL<br>DEJA HUELLA.</h1>
+        <p class="verify-lead">Cada pieza limitada lleva una identidad única. Ingresa el código de la etiqueta para comprobar su origen y descubrir su número dentro de la colección.</p>
+      </div>
+
+      <form class="verify-console" id="verifyForm" novalidate>
+        <div class="console-head"><span>Verificador oficial</span><i id="systemState">Sistema listo</i></div>
+        <label for="codigoInput">Código de autenticidad</label>
+        <div class="verify-search">
+          <input id="codigoInput" name="codigo" type="text" placeholder="SKB-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="32" aria-describedby="verifyHint verifyMessage">
+          <button id="verifyButton" type="submit"><span>Verificar pieza</span><b>→</b></button>
+        </div>
+        <p class="verify-hint" id="verifyHint">Lo encontrarás impreso en la etiqueta interior. No distingue mayúsculas.</p>
+        <div class="verify-message" id="verifyMessage" role="status" aria-live="polite"></div>
+      </form>
+      <div class="verify-index"><span>01</span><i></i><span>25</span></div>
+    </section>
+
+    <section class="verify-story">
+      <div><span>La prueba</span><h2>UNA PIEZA.<br>UNA IDENTIDAD.</h2></div>
+      <div class="verify-steps">
+        <article><b>01</b><h3>Encuentra</h3><p>Localiza el código único incluido en la etiqueta interior de tu prenda.</p></article>
+        <article><b>02</b><h3>Comprueba</h3><p>El código se transforma localmente mediante SHA‑256 antes de compararse.</p></article>
+        <article><b>03</b><h3>Descubre</h3><p>Si es auténtica, conocerás el número exacto de tu pieza en la edición.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <div class="verify-modal" id="verifyModal" aria-hidden="true">
+    <div class="verify-result" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+      <button class="result-close" id="resultClose" aria-label="Cerrar resultado">×</button>
+      <div class="result-mark" id="resultMark">✦</div>
+      <p class="result-eyebrow" id="resultEyebrow"></p>
+      <h2 id="resultTitle"></h2>
+      <div class="result-line"></div>
+      <p class="result-text" id="resultText"></p>
+      <div class="result-serie" id="resultSerie">
+        <div class="result-record"><span>Propietario</span><strong id="propietarioNombre">—</strong></div>
+        <div class="result-record"><span>Serie N°</span><strong id="serieNumero">—</strong></div>
+        <div class="result-record"><span>Colección</span><strong id="coleccionNombre">—</strong></div>
+      </div>
+      <p class="result-motto">La calle también crea personajes grandes.</p>
+      <button class="result-again" id="resultAgain">Verificar otro código <span>→</span></button>
+    </div>
+  </div>
+  <script src="js/verificar.js"></script>
+    <footer>
+    <div class="footer-brand"><a class="brand" href="inicio.html">SKYBLOCK<small>STUDIO</small></a><p>CONSTRUYE. CREA. DOMINA.</p><div class="social">◎ ♪ ▷ ◇</div></div>
+    <div class="footer-col"><h4>Tienda</h4><a href="catalogo.html">Todos los productos</a></div>
+    <div class="footer-col"><h4>Colecciones</h4><a href="colecciones.html">Colaboraciones</a><a href="colecciones.html">Recién llegados</a><a href="colecciones.html">Edición limitada</a><a href="colecciones.html">Archivo</a></div>
+    <div class="footer-col"><h4>Empresa</h4><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a><a href="privacidad.html">Privacidad</a><a href="terminos.html">Términos</a></div>
+    <div class="footer-col"><h4>Síguenos</h4><a href="#">Instagram</a><a href="#">TikTok</a><a href="#">Facebook</a></div>
+    <p class="copyright">© 2026 SKYBLOCK STUDIO<br>Todos los derechos reservados.<br><br>Diseñado y desarrollado<br>con pasión en Tarapoto.</p>
+  </footer>
+</body>
+</html>

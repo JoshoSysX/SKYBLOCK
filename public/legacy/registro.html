@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Crea una cuenta en SKYBLOCK STUDIO.">
+  <title>Crear cuenta | SKYBLOCK STUDIO</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="auth-page">
+  <header class="nav catalog-nav" id="nav">
+    <a class="brand" href="inicio.html" aria-label="Ir al inicio de SKYBLOCK STUDIO">SKYBLOCK<small>STUDIO</small></a>
+    <nav class="desktop-nav"><a href="inicio.html">Inicio</a><a href="catalogo.html">Catálogo</a><a href="colecciones.html">Colecciones</a><a href="posts.html">Posts</a><a href="nosotros.html">Nosotros</a><a href="verificar.html">Autenticidad</a><a href="admin.html">Admin</a></nav>
+    <div class="nav-actions"><a class="auth-action" href="login.html" aria-label="Iniciar sesión"><i class="auth-icon"></i><span>Login</span></a><a class="auth-action active" href="registro.html" aria-label="Crear cuenta"><i class="auth-icon auth-icon-plus"></i><span>Registro</span></a><button id="menuBtn" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span></button></div>
+  </header>
+  <nav class="mobile-nav" id="mobileNav"><a href="inicio.html">Inicio</a><a href="catalogo.html">Catálogo</a><a href="colecciones.html">Colecciones</a><a href="posts.html">Posts</a><a href="nosotros.html">Nosotros</a><a href="verificar.html">Autenticidad</a><a href="admin.html">Admin</a><a href="login.html">Iniciar sesión</a><a class="active" href="registro.html">Crear cuenta</a></nav>
+
+  <main class="auth-main auth-register-main">
+    <section class="auth-visual"><img src="https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1400&q=90" alt="Colección de prendas SKYBLOCK STUDIO"><span></span><div><p>Comunidad SKYBLOCK</p><h1>Forma parte<br>del estudio.</h1></div></section>
+    <section class="auth-panel"><div class="auth-panel-inner"><span>Nueva cuenta</span><h2>Regístrate.</h2><p>Crea tu perfil para formar parte de la comunidad.</p><form class="auth-form" data-auth-form="register"><div class="auth-form-row"><label>Nombre<input type="text" required autocomplete="given-name" placeholder="Tu nombre"></label><label>Apellido<input type="text" required autocomplete="family-name" placeholder="Tu apellido"></label></div><label>Correo electrónico<input type="email" required autocomplete="email" placeholder="nombre@correo.com"></label><label>Contraseña<div class="password-field"><input type="password" required minlength="6" autocomplete="new-password" placeholder="Mínimo 6 caracteres"><button class="password-toggle" type="button" aria-label="Mostrar contraseña">Ver</button></div></label><label class="auth-check"><input type="checkbox" required><span>Acepto los términos y la política de privacidad.</span></label><button class="auth-submit" type="submit">Crear cuenta <b>→</b></button><p class="auth-status" role="status"></p></form><div class="auth-switch"><span>¿Ya tienes una cuenta?</span><a href="login.html">Iniciar sesión</a></div></div></section>
+  </main>
+  <script src="js/auth.js"></script>
+</body>
+</html>

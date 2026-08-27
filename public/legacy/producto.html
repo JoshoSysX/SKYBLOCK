@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Detalles del producto SKYBLOCK STUDIO.">
+  <title>Producto | SKYBLOCK STUDIO</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="product-page">
+    <header class="nav catalog-nav" id="nav">
+    <a class="brand" href="inicio.html" aria-label="Ir al inicio de SKYBLOCK STUDIO">SKYBLOCK<small>STUDIO</small></a>
+    <nav class="desktop-nav"><a href="inicio.html">Inicio</a><a class="active" href="catalogo.html">Catálogo</a><a href="colecciones.html">Colecciones</a><a href="posts.html">Posts</a><a href="nosotros.html">Nosotros</a><a href="verificar.html">Autenticidad</a><a href="admin.html">Admin</a></nav>
+    <div class="nav-actions"><a class="auth-action" href="login.html" aria-label="Iniciar sesión"><i class="auth-icon"></i><span>Login</span></a><a class="auth-action" href="registro.html" aria-label="Crear cuenta"><i class="auth-icon auth-icon-plus"></i><span>Registro</span></a><button id="menuBtn" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span></button></div>
+  </header>
+  <nav class="mobile-nav" id="mobileNav"><a href="inicio.html">Inicio</a><a class="active" href="catalogo.html">Catálogo</a><a href="colecciones.html">Colecciones</a><a href="posts.html">Posts</a><a href="nosotros.html">Nosotros</a><a href="verificar.html">Autenticidad</a><a href="admin.html">Admin</a><a href="login.html">Iniciar sesión</a><a href="registro.html">Crear cuenta</a></nav>
+
+  <main class="product-detail">
+    <a class="product-back" href="catalogo.html">← Volver al catálogo</a>
+    <section class="product-layout">
+      <div class="product-gallery">
+        <div class="product-main-image"><span class="tag" id="productTag"></span><img id="productImage" alt="" hidden></div>
+        <div class="product-thumbs" aria-label="Galería del producto">
+          <button class="active" hidden><img id="thumbOne" alt="Vista principal"></button>
+          <button id="thumbTwoButton" hidden><img id="thumbTwo" src="" alt="Vista de detalle"></button>
+        </div>
+      </div>
+      <div class="product-info">
+        <p class="product-edition">Edición / 001 · No restock</p>
+        <h1 id="productName"></h1>
+        <p class="product-price" id="productPrice"></p>
+        <p class="product-description" id="productDescription"></p>
+        <div class="product-option" id="sizeBlock" hidden>
+          <div><b>Selecciona tu talla</b><a href="#sizeGuide">Guía de tallas</a></div>
+          <div class="size-picker" id="sizePicker"></div>
+          <p class="option-error" id="sizeError">Selecciona una talla para continuar.</p>
+        </div>
+        <button class="add-to-cart" id="addToCart" hidden>Consultar disponibilidad <span>→</span></button>
+        <div class="product-perks"><p>◇ Envío internacional con seguimiento</p><p>□ Pagos seguros y protegidos</p><p>↩ Cambios durante 30 días</p></div>
+        <details open><summary>Detalles y materiales</summary><p id="productDetails"></p></details>
+        <details><summary>Disponibilidad</summary><p>Consulta directamente con SKYBLOCK STUDIO para conocer tallas, unidades disponibles y detalles del lanzamiento.</p></details>
+      </div>
+    </section>
+
+    <section class="size-guide" id="sizeGuide"><span>Encuentra tu fit</span><h2>Guía de tallas</h2><div class="size-table"><div><b>Talla</b><b>Pecho</b><b>Largo</b></div><div><span>S</span><span>52 cm</span><span>70 cm</span></div><div><span>M</span><span>56 cm</span><span>73 cm</span></div><div><span>L</span><span>60 cm</span><span>76 cm</span></div><div><span>XL</span><span>64 cm</span><span>79 cm</span></div></div><p>Medidas aproximadas de la prenda en plano. Para un fit oversize, elige tu talla habitual.</p></section>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="js/producto.js"></script><script src="js/supabase-bridge.js"></script>
+    <footer>
+    <div class="footer-brand"><a class="brand" href="inicio.html">SKYBLOCK<small>STUDIO</small></a><p>CONSTRUYE. CREA. DOMINA.</p><div class="social">◎ ♪ ▷ ◇</div></div>
+    <div class="footer-col"><h4>Tienda</h4><a href="catalogo.html">Todos los productos</a></div>
+    <div class="footer-col"><h4>Colecciones</h4><a href="colecciones.html">Colaboraciones</a><a href="colecciones.html">Recién llegados</a><a href="colecciones.html">Edición limitada</a><a href="colecciones.html">Archivo</a></div>
+    <div class="footer-col"><h4>Empresa</h4><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a><a href="privacidad.html">Privacidad</a><a href="terminos.html">Términos</a></div>
+    <div class="footer-col"><h4>Síguenos</h4><a href="#">Instagram</a><a href="#">TikTok</a><a href="#">Facebook</a></div>
+    <p class="copyright">© 2026 SKYBLOCK STUDIO<br>Todos los derechos reservados.<br><br>Diseñado y desarrollado<br>con pasión en Tarapoto.</p>
+  </footer>
+</body>
+</html>
