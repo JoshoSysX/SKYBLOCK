@@ -13,7 +13,7 @@ export default function App() {
 
   const cargarPublicos = useCallback(async () => {
     const [p, c, posts] = await Promise.all([
-      supabase.from('productos').select('*,tipo:tipos_producto(*),coleccion:colecciones(*),tallas:tallas_producto(*),imagenes(*)').eq('estado', 'publicado').order('creado_en', { ascending: false }),
+      supabase.from('productos').select('*,tipo:tipos_producto(*),coleccion:colecciones(*),tallas:tallas_producto(*),imagenes(*)').in('estado', ['publicado', 'archivado']).order('creado_en', { ascending: false }),
       supabase.from('colecciones').select('*,imagenes(*)').eq('estado', 'publicado').order('publicado_en', { ascending: false }),
       supabase.from('publicaciones').select('*,imagenes(*)').eq('estado', 'publicado').lte('publicado_en', new Date().toISOString()).order('publicado_en', { ascending: false }),
     ])
@@ -166,6 +166,14 @@ export default function App() {
             const tallasEliminadas=await supabase.from('tallas_producto').delete().eq('producto_id',saved.data.id);if(tallasEliminadas.error)throw tallasEliminadas.error
             const tallas=Object.entries(d.sizes||{}).map(([talla,stock])=>({producto_id:saved.data.id,talla,stock:Number(stock)}));if(!tallas.length)throw new Error('Selecciona al menos una talla');if(tallas.length){const tr=await supabase.from('tallas_producto').insert(tallas).select('talla');if(tr.error)throw tr.error;if((tr.data||[]).length!==tallas.length)throw new Error('No se guardaron todas las tallas seleccionadas')}
             const nuevas=[d.image,...(d.gallery||[])].filter((x:string)=>String(x||'').startsWith('data:')); if(nuevas.length){await eliminarImagenesRelacion('producto_id',saved.data.id);for(let i=0;i<nuevas.length;i++)await guardarImagen(nuevas[i],{producto_id:saved.data.id},i,user.id,d.name)}
+          } else if (e.data.tipo === 'SKYBLOCK_ADMIN_ELIMINAR_PRODUCTO') {
+            const id = String(d.id || '')
+            const codigosAsociados = await supabase.from('codigos_autenticidad').select('id', { count:'exact', head:true }).eq('producto_id',id)
+            if (codigosAsociados.error) throw codigosAsociados.error
+            if ((codigosAsociados.count || 0) > 0) throw new Error(`El producto tiene ${codigosAsociados.count} código(s) de autenticidad asociado(s)`)
+            await eliminarImagenesRelacion('producto_id',id)
+            const result = await supabase.from('productos').delete().eq('id',id).select('id').single()
+            if (result.error) throw result.error
           } else if (e.data.tipo === 'SKYBLOCK_ADMIN_GUARDAR_TIPO') {
             const slug=String(d.nombre||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); const result=await supabase.from('tipos_producto').insert({nombre:d.nombre,slug});if(result.error)throw result.error
           } else if (e.data.tipo === 'SKYBLOCK_ADMIN_ELIMINAR_TIPO') {
@@ -181,7 +189,9 @@ export default function App() {
         const adminData=await cargarAdmin()
         e.source?.postMessage({tipo:'SKYBLOCK_ADMIN_DATOS',...adminData},{targetOrigin:e.origin})
         const eliminandoColeccion=e.data.tipo==='SKYBLOCK_ADMIN_ELIMINAR_COLECCION'
-        e.source?.postMessage({tipo:'SKYBLOCK_ADMIN_ACCION_RESULTADO',ok:!error,mensaje:error?`${eliminandoColeccion?'No se pudo eliminar':'No se pudo guardar'}: ${error.message||'error desconocido'}`:eliminandoColeccion?'Colección eliminada de Supabase.':'Cambios guardados en Supabase.'},{targetOrigin:e.origin})
+        const eliminandoProducto=e.data.tipo==='SKYBLOCK_ADMIN_ELIMINAR_PRODUCTO'
+        const eliminando=eliminandoColeccion||eliminandoProducto
+        e.source?.postMessage({tipo:'SKYBLOCK_ADMIN_ACCION_RESULTADO',ok:!error,mensaje:error?`${eliminando?'No se pudo eliminar':'No se pudo guardar'}: ${error.message||'error desconocido'}`:eliminandoColeccion?'Colección eliminada de Supabase.':eliminandoProducto?'Producto e imágenes eliminados.':'Cambios guardados en Supabase.'},{targetOrigin:e.origin})
         if(!error){const next=await cargarPublicos();setDatos(next)}
         return
       }

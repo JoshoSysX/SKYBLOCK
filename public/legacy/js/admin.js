@@ -87,7 +87,7 @@ function renderProducts() {
   document.getElementById('adminProductList').innerHTML = visible.map((product) => {
     const stock = productStock(product);
     const availableSizes = Object.keys(product.sizes || {}).join(' · ') || 'Sin tallas definidas';
-    return `<article class="${product.blocked ? 'is-blocked' : ''}"><img src="${product.blocked ? 'assets/image/skb-bloqueado.png' : product.image}" alt="${product.blocked ? `Producto ${product.name} bloqueado` : product.name}"><div><b>${product.name}</b><span>SKB — ${product.collection}</span><small>${product.type} · ${availableSizes}</small></div><strong>${money(product.price)}</strong><em class="${product.blocked ? 'blocked' : stock <= 5 ? 'low' : ''}">${product.blocked ? 'Bloqueado' : `${stock} en stock`}</em>${product.limited ? '<i>Limitada</i>' : '<i class="standard">Regular</i>'}<div class="admin-product-actions"><button type="button" class="admin-product-lock ${product.blocked ? 'unlock' : ''}" data-toggle-product="${product.id}">${product.blocked ? 'Desbloquear' : 'Bloquear'}</button><button type="button" data-edit-product="${product.id}" aria-label="Editar ${product.name}">Editar</button></div></article>`;
+    return `<article class="${product.blocked ? 'is-blocked' : ''}"><img src="${product.blocked ? 'assets/image/skb-bloqueado.png' : product.image}" alt="${product.blocked ? `Producto ${product.name} bloqueado` : product.name}"><div><b>${product.name}</b><span>SKB — ${product.collection}</span><small>${product.type} · ${availableSizes}</small></div><strong>${money(product.price)}</strong><em class="${product.blocked ? 'blocked' : stock <= 5 ? 'low' : ''}">${product.blocked ? 'Bloqueado' : `${stock} en stock`}</em>${product.limited ? '<i>Limitada</i>' : '<i class="standard">Regular</i>'}<div class="admin-product-actions"><button type="button" class="admin-product-lock ${product.blocked ? 'unlock' : ''}" data-toggle-product="${product.id}">${product.blocked ? 'Desbloquear' : 'Bloquear'}</button><button type="button" data-edit-product="${product.id}" aria-label="Editar ${product.name}">Editar</button><button type="button" class="admin-product-delete" data-delete-product="${product.id}" aria-label="Eliminar ${product.name}">Eliminar</button></div></article>`;
   }).join('') || '<p class="admin-empty-products">No hay productos que coincidan con la búsqueda.</p>';
   document.getElementById('adminProductCount').textContent = products.length;
   document.getElementById('adminPublishedProducts').textContent = String(products.length).padStart(2,'0');
@@ -182,9 +182,10 @@ document.getElementById('productTypeList').addEventListener('click',(event) => {
 });
 
 document.querySelectorAll('[data-open-product]').forEach((button) => button.addEventListener('click',() => openProductEditor()));
-document.getElementById('adminProductList').addEventListener('click',(event) => {
+document.getElementById('adminProductList').addEventListener('click',async (event) => {
   const editButton = event.target.closest('[data-edit-product]');
   const toggleButton = event.target.closest('[data-toggle-product]');
+  const deleteButton = event.target.closest('[data-delete-product]');
   if (toggleButton) {
     const product = products.find((item) => item.id === toggleButton.dataset.toggleProduct);
     if (!product) return;
@@ -195,6 +196,19 @@ document.getElementById('adminProductList').addEventListener('click',(event) => 
     toast.textContent = product.blocked ? 'Producto bloqueado en el catálogo.' : 'Producto habilitado en el catálogo.';
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'),2600);
+    return;
+  }
+  if (deleteButton) {
+    const product = products.find((item) => item.id === deleteButton.dataset.deleteProduct);
+    if (!product) return;
+    const confirmed = await window.skyblockConfirm({
+      title:'Eliminar producto',
+      message:`“${product.name}” y todas sus imágenes se eliminarán definitivamente. Esta acción no se puede deshacer.`,
+      confirmText:'Eliminar producto'
+    });
+    if (!confirmed) return;
+    deleteButton.disabled = true;
+    guardarEnSupabase('SKYBLOCK_ADMIN_ELIMINAR_PRODUCTO',{id:product.id});
     return;
   }
   if (editButton) openProductEditor(products.find((product) => product.id === editButton.dataset.editProduct));
