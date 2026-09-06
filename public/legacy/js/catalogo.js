@@ -30,7 +30,7 @@ cards.forEach((card) => {
   card.dataset.blocked = String(Boolean(product.blocked));
   card.querySelector('.catalog-copy h2').textContent = product.name;
   card.querySelector('.catalog-copy p').textContent = product.description;
-  card.querySelector('.catalog-copy strong').textContent = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(product.price);
+  card.querySelector('.catalog-copy strong').textContent = new Intl.NumberFormat('es-PE',{style:'currency',currency:'PEN'}).format(product.price);
   const imageWrap = card.querySelector('.catalog-image');
   const image = imageWrap.querySelector('img');
   if (product.blocked) {

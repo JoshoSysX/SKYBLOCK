@@ -4182,7 +4182,7 @@ footer[data-chapter] {
   min-height: 390px;
   padding: clamp(65px, 8vw, 115px) clamp(25px, 6.5vw, 105px) 38px;
   display: grid;
-  grid-template-columns: minmax(250px, 1.65fr) repeat(3, minmax(125px, .7fr));
+  grid-template-columns: minmax(230px, 1.45fr) repeat(4, minmax(115px, .7fr));
   gap: clamp(35px, 5vw, 85px);
   align-items: start;
   background: #090a0b;
@@ -4274,7 +4274,7 @@ footer[data-chapter] {
   }
 
   .site-footer {
-    grid-template-columns: 1.4fr repeat(3, 1fr)
+    grid-template-columns: 1.35fr repeat(4, 1fr)
   }
 }
 

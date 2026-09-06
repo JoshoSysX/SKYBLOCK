@@ -69,7 +69,7 @@ function renderProductTypes(selectedType = '') {
 }
 
 const productStock = (product) => Object.values(product.sizes || {}).reduce((total,value) => total + Number(value || 0),0);
-const money = (value) => new Intl.NumberFormat('en-US',{ style:'currency',currency:'USD' }).format(value);
+const money = (value) => new Intl.NumberFormat('es-PE',{ style:'currency',currency:'PEN' }).format(value);
 
 function saveProducts() {
   return;
