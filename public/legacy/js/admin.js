@@ -142,7 +142,7 @@ function openProductEditor(product = null) {
     syncSizeOption(size,false);
   });
   productMainImageData = product?.image || '';
-  productGalleryData = [...(product?.gallery || [])];
+  productGalleryData = [...(product?.gallery || [])].slice(0,2);
   document.getElementById('productMainPreview').innerHTML = productMainImageData ? `<img src="${productMainImageData}" alt="Vista previa principal">` : '<span>Vista previa principal</span>';
   document.getElementById('productGalleryPreview').innerHTML = productGalleryData.map((image,index) => `<img src="${image}" alt="Imagen adicional ${index + 1}">`).join('');
   document.getElementById('adminFormStatus').textContent = '';
@@ -247,11 +247,13 @@ document.getElementById('productMainImage').addEventListener('change',async (eve
 });
 
 document.getElementById('productGallery').addEventListener('change',async (event) => {
-  const files = [...event.target.files].slice(0,4);
+  const selectedFiles = [...event.target.files];
+  const files = selectedFiles.slice(0,2);
+  if (selectedFiles.length > 2) document.getElementById('adminFormStatus').textContent = 'Solo puedes seleccionar 2 imágenes secundarias.';
   try {
     productGalleryData = await Promise.all(files.map(readImage));
     document.getElementById('productGalleryPreview').innerHTML = productGalleryData.map((image,index) => `<img src="${image}" alt="Imagen adicional ${index + 1}">`).join('');
-    document.getElementById('adminFormStatus').textContent = '';
+    if (selectedFiles.length <= 2) document.getElementById('adminFormStatus').textContent = '';
   } catch (error) { document.getElementById('adminFormStatus').textContent = error.message;event.target.value = ''; }
 });
 

@@ -187,7 +187,7 @@ export default function App() {
             const saved=idValido?await supabase.from('productos').update(payload).eq('id',d.id).select('id').single():await supabase.from('productos').insert(payload).select('id').single(); if(saved.error)throw saved.error
             const tallasEliminadas=await supabase.from('tallas_producto').delete().eq('producto_id',saved.data.id);if(tallasEliminadas.error)throw tallasEliminadas.error
             const tallas=Object.entries(d.sizes||{}).map(([talla,stock])=>({producto_id:saved.data.id,talla,stock:Number(stock)}));if(!tallas.length)throw new Error('Selecciona al menos una talla');if(tallas.length){const tr=await supabase.from('tallas_producto').insert(tallas).select('talla');if(tr.error)throw tr.error;if((tr.data||[]).length!==tallas.length)throw new Error('No se guardaron todas las tallas seleccionadas')}
-            const nuevas=[d.image,...(d.gallery||[])].filter((x:string)=>String(x||'').startsWith('data:')); if(nuevas.length){await eliminarImagenesRelacion('producto_id',saved.data.id);for(let i=0;i<nuevas.length;i++)await guardarImagen(nuevas[i],{producto_id:saved.data.id},i,user.id,d.name)}
+            const nuevas=[d.image,...(d.gallery||[]).slice(0,2)].filter((x:string)=>String(x||'').startsWith('data:')); if(nuevas.length){await eliminarImagenesRelacion('producto_id',saved.data.id);for(let i=0;i<nuevas.length;i++)await guardarImagen(nuevas[i],{producto_id:saved.data.id},i,user.id,d.name)}
           } else if (e.data.tipo === 'SKYBLOCK_ADMIN_ELIMINAR_PRODUCTO') {
             const id = String(d.id || '')
             const codigosAsociados = await supabase.from('codigos_autenticidad').select('id', { count:'exact', head:true }).eq('producto_id',id)
