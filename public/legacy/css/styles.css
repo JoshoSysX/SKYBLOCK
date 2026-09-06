@@ -1793,7 +1793,7 @@ footer[data-chapter] {
   padding: clamp(55px, 7vw, 115px) clamp(45px, 6vw, 95px);
   border-top: 0;
   border-left: 0;
-  background: #111214;
+  background: #000;
   backdrop-filter: none;
 }
 

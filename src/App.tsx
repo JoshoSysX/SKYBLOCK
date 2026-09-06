@@ -4,6 +4,8 @@ import { supabase } from './lib/supabase'
 type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; error?: string }
 type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
+const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
+const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const paginas = new Set(['inicio','catalogo','colecciones','coleccion','producto','posts','nosotros','contacto','privacidad','terminos','verificar','login','admin'])
 const rutaInicial = paginas.has(location.pathname.split('/').filter(Boolean)[0] || '') ? location.pathname.split('/').filter(Boolean)[0] : 'inicio'
 
@@ -64,18 +66,38 @@ export default function App() {
   }, [datos])
 
   const subirCloudinary = async (archivo: File) => {
+    if (archivo.size > MAX_IMAGE_SIZE_BYTES) throw new Error('Cada imagen debe pesar como máximo 150 MB')
     const { data: firma, error } = await supabase.functions.invoke('cloudinary-signature')
     if (error || !firma?.signature) throw new Error(firma?.error || 'No se pudo firmar la imagen')
-    const form = new FormData()
-    form.append('file', archivo)
-    form.append('api_key', firma.apiKey)
-    form.append('timestamp', String(firma.timestamp))
-    form.append('signature', firma.signature)
-    form.append('folder', firma.folder)
-    form.append('upload_preset', firma.uploadPreset)
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${firma.cloudName}/image/upload`, { method: 'POST', body: form })
-    const result = await response.json()
-    if (!response.ok) throw new Error(result?.error?.message || 'Cloudinary rechazó la imagen')
+    const endpoint = `https://api.cloudinary.com/v1_1/${firma.cloudName}/image/upload`
+    const crearFormulario = (contenido: Blob) => {
+      const form = new FormData()
+      form.append('file', contenido, archivo.name)
+      form.append('api_key', firma.apiKey)
+      form.append('timestamp', String(firma.timestamp))
+      form.append('signature', firma.signature)
+      form.append('folder', firma.folder)
+      form.append('upload_preset', firma.uploadPreset)
+      return form
+    }
+    if (archivo.size <= 100 * 1024 * 1024) {
+      const response = await fetch(endpoint, { method: 'POST', body: crearFormulario(archivo) })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result?.error?.message || 'Cloudinary rechazó la imagen')
+      return result
+    }
+    const uploadId = crypto.randomUUID()
+    let result: any = null
+    for (let inicio = 0; inicio < archivo.size; inicio += CLOUDINARY_CHUNK_SIZE_BYTES) {
+      const fin = Math.min(inicio + CLOUDINARY_CHUNK_SIZE_BYTES, archivo.size)
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'X-Unique-Upload-Id': uploadId, 'Content-Range': `bytes ${inicio}-${fin - 1}/${archivo.size}` },
+        body: crearFormulario(archivo.slice(inicio, fin)),
+      })
+      result = await response.json()
+      if (!response.ok) throw new Error(result?.error?.message || 'Cloudinary rechazó la imagen')
+    }
     return result
   }
 

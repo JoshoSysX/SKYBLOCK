@@ -52,6 +52,8 @@ function loadProducts() {
 let products = loadProducts();
 let productMainImageData = '';
 let productGalleryData = [];
+const MAX_IMAGE_SIZE_MB = 150;
+const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 const sizeOptions = [{ key:'XS',id:'XS' },{ key:'S',id:'S' },{ key:'M',id:'M' },{ key:'L',id:'L' },{ key:'XL',id:'XL' },{ key:'XXL',id:'XXL' },{ key:'Única',id:'One' }];
 let productTypes;
 productTypes = [];
@@ -227,7 +229,7 @@ document.getElementById('cancelProductEdit').addEventListener('click',closeProdu
 modal.addEventListener('click', (event) => { if (event.target === modal) document.getElementById('closeProductModal').click(); });
 
 const readImage = (file) => new Promise((resolve,reject) => {
-  if (file.size > 2 * 1024 * 1024) { reject(new Error('Cada imagen debe pesar menos de 2 MB.')); return; }
+  if (file.size > MAX_IMAGE_SIZE_BYTES) { reject(new Error(`Cada imagen debe pesar como máximo ${MAX_IMAGE_SIZE_MB} MB.`)); return; }
   const reader = new FileReader();
   reader.addEventListener('load',() => resolve(reader.result));
   reader.addEventListener('error',() => reject(new Error('No se pudo leer la imagen.')));
@@ -502,25 +504,16 @@ document.getElementById('logoutDemo').addEventListener('click', () => {
   parent.postMessage({tipo:'SKYBLOCK_LOGOUT'},location.origin);
 });
 
-const postStorageKey = 'skyblockStudioPosts';
-const postManagementVersionKey = 'skyblockStudioPostsManagedV2';
-const defaultAdminPosts = [];
 const postForm = document.getElementById('adminPostForm');
 const postImageInput = document.getElementById('postImage');
 const postPreview = document.getElementById('postImagePreview');
 let postImageData = '';
+let adminPosts = [];
 
 function storedPosts() {
-  try {
-    const stored = localStorage.getItem(postStorageKey);
-    if (stored === null) return defaultAdminPosts.map((post) => ({...post}));
-    const parsed = JSON.parse(stored) || [];
-    return localStorage.getItem(postManagementVersionKey) ? parsed : [...parsed,...defaultAdminPosts.filter((fallback) => !parsed.some((post) => post.id === fallback.id))];
-  }
-  catch { return defaultAdminPosts.map((post) => ({...post})); }
+  return adminPosts;
 }
 
-function savePosts(posts) { localStorage.setItem(postStorageKey,JSON.stringify(posts));localStorage.setItem(postManagementVersionKey,'1'); }
 function renderAdminPosts() {
   const posts = storedPosts();
   document.getElementById('adminPostCount').textContent = posts.length;
@@ -539,10 +532,10 @@ postImageInput.addEventListener('change', () => {
   const file = postImageInput.files[0];
   const status = document.getElementById('postStatus');
   if (!file) return;
-  if (file.size > 2 * 1024 * 1024) {
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
     postImageInput.value = '';
     postImageData = '';
-    status.textContent = 'La fotografía supera el límite de 2 MB.';
+    status.textContent = `La fotografía supera el límite de ${MAX_IMAGE_SIZE_MB} MB.`;
     return;
   }
   const reader = new FileReader();
@@ -591,10 +584,8 @@ document.getElementById('adminPostList').addEventListener('click',async (event) 
   const posts = storedPosts();
   if (editButton) editPost(posts.find((post) => post.id === editButton.dataset.editPost));
   if (deleteButton && await window.skyblockConfirm({title:'Eliminar publicación',message:'La publicación y su contenido dejarán de mostrarse. Esta acción no se puede deshacer.',confirmText:'Eliminar publicación'})) {
-    try { savePosts(posts.filter((post) => post.id !== deleteButton.dataset.deletePost)); }
-    catch { document.getElementById('postStatus').textContent = 'No se pudo actualizar el almacenamiento.';return; }
-    if (document.getElementById('postEditId').value === deleteButton.dataset.deletePost) resetPostEditor();
-    renderAdminPosts();
+    document.getElementById('postStatus').textContent = 'Eliminando publicación...';
+    parent.postMessage({tipo:'SKYBLOCK_ADMIN_ELIMINAR_POST',id:deleteButton.dataset.deletePost},location.origin);
   }
 });
 
@@ -603,21 +594,42 @@ postForm.addEventListener('submit', (event) => {
   const status = document.getElementById('postStatus');
   if (!postImageData) { status.textContent = 'Selecciona una fotografía para publicar.'; return; }
   const editId = document.getElementById('postEditId').value;
-  const posts = storedPosts();
-  const existingIndex = posts.findIndex((post) => post.id === editId);
-  const post = {
-    id: editId || `post-${Date.now()}`,
-    title: document.getElementById('postTitle').value.trim(),
-    description: document.getElementById('postDescription').value.trim(),
+  const existingIndex = adminPosts.findIndex((post) => post.id === editId);
+  const archivo = postImageInput.files[0] || null;
+  if (existingIndex < 0 && !archivo) { status.textContent = 'Selecciona una fotografía para publicar.'; return; }
+  const datos = {
+    id: editId,
+    titulo: document.getElementById('postTitle').value.trim(),
+    descripcion: document.getElementById('postDescription').value.trim(),
     alt: document.getElementById('postAlt').value.trim(),
-    image: postImageData,
-    date: existingIndex >= 0 ? posts[existingIndex].date : new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date()).toUpperCase()
+    archivo
   };
-  if (existingIndex >= 0) posts[existingIndex] = post; else posts.unshift(post);
-  try { savePosts(posts); }
-  catch { status.textContent = 'No hay espacio suficiente. Prueba con una imagen más pequeña.'; return; }
-  resetPostEditor(`${existingIndex >= 0 ? 'Post actualizado' : 'Post publicado'}. <a href="posts.html">Ver en la página pública →</a>`);
-  renderAdminPosts();
+  document.getElementById('savePostButton').disabled = true;
+  status.textContent = existingIndex >= 0 ? 'Guardando cambios...' : 'Publicando...';
+  parent.postMessage({tipo:'SKYBLOCK_ADMIN_GUARDAR_POST',datos},location.origin);
+});
+
+window.addEventListener('message',(event) => {
+  if (event.origin !== location.origin) return;
+  if (event.data?.tipo === 'SKYBLOCK_ADMIN_POSTS') {
+    adminPosts = (event.data.publicaciones || []).map((post) => {
+      const imagen = [...(post.imagenes || [])].sort((a,b) => Number(a.posicion || 0) - Number(b.posicion || 0))[0];
+      return {
+        id:post.id,
+        title:post.titulo,
+        description:post.descripcion || post.contenido || '',
+        alt:imagen?.texto_alternativo || post.titulo,
+        image:imagen?.url_segura || '',
+        date:new Intl.DateTimeFormat('es-PE',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(post.publicado_en || post.creado_en)).toUpperCase()
+      };
+    });
+    renderAdminPosts();
+  }
+  if (event.data?.tipo === 'SKYBLOCK_ADMIN_POST_RESULTADO') {
+    document.getElementById('savePostButton').disabled = false;
+    if (event.data.ok) resetPostEditor(`${event.data.mensaje} <a href="posts.html">Ver en la página pública →</a>`);
+    else document.getElementById('postStatus').textContent = event.data.mensaje;
+  }
 });
 
 // Resend: configuración y plantillas. La API key vive únicamente en el servidor.
