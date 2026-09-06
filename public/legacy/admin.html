@@ -133,7 +133,7 @@
             <label class="admin-size-option"><span><input id="sizeOneAvailable" type="checkbox">Única</span><input id="stockOne" type="number" min="0" value="0" disabled aria-label="Stock talla única"></label>
           </fieldset>
           <label class="admin-check-row"><input id="productLimited" type="checkbox"><span><b>Prenda limitada</b><small>Marcar como edición limitada y sin reposición.</small></span></label>
-          <label id="productLimitedUnitsField">Cantidad total de prendas limitadas<input id="productLimitedUnits" type="number" min="1" step="1" placeholder="Ej. 25"><small>Este será el máximo de códigos de autenticidad para este diseño.</small></label>
+          <label id="productLimitedUnitsField" hidden>Cantidad total de prendas limitadas<input id="productLimitedUnits" type="number" min="1" step="1" placeholder="Ej. 25"><small>Debe ser igual o mayor al stock total y será el máximo de códigos para este diseño.</small></label>
         </section>
         <section class="admin-product-media">
           <label class="admin-product-upload" for="productMainImage"><span>Imagen principal</span><small>JPG, PNG o WEBP · Máximo 150 MB</small><input id="productMainImage" type="file" accept="image/jpeg,image/png,image/webp"></label>

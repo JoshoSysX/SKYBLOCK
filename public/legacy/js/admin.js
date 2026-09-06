@@ -104,6 +104,7 @@ function updateTotalStock() {
     return sum + (available ? Number(document.getElementById(`stock${size.id}`).value || 0) : 0);
   },0);
   document.getElementById('productTotalStock').value = total;
+  document.getElementById('productLimitedUnits').min = Math.max(1,total);
 }
 
 function syncSizeOption(size,resetWhenDisabled = true) {
@@ -225,6 +226,7 @@ sizeOptions.forEach((size) => {
 document.getElementById('productLimited').addEventListener('change',(event) => {
   document.getElementById('productLimitedUnitsField').hidden = !event.target.checked;
   document.getElementById('productLimitedUnits').required = event.target.checked;
+  updateTotalStock();
 });
 
 function closeProductEditor() {
@@ -278,6 +280,13 @@ document.getElementById('adminProductForm').addEventListener('submit', (event) =
     return sizes;
   },{});
   if (!Object.keys(selectedSizes).length) { status.textContent = 'Selecciona al menos una talla disponible.';return; }
+  const totalStock = Object.values(selectedSizes).reduce((sum,stock) => sum + Number(stock || 0),0);
+  const isLimited = document.getElementById('productLimited').checked;
+  const limitedUnits = Number(document.getElementById('productLimitedUnits').value);
+  if (isLimited && (!Number.isInteger(limitedUnits) || limitedUnits < totalStock)) {
+    status.textContent = `La cantidad limitada debe ser igual o mayor al stock total (${totalStock}).`;
+    return;
+  }
   const id = document.getElementById('productId').value || `product-${Date.now()}`;
   const product = {
     id,
@@ -287,8 +296,8 @@ document.getElementById('adminProductForm').addEventListener('submit', (event) =
     price:Number(document.getElementById('productPrice').value),
     description:document.getElementById('productDescription').value.trim(),
     sizes:selectedSizes,
-    limited:document.getElementById('productLimited').checked,
-    limitedUnits:document.getElementById('productLimited').checked ? Number(document.getElementById('productLimitedUnits').value) : null,
+    limited:isLimited,
+    limitedUnits:isLimited ? limitedUnits : null,
     blocked:products.find((item) => item.id === id)?.blocked || false,
     image:productMainImageData,
     gallery:productGalleryData

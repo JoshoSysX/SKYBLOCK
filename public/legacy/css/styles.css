@@ -5692,6 +5692,7 @@ footer .footer-brand>.brand small {
 .admin-product-editor-grid { display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:38px }
 .admin-product-fields,.admin-product-media { min-width:0 }
 .admin-product-editor label { display:block;margin-bottom:19px;color:#666;font:600 8px var(--display);letter-spacing:.1em;text-transform:uppercase }
+.admin-product-editor label[hidden] { display:none!important }
 .admin-product-editor input,.admin-product-editor select,.admin-product-editor textarea { width:100%;margin-top:8px;border:1px solid #c9c9c4;background:#fff;color:#111;outline:none }
 .admin-product-editor input,.admin-product-editor select { height:46px;padding:0 12px }
 .admin-product-editor textarea { padding:12px;resize:vertical;font:400 11px/1.6 var(--body) }
