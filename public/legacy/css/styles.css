@@ -5777,3 +5777,89 @@ footer .footer-brand>.brand small {
   .admin-collection-editor { max-height:100svh;min-height:100svh;padding:32px 18px }
   .admin-collection-cover-preview { height:300px }
 }
+
+/* Tipografía legible en todo el panel administrativo */
+.admin-page { font-size:15px }
+.admin-brand a { font-size:24px }
+.admin-brand a small { font-size:9px }
+.admin-brand span { font-size:11px;line-height:1.5 }
+.admin-menu button { font-size:15px }
+.admin-menu button i { font-size:13px }
+.admin-sidebar-foot a,.admin-sidebar-foot button { font-size:12px;line-height:1.5 }
+.admin-topbar span,.admin-title>div>span,.admin-card-head>div>span { font-size:11px }
+.admin-topbar strong { font-size:14px }
+.admin-user b { font-size:12px }
+.admin-title p { font-size:15px;line-height:1.6 }
+.admin-primary,.admin-secondary,.admin-confirm-danger { min-height:50px;font-size:12px }
+.admin-stats article>span,.admin-table-label { font-size:11px }
+.admin-stats small { font-size:12px;line-height:1.5 }
+.admin-card-head button,.admin-stock>a { font-size:11px }
+.admin-table-row { min-height:68px;font-size:14px }
+.admin-table-row b { font-size:14px }
+.admin-stock article b { font-size:14px }
+.admin-stock article span,.admin-stock article button { font-size:12px }
+.admin-toolbar label { font-size:11px }
+.admin-toolbar input,.admin-toolbar select,.admin-toolbar+select { font-size:15px }
+.admin-product-list b { font-size:15px }
+.admin-product-list span { font-size:12px;line-height:1.45 }
+.admin-product-list strong { font-size:15px }
+.admin-product-list em,.admin-product-list button { font-size:12px }
+.admin-collection-grid span { font-size:11px }
+.admin-collection-grid p { font-size:14px;line-height:1.6 }
+.admin-collection-grid button { font-size:12px }
+.admin-message-list button { min-height:105px }
+.admin-message-list button>b { font-size:12px }
+.admin-message-list strong { font-size:14px }
+.admin-message-list small,.admin-message-list time { font-size:12px }
+.admin-message>span { font-size:11px }
+.admin-message>div b { font-size:14px }
+.admin-message>div small { font-size:12px }
+.admin-message p { font-size:15px }
+.admin-modal-card>span,.admin-confirm-card>span { font-size:11px }
+.admin-modal-card label,.admin-product-editor label,.admin-collection-editor label { font-size:12px;line-height:1.4 }
+.admin-modal-card input,.admin-modal-card select,
+.admin-product-editor input,.admin-product-editor select,.admin-product-editor textarea,
+.admin-collection-editor input,.admin-collection-editor select,.admin-collection-editor textarea { font-size:15px }
+.admin-product-editor input,.admin-product-editor select,
+.admin-collection-editor input,.admin-collection-editor select { height:52px }
+.admin-product-editor textarea,.admin-collection-editor textarea { font-size:15px;line-height:1.65 }
+.admin-modal-card>p,.admin-confirm-card p,
+.admin-product-editor>#adminFormStatus,.admin-collection-editor>#collectionFormStatus { font-size:13px }
+.admin-type-add button,.admin-type-list>span { font-size:11px }
+.admin-type-modal-card>small { font-size:12px }
+.admin-collection-cover-preview,.admin-main-image-preview { font-size:11px }
+.admin-collection-note span { font-size:12px }
+.admin-collection-note p { font-size:13px }
+.admin-size-stock legend { font-size:11px }
+.admin-size-option>span { font-size:12px }
+.admin-check-row b { font-size:13px }
+.admin-check-row small { font-size:12px }
+.admin-product-upload span { font-size:13px }
+.admin-product-upload small { font-size:12px;line-height:1.45 }
+.admin-product-inventory article>div small { font-size:11px }
+.admin-product-inventory article>i,.admin-product-actions button { font-size:10px }
+.admin-empty-products { font-size:14px }
+.admin-post-fields>label { font-size:12px }
+.admin-post-fields input,.admin-post-fields textarea { font-size:15px;line-height:1.6 }
+.admin-upload>span { font-size:14px }
+.admin-post-status { font-size:13px }
+.admin-post-preview>span { font-size:11px }
+.post-preview-image { font-size:12px }
+.admin-post-list b { font-size:15px }
+.admin-post-list span { font-size:12px }
+.admin-post-list p { font-size:13px }
+.admin-post-list button { font-size:11px }
+.admin-email-fields label,.admin-email-test label { font-size:12px }
+.admin-email-fields input,.admin-email-fields select,.admin-email-fields textarea,.admin-email-test input { font-size:15px }
+.admin-email-checklist,.admin-email-variables,.admin-email-test p { font-size:13px }
+.admin-email-checklist code,.admin-email-variables code { font-size:12px }
+.admin-email-preview-wrap>span,.admin-email-test>div>span { font-size:11px }
+.admin-email-test>#emailTestStatus { font-size:13px }
+
+@media(max-width:760px) {
+  .admin-menu button { font-size:16px }
+  .admin-title p { font-size:14px }
+  .admin-modal-card label,.admin-product-editor label,.admin-collection-editor label { font-size:12px }
+  .admin-product-editor input,.admin-product-editor select,.admin-product-editor textarea,
+  .admin-collection-editor input,.admin-collection-editor select,.admin-collection-editor textarea { font-size:16px }
+}
