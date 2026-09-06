@@ -134,6 +134,9 @@ function openProductEditor(product = null) {
   document.getElementById('productPrice').value = product?.price ?? '';
   document.getElementById('productDescription').value = product?.description || '';
   document.getElementById('productLimited').checked = Boolean(product?.limited);
+  document.getElementById('productLimitedUnits').value = product?.limitedUnits || '';
+  document.getElementById('productLimitedUnitsField').hidden = !product?.limited;
+  document.getElementById('productLimitedUnits').required = Boolean(product?.limited);
   const defaultSizes = product ? Object.keys(product.sizes || {}) : [];
   sizeOptions.forEach((size) => {
     const available = defaultSizes.includes(size.key);
@@ -219,6 +222,10 @@ sizeOptions.forEach((size) => {
   document.getElementById(`stock${size.id}`).addEventListener('input',updateTotalStock);
   document.getElementById(`size${size.id}Available`).addEventListener('change',() => syncSizeOption(size));
 });
+document.getElementById('productLimited').addEventListener('change',(event) => {
+  document.getElementById('productLimitedUnitsField').hidden = !event.target.checked;
+  document.getElementById('productLimitedUnits').required = event.target.checked;
+});
 
 function closeProductEditor() {
   modal.classList.remove('open');
@@ -281,6 +288,7 @@ document.getElementById('adminProductForm').addEventListener('submit', (event) =
     description:document.getElementById('productDescription').value.trim(),
     sizes:selectedSizes,
     limited:document.getElementById('productLimited').checked,
+    limitedUnits:document.getElementById('productLimited').checked ? Number(document.getElementById('productLimitedUnits').value) : null,
     blocked:products.find((item) => item.id === id)?.blocked || false,
     image:productMainImageData,
     gallery:productGalleryData
@@ -402,10 +410,10 @@ function renderVerificationCodes() {
   const query = document.getElementById('adminCodeSearch').value.trim().toLowerCase();
   const filter = document.getElementById('adminCodeFilter').value;
   const visible = verificationCodes.filter((item) => {
-    const matchesQuery = `${item.series} ${item.collection} ${item.owner} ${item.codeHint}`.toLowerCase().includes(query);
+    const matchesQuery = `${item.series} ${item.collection} ${item.product} ${item.owner} ${item.codeHint}`.toLowerCase().includes(query);
     return matchesQuery && (filter === 'all' || item.status === filter);
   });
-  document.getElementById('adminCodeList').innerHTML = visible.map((item) => `<article><div><b>${cleanText(item.series)}</b><span>${cleanText(item.codeHint || 'Código protegido')}</span></div><strong>${cleanText(item.collection || 'Sin colección')}</strong><span>${cleanText(item.owner || 'Sin registrar')}</span><em class="${item.status === 'blocked' ? 'blocked' : ''}">${item.status === 'blocked' ? 'Bloqueado' : 'Activo'}</em><div><button type="button" data-edit-verification="${item.id}">Editar</button><button type="button" data-delete-verification="${item.id}">Eliminar</button></div></article>`).join('') || '<p class="admin-empty-products">No hay códigos que coincidan con la búsqueda.</p>';
+  document.getElementById('adminCodeList').innerHTML = visible.map((item) => `<article><div><b>${cleanText(item.series)}</b><span>${cleanText(item.codeHint || 'Código protegido')}</span></div><strong>${cleanText(item.collection || 'Sin colección')} · ${cleanText(item.product || 'Diseño pendiente')}</strong><span>${cleanText(item.owner || 'Sin registrar')}</span><em class="${item.status === 'blocked' ? 'blocked' : ''}">${item.status === 'blocked' ? 'Bloqueado' : 'Activo'}</em><div><button type="button" data-edit-verification="${item.id}">Editar</button><button type="button" data-delete-verification="${item.id}">Eliminar</button></div></article>`).join('') || '<p class="admin-empty-products">No hay códigos que coincidan con la búsqueda.</p>';
   document.getElementById('adminCodeCount').textContent = verificationCodes.length;
 }
 function openVerificationEditor(item = null) {
@@ -426,12 +434,24 @@ function openVerificationEditor(item = null) {
   if (item?.collection && !names.includes(item.collection)) names.push(item.collection);
   collectionSelect.innerHTML = names.map((name) => `<option value="${cleanText(name)}">${cleanText(name)}</option>`).join('');
   collectionSelect.value = item?.collection || names[0] || '';
+  renderVerificationProducts(item?.product || '');
   document.getElementById('verificationOwner').value = item?.owner === 'Sin registrar' ? '' : (item?.owner || '');
   document.getElementById('verificationStatus').value = item?.status || 'active';
   document.getElementById('verificationFormStatus').textContent = '';
   verificationModal.classList.add('open');
   verificationModal.setAttribute('aria-hidden','false');
 }
+function renderVerificationProducts(selectedProduct = '') {
+  const collection = document.getElementById('verificationCollection').value;
+  const available = products.filter((product) => product.collection === collection);
+  const select = document.getElementById('verificationProduct');
+  select.innerHTML = available.map((product) => `<option value="${cleanText(product.name)}">${cleanText(product.name)}${product.limitedUnits ? ` · ${product.limitedUnits} unidades` : ''}</option>`).join('');
+  if (selectedProduct && available.some((product) => product.name === selectedProduct)) select.value = selectedProduct;
+  const product = available.find((entry) => entry.name === select.value);
+  document.getElementById('verificationSeries').placeholder = product?.limitedUnits ? `Ej. 01/${product.limitedUnits}` : 'Configura primero el límite del diseño';
+}
+document.getElementById('verificationCollection').addEventListener('change',() => renderVerificationProducts());
+document.getElementById('verificationProduct').addEventListener('change',() => renderVerificationProducts(document.getElementById('verificationProduct').value));
 function closeVerificationEditor() { verificationModal.classList.remove('open');verificationModal.setAttribute('aria-hidden','true'); }
 document.getElementById('newVerificationCode').addEventListener('click',() => openVerificationEditor());
 document.getElementById('closeVerificationModal').addEventListener('click',closeVerificationEditor);
@@ -461,12 +481,20 @@ document.getElementById('verificationForm').addEventListener('submit',async (eve
   if (verificationCodes.some((item) => item.hash === hash && item.id !== id)) { status.textContent = 'Ese código ya existe.';return; }
   const selectedCollection = document.getElementById('verificationCollection').value;
   if (!selectedCollection || !collections.some((collection) => collection.name === selectedCollection)) { status.textContent = 'Primero debes crear y seleccionar una colección válida.';return; }
+  const selectedProduct = document.getElementById('verificationProduct').value;
+  const product = products.find((entry) => entry.name === selectedProduct && entry.collection === selectedCollection);
+  if (!product) { status.textContent = 'Selecciona un diseño válido de la colección.';return; }
+  if (!product.limited || !product.limitedUnits) { status.textContent = 'Configura cuántas prendas limitadas tendrá este diseño.';return; }
+  const series = document.getElementById('verificationSeries').value.trim();
+  const match = series.match(/^(\d+)\/(\d+)$/);
+  if (!match || Number(match[2]) !== Number(product.limitedUnits) || Number(match[1]) < 1 || Number(match[1]) > Number(product.limitedUnits)) { status.textContent = `La serie debe usar el formato 01/${product.limitedUnits} y no superar el límite.`;return; }
   const item = {
     id:id || `verification-${Date.now()}`,
     hash,
     codeHint:rawCode ? `•••• ${rawCode.slice(-4)}` : existing.codeHint,
-    series:document.getElementById('verificationSeries').value.trim(),
+    series,
     collection:selectedCollection,
+    product:selectedProduct,
     owner:document.getElementById('verificationOwner').value.trim() || 'Sin registrar',
     status:document.getElementById('verificationStatus').value
   };

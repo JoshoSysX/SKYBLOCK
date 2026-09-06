@@ -37,6 +37,7 @@ function showResult(record) {
   propietarioNombre.textContent = authentic ? (record.owner || 'Sin registrar') : '—';
   serieNumero.textContent = authentic ? record.series : '—';
   coleccionNombre.textContent = authentic ? (record.collection || 'Sin colección') : '—';
+  disenoNombre.textContent = authentic ? (record.design || 'Diseño pendiente de asignar') : '—';
   modal.classList.add('open');
   modal.setAttribute('aria-hidden', 'false');
   document.body.classList.add('lock');

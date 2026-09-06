@@ -133,12 +133,12 @@ export default function App() {
       supabase.from('productos').select('*,tipo:tipos_producto(*),coleccion:colecciones(*),tallas:tallas_producto(*),imagenes(*)').order('creado_en', { ascending: false }),
       supabase.from('colecciones').select('*,imagenes(*)').order('creado_en', { ascending: false }),
       supabase.from('tipos_producto').select('*').order('nombre'),
-      supabase.from('codigos_autenticidad').select('*,coleccion:colecciones(id,nombre)').order('creado_en', { ascending: false }),
+      supabase.from('codigos_autenticidad').select('*,coleccion:colecciones(id,nombre),producto:productos(id,nombre,unidades_limitadas)').order('creado_en', { ascending: false }),
     ])
     const error = productos.error || colecciones.error || tipos.error || codigos.error
     const cs = (colecciones.data ?? []).map((c: any) => ({ id:c.id, name:c.nombre, slug:c.slug, edition:c.numero_edicion, status:c.estado === 'publicado' ? 'published' : c.estado === 'archivado' ? 'upcoming' : 'draft', limited:false, description:c.descripcion, story:c.historia, cover:[...(c.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0))[0]?.url_segura || '' }))
-    const ps = (productos.data ?? []).map((p: any) => { const images=[...(p.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0)); return { id:p.id, name:p.nombre, type:p.tipo?.nombre || '', collection:p.coleccion?.nombre || '', price:Number(p.precio), description:p.descripcion, sizes:Object.fromEntries((p.tallas || []).map((t:any)=>[t.talla,t.stock])), limited:p.es_limitado, blocked:p.estado === 'archivado', image:images[0]?.url_segura || '', gallery:images.slice(1).map((i:FilaImagen)=>i.url_segura) } })
-    const codes = (codigos.data ?? []).map((c:any) => ({ id:c.id, hash:String(c.codigo_hmac || '').replace(/^\\x/,''), codeHint:`•••• ${c.ultimos_cuatro}`, series:c.numero_serie, collection:c.coleccion?.nombre || '', owner:c.propietario_nombre || 'Sin registrar', status:c.estado === 'bloqueado' || c.estado === 'anulado' ? 'blocked' : 'active' }))
+    const ps = (productos.data ?? []).map((p: any) => { const images=[...(p.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0)); return { id:p.id, name:p.nombre, type:p.tipo?.nombre || '', collection:p.coleccion?.nombre || '', price:Number(p.precio), description:p.descripcion, sizes:Object.fromEntries((p.tallas || []).map((t:any)=>[t.talla,t.stock])), limited:p.es_limitado, limitedUnits:p.unidades_limitadas, blocked:p.estado === 'archivado', image:images[0]?.url_segura || '', gallery:images.slice(1).map((i:FilaImagen)=>i.url_segura) } })
+    const codes = (codigos.data ?? []).map((c:any) => ({ id:c.id, hash:String(c.codigo_hmac || '').replace(/^\\x/,''), codeHint:`•••• ${c.ultimos_cuatro}`, series:c.numero_serie, collection:c.coleccion?.nombre || '', product:c.producto?.nombre || '', owner:c.propietario_nombre || 'Sin registrar', status:c.estado === 'bloqueado' || c.estado === 'anulado' ? 'blocked' : 'active' }))
     return { productos: ps, colecciones: cs, tipos: (tipos.data ?? []).map((t:any)=>t.nombre), codigos: codes, error: error?.message || '' }
   }
 
@@ -149,7 +149,7 @@ export default function App() {
       if (e.data?.tipo === 'SKYBLOCK_VERIFICAR_CODIGO') {
         const { data, error } = await supabase.rpc('verificar_codigo_autenticidad', { codigo_hash: String(e.data.hash || '') })
         const row = Array.isArray(data) ? data[0] : data
-        e.source?.postMessage({ tipo:'SKYBLOCK_VERIFICAR_RESULTADO', id:e.data.id, registro: error || !row ? null : { series:row.numero_serie, collection:row.coleccion, owner:row.propietario_nombre || 'Sin registrar', status:['bloqueado','anulado'].includes(row.estado) ? 'blocked' : 'active' } }, { targetOrigin:e.origin })
+        e.source?.postMessage({ tipo:'SKYBLOCK_VERIFICAR_RESULTADO', id:e.data.id, registro: error || !row ? null : { series:row.numero_serie, collection:row.coleccion, design:row.diseno, limitedUnits:row.unidades_limitadas, owner:row.propietario_nombre || 'Sin registrar', status:['bloqueado','anulado'].includes(row.estado) ? 'blocked' : 'active' } }, { targetOrigin:e.origin })
         return
       }
       if (String(e.data?.tipo || '').startsWith('SKYBLOCK_ADMIN_') && !['SKYBLOCK_ADMIN_GUARDAR_POST','SKYBLOCK_ADMIN_ELIMINAR_POST','SKYBLOCK_ADMIN_ELIMINAR_MENSAJE'].includes(e.data.tipo)) {
@@ -182,8 +182,8 @@ export default function App() {
             const { data:coleccion, error:ce } = await supabase.from('colecciones').select('id').eq('nombre',d.collection).single(); if (ce) throw ce
             let { data:tipo } = await supabase.from('tipos_producto').select('id').eq('nombre',d.type).maybeSingle()
             if (!tipo) { const created=await supabase.from('tipos_producto').insert({nombre:d.type,slug:String(d.type).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}).select('id').single(); if(created.error)throw created.error; tipo=created.data }
-            const total=Object.values(d.sizes||{}).reduce((sum:number,v:any)=>sum+Number(v||0),0)
-            const payload={tipo_producto_id:tipo.id,coleccion_id:coleccion.id,nombre:String(d.name||'').trim(),slug:String(d.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),precio:Number(d.price),moneda:'PEN',descripcion:String(d.description||'').trim(),estado:d.blocked?'archivado':'publicado',es_limitado:Boolean(d.limited),unidades_limitadas:d.limited?Math.max(total,1):null,creado_por:user.id}
+            const limitedUnits=Number(d.limitedUnits||0);if(d.limited&&limitedUnits<1)throw new Error('Indica cuántas prendas limitadas tendrá el diseño')
+            const payload={tipo_producto_id:tipo.id,coleccion_id:coleccion.id,nombre:String(d.name||'').trim(),slug:String(d.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),precio:Number(d.price),moneda:'PEN',descripcion:String(d.description||'').trim(),estado:d.blocked?'archivado':'publicado',es_limitado:Boolean(d.limited),unidades_limitadas:d.limited?limitedUnits:null,creado_por:user.id}
             const saved=idValido?await supabase.from('productos').update(payload).eq('id',d.id).select('id').single():await supabase.from('productos').insert(payload).select('id').single(); if(saved.error)throw saved.error
             const tallasEliminadas=await supabase.from('tallas_producto').delete().eq('producto_id',saved.data.id);if(tallasEliminadas.error)throw tallasEliminadas.error
             const tallas=Object.entries(d.sizes||{}).map(([talla,stock])=>({producto_id:saved.data.id,talla,stock:Number(stock)}));if(!tallas.length)throw new Error('Selecciona al menos una talla');if(tallas.length){const tr=await supabase.from('tallas_producto').insert(tallas).select('talla');if(tr.error)throw tr.error;if((tr.data||[]).length!==tallas.length)throw new Error('No se guardaron todas las tallas seleccionadas')}
@@ -203,7 +203,12 @@ export default function App() {
           } else if (e.data.tipo === 'SKYBLOCK_ADMIN_GUARDAR_CODIGO') {
             const idValido = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(d.id || ''))
             const {data:coleccion,error:ce}=await supabase.from('colecciones').select('id').eq('nombre',d.collection).single();if(ce)throw ce
-            const payload={coleccion_id:coleccion.id,codigo_hmac:`\\x${d.hash}`,ultimos_cuatro:String(d.codeHint||'').slice(-4),numero_serie:d.series,estado:d.status==='blocked'?'bloqueado':'disponible',propietario_nombre:d.owner==='Sin registrar'?null:d.owner,creado_por:user.id}
+            const {data:producto,error:pe}=await supabase.from('productos').select('id,unidades_limitadas').eq('coleccion_id',coleccion.id).eq('nombre',d.product).single();if(pe)throw pe
+            if(!producto.unidades_limitadas)throw new Error('El diseño no tiene una cantidad limitada configurada')
+            const serie=String(d.series||'').match(/^(\d+)\/(\d+)$/);if(!serie||Number(serie[2])!==producto.unidades_limitadas||Number(serie[1])<1||Number(serie[1])>producto.unidades_limitadas)throw new Error(`La serie debe usar el límite ${producto.unidades_limitadas}`)
+            const existentes=await supabase.from('codigos_autenticidad').select('id',{count:'exact',head:true}).eq('producto_id',producto.id);if(existentes.error)throw existentes.error
+            if(!idValido&&(existentes.count||0)>=producto.unidades_limitadas)throw new Error('Ya se crearon todos los códigos permitidos para este diseño')
+            const payload={producto_id:producto.id,coleccion_id:coleccion.id,codigo_hmac:`\\x${d.hash}`,ultimos_cuatro:String(d.codeHint||'').slice(-4),numero_serie:d.series,estado:d.status==='blocked'?'bloqueado':'disponible',propietario_nombre:d.owner==='Sin registrar'?null:d.owner,creado_por:user.id}
             const result=idValido?await supabase.from('codigos_autenticidad').update(payload).eq('id',d.id):await supabase.from('codigos_autenticidad').insert(payload);if(result.error)throw result.error
           } else if (e.data.tipo === 'SKYBLOCK_ADMIN_ELIMINAR_CODIGO') { const result=await supabase.from('codigos_autenticidad').delete().eq('id',d.id);if(result.error)throw result.error }
           else return
