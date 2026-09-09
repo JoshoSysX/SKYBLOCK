@@ -79,9 +79,9 @@ export default function App() {
     const factores = await supabase.auth.mfa.listFactors()
     if (factores.error) throw factores.error
     const verificado = factores.data.totp.find((factor) => factor.status === 'verified')
-    if (verificado) return { verificado:false, modo:'desafio', factorId:verificado.id }
+    if (verificado) return { verificado:false, modo:verificado.friendly_name === 'Admin SKYBLOCK' ? 'desafio' : 'renovacion', factorId:verificado.id }
     for (const factor of factores.data.totp.filter((item) => item.status !== 'verified')) await supabase.auth.mfa.unenroll({ factorId:factor.id })
-    const registro = await supabase.auth.mfa.enroll({ factorType:'totp', friendlyName:'SKYBLOCK Admin' })
+    const registro = await supabase.auth.mfa.enroll({ factorType:'totp', friendlyName:'Admin SKYBLOCK', issuer:'Admin SKYBLOCK' })
     if (registro.error) throw registro.error
     return { verificado:false, modo:'registro', factorId:registro.data.id, qr:registro.data.totp.qr_code, secreto:registro.data.totp.secret }
   }
@@ -334,7 +334,7 @@ export default function App() {
         try {
           const mfa=await iniciarMfaAdmin()
           if(mfa.verificado){e.source?.postMessage({tipo:'SKYBLOCK_AUTH_RESULTADO',ok:true,esAdmin:true,mensaje:'Acceso administrativo concedido.'},{targetOrigin:e.origin});return}
-          e.source?.postMessage({tipo:'SKYBLOCK_MFA_REQUERIDO',...mfa,mensaje:mfa.modo==='registro'?'Escanea el código QR y escribe el código de 6 dígitos.':'Escribe el código de Google Authenticator.'},{targetOrigin:e.origin})
+          e.source?.postMessage({tipo:'SKYBLOCK_MFA_REQUERIDO',...mfa,mensaje:mfa.modo==='registro'?'Escanea el código QR y escribe el código de 6 dígitos.':mfa.modo==='renovacion'?'Confirma una vez tu código anterior para generar el nuevo QR de Admin SKYBLOCK.':'Escribe el código de Google Authenticator.'},{targetOrigin:e.origin})
         } catch { await supabase.auth.signOut(); e.source?.postMessage({tipo:'SKYBLOCK_AUTH_RESULTADO',ok:false,mensaje:'No se pudo preparar la verificación en dos pasos.'},{targetOrigin:e.origin}) }
         return
       }
@@ -345,6 +345,19 @@ export default function App() {
         if(challenge.error){e.source?.postMessage({tipo:'SKYBLOCK_MFA_RESULTADO',ok:false,mensaje:'No se pudo iniciar la comprobación. Inténtalo nuevamente.'},{targetOrigin:e.origin});return}
         const verify=await supabase.auth.mfa.verify({factorId,challengeId:challenge.data.id,code})
         if(verify.error){e.source?.postMessage({tipo:'SKYBLOCK_MFA_RESULTADO',ok:false,mensaje:'El código no es correcto o ya venció.'},{targetOrigin:e.origin});return}
+        if(e.data.renovar){
+          const factores=await supabase.auth.mfa.listFactors()
+          const anterior=factores.data?.totp.find((factor)=>factor.id===factorId&&factor.status==='verified')
+          if(factores.error||!anterior){e.source?.postMessage({tipo:'SKYBLOCK_MFA_RESULTADO',ok:false,mensaje:'No se pudo comprobar el código anterior.'},{targetOrigin:e.origin});return}
+          const registro=await supabase.auth.mfa.enroll({factorType:'totp',friendlyName:'Admin SKYBLOCK',issuer:'Admin SKYBLOCK'})
+          if(registro.error){e.source?.postMessage({tipo:'SKYBLOCK_MFA_RESULTADO',ok:false,mensaje:'No se pudo generar el nuevo QR.'},{targetOrigin:e.origin});return}
+          e.source?.postMessage({tipo:'SKYBLOCK_MFA_REQUERIDO',modo:'registro',factorId:registro.data.id,reemplazaFactorId:factorId,qr:registro.data.totp.qr_code,secreto:registro.data.totp.secret,mensaje:'Escanea el nuevo QR de Admin SKYBLOCK y escribe su código de 6 dígitos.'},{targetOrigin:e.origin});return
+        }
+        if(e.data.reemplazaFactorId){
+          const factores=await supabase.auth.mfa.listFactors()
+          const anterior=factores.data?.totp.find((factor)=>factor.id===String(e.data.reemplazaFactorId)&&factor.id!==factorId)
+          if(!factores.error&&anterior)await supabase.auth.mfa.unenroll({factorId:anterior.id})
+        }
         const {esAdmin}=await obtenerAdmin()
         e.source?.postMessage({tipo:'SKYBLOCK_MFA_RESULTADO',ok:esAdmin,mensaje:esAdmin?'Verificación completada. Abriendo el panel…':'No se pudo confirmar el acceso administrativo.'},{targetOrigin:e.origin})
       }
