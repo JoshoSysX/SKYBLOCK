@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Contacta con SKYBLOCK STUDIO para productos, tallas y colaboraciones.">
   <title>Contacto | SKYBLOCK STUDIO</title>
+  <link rel="canonical" href="https://www.skyblocktpp.com/contacto">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="contact-page">
@@ -48,6 +49,8 @@
         </div>
         <label>Motivo<select name="motivo" required><option value="">Selecciona una opción</option><option>Información de producto</option><option>Tallas y disponibilidad</option><option>Lanzamientos</option><option>Colaboraciones</option><option>Otro</option></select></label>
         <label>Mensaje<textarea name="mensaje" rows="6" placeholder="Cuéntanos cómo podemos ayudarte" required></textarea></label>
+        <div class="contact-security" id="turnstileContainer"><span>Preparando verificación segura…</span></div>
+        <input id="turnstileToken" name="turnstileToken" type="hidden">
         <button type="submit">Enviar mensaje <span>→</span></button>
         <p class="form-status" id="formStatus" role="status"></p>
       </form>

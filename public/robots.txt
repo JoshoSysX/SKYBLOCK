@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
 Disallow: /admin
-Sitemap: https://example.com/sitemap.xml
+Disallow: /login
+Disallow: /registro
+Disallow: /legacy/admin.html
+Disallow: /legacy/login.html
+Disallow: /legacy/registro.html
+
+Sitemap: https://www.skyblocktpp.com/sitemap.xml

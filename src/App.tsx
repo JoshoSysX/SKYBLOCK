@@ -6,8 +6,43 @@ type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
 const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
-const paginas = new Set(['inicio','catalogo','colecciones','coleccion','producto','posts','nosotros','contacto','privacidad','terminos','verificar','login','admin'])
+const paginas = new Set(['inicio','catalogo','colecciones','coleccion','producto','posts','nosotros','contacto','privacidad','terminos','verificar','login','registro','admin'])
 const rutaInicial = paginas.has(location.pathname.split('/').filter(Boolean)[0] || '') ? location.pathname.split('/').filter(Boolean)[0] : 'inicio'
+const SEO:Record<string,{title:string;description:string;path:string;index?:boolean}> = {
+  inicio:{title:'SKYBLOCK STUDIO | Ropa urbana de edición limitada',description:'SKYBLOCK STUDIO, marca de ropa urbana de ediciones limitadas creada en Tarapoto, Perú. Del bloque para el cielo.',path:'/'},
+  catalogo:{title:'Catálogo de ropa urbana | SKYBLOCK STUDIO',description:'Descubre prendas urbanas, diseños exclusivos y ediciones limitadas de SKYBLOCK STUDIO en Tarapoto.',path:'/catalogo'},
+  colecciones:{title:'Colecciones limitadas | SKYBLOCK STUDIO',description:'Conoce las colecciones y colaboraciones de ropa urbana creadas por SKYBLOCK STUDIO.',path:'/colecciones'},
+  coleccion:{title:'Colección | SKYBLOCK STUDIO',description:'Historia, concepto y prendas de una colección limitada de SKYBLOCK STUDIO.',path:'/coleccion'},
+  producto:{title:'Producto | SKYBLOCK STUDIO',description:'Consulta el diseño, tallas, disponibilidad y autenticidad de esta prenda SKYBLOCK STUDIO.',path:'/producto'},
+  posts:{title:'Novedades y procesos | SKYBLOCK STUDIO',description:'Publicaciones, procesos creativos, lanzamientos y novedades de SKYBLOCK STUDIO.',path:'/posts'},
+  nosotros:{title:'Nuestra historia | SKYBLOCK STUDIO',description:'Conoce el origen de SKYBLOCK, su historia en Tarapoto y el movimiento Del bloque para el cielo.',path:'/nosotros'},
+  contacto:{title:'Contacto en Tarapoto | SKYBLOCK STUDIO',description:'Contacta con SKYBLOCK STUDIO para consultar productos, tallas, disponibilidad y colaboraciones.',path:'/contacto'},
+  verificar:{title:'Verificar autenticidad | SKYBLOCK STUDIO',description:'Verifica el código, diseño, colección y número de serie de tu prenda SKYBLOCK STUDIO.',path:'/verificar'},
+  privacidad:{title:'Política de privacidad | SKYBLOCK STUDIO',description:'Conoce cómo SKYBLOCK STUDIO trata y protege tus datos personales conforme a las normas peruanas.',path:'/privacidad'},
+  terminos:{title:'Términos y condiciones | SKYBLOCK STUDIO',description:'Términos y condiciones de uso y contratación de SKYBLOCK STUDIO conforme a la normativa peruana.',path:'/terminos'},
+  login:{title:'Iniciar sesión | SKYBLOCK STUDIO',description:'Acceso privado a SKYBLOCK STUDIO.',path:'/login',index:false},
+  registro:{title:'Crear cuenta | SKYBLOCK STUDIO',description:'Registro de cuenta en SKYBLOCK STUDIO.',path:'/registro',index:false},
+  admin:{title:'Panel administrativo | SKYBLOCK STUDIO',description:'Panel privado de administración.',path:'/admin',index:false},
+}
+const upsertMeta = (selector:string,attribute:string,value:string) => {
+  let element=document.head.querySelector<HTMLMetaElement>(selector)
+  if(!element){element=document.createElement('meta');document.head.appendChild(element)}
+  element.setAttribute(attribute,value)
+}
+const actualizarSeo = (pagina:string) => {
+  const seo=SEO[pagina] || SEO.inicio
+  const query=['producto','coleccion'].includes(pagina) ? location.search : ''
+  const canonical=`https://www.skyblocktpp.com${seo.path}${query}`
+  document.title=seo.title
+  upsertMeta('meta[name="description"]','content',seo.description)
+  upsertMeta('meta[name="robots"]','content',seo.index===false?'noindex,nofollow':'index,follow,max-image-preview:large')
+  upsertMeta('meta[property="og:title"]','content',seo.title)
+  upsertMeta('meta[property="og:description"]','content',seo.description)
+  upsertMeta('meta[property="og:url"]','content',canonical)
+  let link=document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
+  if(!link){link=document.createElement('link');link.rel='canonical';document.head.appendChild(link)}
+  link.href=canonical
+}
 
 export default function App() {
   const frame = useRef<HTMLIFrameElement>(null)
@@ -26,12 +61,29 @@ export default function App() {
     return next
   }, [])
 
-  useEffect(() => { document.body.className = 'legacy-shell'; void cargarPublicos() }, [cargarPublicos])
+  useEffect(() => { document.body.className = 'legacy-shell'; actualizarSeo(rutaInicial); void cargarPublicos() }, [cargarPublicos])
 
   const obtenerAdmin = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     const { data: rol } = user ? await supabase.from('roles_usuario').select('rol').eq('usuario_id', user.id).maybeSingle() : { data: null }
-    return { user, rol: rol as Rol, esAdmin: Boolean(rol && ['administrador', 'superadministrador'].includes(rol.rol)) }
+    const esRolAdmin = Boolean(rol && ['administrador', 'superadministrador'].includes(rol.rol))
+    const { data: nivel } = user && esRolAdmin ? await supabase.auth.mfa.getAuthenticatorAssuranceLevel() : { data: null }
+    const mfaVerificado = nivel?.currentLevel === 'aal2'
+    return { user, rol: rol as Rol, esRolAdmin, mfaVerificado, esAdmin: esRolAdmin && mfaVerificado }
+  }
+
+  const iniciarMfaAdmin = async () => {
+    const niveles = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    if (niveles.error) throw niveles.error
+    if (niveles.data.currentLevel === 'aal2') return { verificado:true }
+    const factores = await supabase.auth.mfa.listFactors()
+    if (factores.error) throw factores.error
+    const verificado = factores.data.totp.find((factor) => factor.status === 'verified')
+    if (verificado) return { verificado:false, modo:'desafio', factorId:verificado.id }
+    for (const factor of factores.data.totp.filter((item) => item.status !== 'verified')) await supabase.auth.mfa.unenroll({ factorId:factor.id })
+    const registro = await supabase.auth.mfa.enroll({ factorType:'totp', friendlyName:'SKYBLOCK Admin' })
+    if (registro.error) throw registro.error
+    return { verificado:false, modo:'registro', factorId:registro.data.id, qr:registro.data.totp.qr_code, secreto:registro.data.totp.secret }
   }
 
   const enviar = useCallback(async () => {
@@ -40,7 +92,7 @@ export default function App() {
     try {
       const documento = frame.current?.contentDocument
       if (documento?.title) document.title = documento.title
-      const { user, esAdmin } = await obtenerAdmin()
+      const { user, esRolAdmin, esAdmin } = await obtenerAdmin()
       documento?.body.classList.toggle('skyblock-admin-auth', esAdmin)
       documento?.body.classList.toggle('skyblock-signed-out', !user)
       ventana?.postMessage({ tipo: 'SKYBLOCK_ESTADO_AUTH', conectado: Boolean(user), esAdmin }, location.origin)
@@ -49,9 +101,10 @@ export default function App() {
       if (paginas.has(pagina)) {
         const rutaLimpia = `/${pagina}${ventana?.location.search || ''}`
         if (`${location.pathname}${location.search}` !== rutaLimpia) history.replaceState(null, '', rutaLimpia)
+        actualizarSeo(pagina)
       }
       if (ruta.endsWith('/admin.html') && !user) { ventana!.location.href = 'login.html'; return }
-      if (ruta.endsWith('/admin.html') && !esAdmin) { ventana!.location.href = 'inicio.html'; return }
+      if (ruta.endsWith('/admin.html') && !esAdmin) { ventana!.location.href = esRolAdmin ? 'login.html' : 'inicio.html'; return }
       if (ruta.endsWith('/admin.html')) {
         const [{ data: mensajes, error }, { data: publicaciones, error: errorPosts }, adminData] = await Promise.all([
           supabase.from('mensajes_contacto').select('*').order('creado_en', { ascending: false }),
@@ -263,8 +316,11 @@ export default function App() {
       }
       if (e.data?.tipo === 'SKYBLOCK_CONTACTO') {
         const d = e.data.datos || {}
-        const { error } = await supabase.from('mensajes_contacto').insert({ nombre: String(d.nombre || '').trim(), correo: String(d.correo || '').trim().toLowerCase(), asunto: String(d.motivo || '').trim(), mensaje: String(d.mensaje || '').trim(), estado: 'nuevo' })
-        e.source?.postMessage({ tipo: 'SKYBLOCK_CONTACTO_RESULTADO', ok: !error, mensaje: error ? 'No se pudo enviar el mensaje. Revisa los datos e inténtalo nuevamente.' : 'Gracias por escribirnos. Te responderemos en un máximo de 12–24 horas.' }, { targetOrigin: e.origin }); return
+        const { data, error } = await supabase.functions.invoke('contact-submit',{body:d})
+        e.source?.postMessage({ tipo:'SKYBLOCK_CONTACTO_RESULTADO',ok:!error&&Boolean(data?.ok),mensaje:data?.mensaje||(error?'No se pudo validar el envío. Inténtalo nuevamente.':'Mensaje procesado.') },{targetOrigin:e.origin});return
+      }
+      if(e.data?.tipo==='SKYBLOCK_SOLICITAR_CONFIGURACION_PUBLICA'){
+        e.source?.postMessage({tipo:'SKYBLOCK_CONFIGURACION_PUBLICA',turnstileSiteKey:import.meta.env.VITE_TURNSTILE_SITE_KEY||''},{targetOrigin:e.origin});return
       }
       if (e.data?.tipo === 'SKYBLOCK_LOGOUT') { await supabase.auth.signOut(); if (frame.current?.contentWindow) frame.current.contentWindow.location.href = 'inicio.html'; return }
       if (e.data?.tipo === 'SKYBLOCK_LOGIN') {
@@ -274,7 +330,23 @@ export default function App() {
         const { data: rol, error: errorRol } = await supabase.from('roles_usuario').select('rol').eq('usuario_id', data.user.id).maybeSingle()
         if (errorRol) { e.source?.postMessage({ tipo: 'SKYBLOCK_AUTH_RESULTADO', ok: false, mensaje: 'La sesión inició, pero no se pudo comprobar el acceso administrativo.' }, { targetOrigin: e.origin }); return }
         const esAdmin = Boolean(rol && ['administrador', 'superadministrador'].includes(rol.rol))
-        e.source?.postMessage({ tipo: 'SKYBLOCK_AUTH_RESULTADO', ok: true, esAdmin, mensaje: esAdmin ? 'Acceso administrativo concedido.' : 'Sesión iniciada correctamente.' }, { targetOrigin: e.origin })
+        if (!esAdmin) { e.source?.postMessage({ tipo:'SKYBLOCK_AUTH_RESULTADO', ok:true, esAdmin:false, mensaje:'Sesión iniciada correctamente.' }, { targetOrigin:e.origin }); return }
+        try {
+          const mfa=await iniciarMfaAdmin()
+          if(mfa.verificado){e.source?.postMessage({tipo:'SKYBLOCK_AUTH_RESULTADO',ok:true,esAdmin:true,mensaje:'Acceso administrativo concedido.'},{targetOrigin:e.origin});return}
+          e.source?.postMessage({tipo:'SKYBLOCK_MFA_REQUERIDO',...mfa,mensaje:mfa.modo==='registro'?'Escanea el código QR y escribe el código de 6 dígitos.':'Escribe el código de Google Authenticator.'},{targetOrigin:e.origin})
+        } catch { await supabase.auth.signOut(); e.source?.postMessage({tipo:'SKYBLOCK_AUTH_RESULTADO',ok:false,mensaje:'No se pudo preparar la verificación en dos pasos.'},{targetOrigin:e.origin}) }
+        return
+      }
+      if (e.data?.tipo === 'SKYBLOCK_MFA_VERIFICAR') {
+        const factorId=String(e.data.factorId||''),code=String(e.data.code||'').replace(/\D/g,'').slice(0,6)
+        if(!factorId||code.length!==6){e.source?.postMessage({tipo:'SKYBLOCK_MFA_RESULTADO',ok:false,mensaje:'Ingresa los 6 dígitos de Google Authenticator.'},{targetOrigin:e.origin});return}
+        const challenge=await supabase.auth.mfa.challenge({factorId})
+        if(challenge.error){e.source?.postMessage({tipo:'SKYBLOCK_MFA_RESULTADO',ok:false,mensaje:'No se pudo iniciar la comprobación. Inténtalo nuevamente.'},{targetOrigin:e.origin});return}
+        const verify=await supabase.auth.mfa.verify({factorId,challengeId:challenge.data.id,code})
+        if(verify.error){e.source?.postMessage({tipo:'SKYBLOCK_MFA_RESULTADO',ok:false,mensaje:'El código no es correcto o ya venció.'},{targetOrigin:e.origin});return}
+        const {esAdmin}=await obtenerAdmin()
+        e.source?.postMessage({tipo:'SKYBLOCK_MFA_RESULTADO',ok:esAdmin,mensaje:esAdmin?'Verificación completada. Abriendo el panel…':'No se pudo confirmar el acceso administrativo.'},{targetOrigin:e.origin})
       }
     }
     addEventListener('message', recibir); void enviar(); return () => removeEventListener('message', recibir)

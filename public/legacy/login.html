@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Inicia sesión en SKYBLOCK STUDIO.">
+  <meta name="robots" content="noindex,nofollow">
   <title>Iniciar sesión | SKYBLOCK STUDIO</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -17,7 +18,7 @@
 
   <main class="auth-main">
     <section class="auth-visual"><img src="assets/image/PORTADA%20PRINCIPAL%202.jpg" alt="Portada principal de SKYBLOCK STUDIO"><span></span><div><p>Acceso a la comunidad</p><h1>Continúa<br>construyendo.</h1></div></section>
-    <section class="auth-panel"><div class="auth-panel-inner"><span>Cuenta SKYBLOCK STUDIO</span><h2>Bienvenido.</h2><p>Ingresa tus datos para acceder a tu perfil.</p><form class="auth-form" data-auth-form="login"><label>Correo electrónico<input type="email" required autocomplete="email" placeholder="nombre@correo.com"></label><label>Contraseña<span><a href="#">¿La olvidaste?</a></span><div class="password-field"><input type="password" required minlength="6" autocomplete="current-password" placeholder="Tu contraseña"><button class="password-toggle" type="button" aria-label="Mostrar contraseña">Ver</button></div></label><button class="auth-submit" type="submit">Iniciar sesión <b>→</b></button><p class="auth-status" role="status"></p></form><div class="auth-switch"><span>¿Aún no tienes una cuenta?</span><a href="registro.html">Crear una cuenta</a></div></div></section>
+    <section class="auth-panel"><div class="auth-panel-inner"><span>Cuenta SKYBLOCK STUDIO</span><h2 id="authTitle">Bienvenido.</h2><p id="authDescription">Ingresa tus datos para acceder a tu perfil.</p><form class="auth-form" data-auth-form="login"><div id="passwordStep"><label>Correo electrónico<input type="email" required autocomplete="email" placeholder="nombre@correo.com"></label><label>Contraseña<span><a href="#">¿La olvidaste?</a></span><div class="password-field"><input type="password" required minlength="6" autocomplete="current-password" placeholder="Tu contraseña"><button class="password-toggle" type="button" aria-label="Mostrar contraseña">Ver</button></div></label></div><div class="mfa-step" id="mfaStep" hidden><div class="mfa-qr-wrap" id="mfaQrWrap" hidden><img id="mfaQr" alt="Código QR para configurar Google Authenticator"><p>Escanéalo con Google Authenticator. Si no puedes escanearlo, usa esta clave:</p><code id="mfaSecret"></code></div><label>Código de seguridad<input id="mfaCode" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000"></label></div><button class="auth-submit" type="submit"><span id="authSubmitText">Iniciar sesión</span> <b>→</b></button><p class="auth-status" role="status"></p></form><div class="auth-switch"><span>¿Aún no tienes una cuenta?</span><a href="registro.html">Crear una cuenta</a></div></div></section>
   </main>
   <script src="js/auth.js"></script>
 </body>
