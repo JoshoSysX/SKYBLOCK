@@ -92,7 +92,7 @@ export default function App() {
     ventana?.postMessage({ tipo: 'SKYBLOCK_DATOS_PUBLICOS', datos }, location.origin)
     try {
       const documento = frame.current?.contentDocument
-      const aplicarFotoPerfil = () => documento?.querySelectorAll<HTMLElement>('.post-avatar').forEach((avatar) => {
+      const aplicarFotoPerfil = () => documento?.querySelectorAll<HTMLElement>('.post-avatar, .posts-profile-mark').forEach((avatar) => {
         avatar.textContent = ''
         avatar.style.backgroundImage = `url("${profileImage}")`
         avatar.style.backgroundSize = 'cover'
