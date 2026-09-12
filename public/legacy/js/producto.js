@@ -12,7 +12,7 @@ addToCart.onclick = () => {
   if (!selected) return sizeError.classList.add('show');
   const currentProduct = productName.textContent.trim();
   const selectedSize = selected.textContent.trim();
-  const message = `Hola SKB, estoy interesado en: ${currentProduct}. Talla: ${selectedSize}. ¿Está disponible?`;
+  const message = `¡Hola Skyblock Studio! Estoy interesado en adquirir la ${currentProduct} (Talla ${selectedSize}). ¿Tienen stock disponible y cuáles son los medios de pago?`;
   window.open(`https://wa.me/51904604842?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
 };
 
