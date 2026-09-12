@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from './lib/supabase'
+import profileImage from '../assets/image/PERFIL.jpg'
 
 type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; error?: string }
 type Rol = { rol: string } | null
@@ -91,11 +92,19 @@ export default function App() {
     ventana?.postMessage({ tipo: 'SKYBLOCK_DATOS_PUBLICOS', datos }, location.origin)
     try {
       const documento = frame.current?.contentDocument
+      const aplicarFotoPerfil = () => documento?.querySelectorAll<HTMLElement>('.post-avatar').forEach((avatar) => {
+        avatar.textContent = ''
+        avatar.style.backgroundImage = `url("${profileImage}")`
+        avatar.style.backgroundSize = 'cover'
+        avatar.style.backgroundPosition = 'center'
+      })
+      aplicarFotoPerfil()
+      window.setTimeout(aplicarFotoPerfil, 0)
       const footer = documento?.querySelector<HTMLElement>('.site-footer')
       const socialColumn = [...(footer?.querySelectorAll<HTMLElement>('.footer-col') ?? [])].find(
         (column) => column.querySelector('h4')?.textContent?.trim() === 'Síguenos',
       )
-      if (socialColumn && !socialColumn.querySelector('[data-social="facebook"]')) {
+      if (socialColumn && !socialColumn.querySelector('a[href*="facebook.com/"]')) {
         const facebook = documento!.createElement('a')
         facebook.dataset.social = 'facebook'
         facebook.href = 'https://www.facebook.com/profile.php?id=61593904007232&locale=es_LA'
