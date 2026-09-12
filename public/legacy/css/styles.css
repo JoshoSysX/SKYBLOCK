@@ -1975,7 +1975,12 @@ footer[data-chapter] {
 }
 
 .catalog-hero::before {
-  display: none
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: none;
+  pointer-events: none
 }
 
 .catalog-hero-copy {
@@ -2389,7 +2394,8 @@ footer[data-chapter] {
   }
 
   .catalog-hero::before {
-    background: linear-gradient(0deg, #f7f7f7f5 0%, #f7f7f7c9 24%, transparent 54%)
+    display: block;
+    background: linear-gradient(0deg, #fafafa 0%, #fafafaf0 36%, #fafafa9c 56%, transparent 76%)
   }
 
   .catalog-hero h1 {
@@ -6042,7 +6048,7 @@ body.catalog-page,
   }
 
   .catalog-hero::before {
-    background:linear-gradient(0deg,#f7f7f7f5 0%,#f7f7f7c9 24%,transparent 54%);
+    background:linear-gradient(0deg,#fafafa 0%,#fafafaf0 36%,#fafafa9c 56%,transparent 76%);
     opacity:1;
   }
 }
