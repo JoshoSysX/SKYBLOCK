@@ -4890,6 +4890,12 @@ footer .footer-brand>.brand small {
   color:#f1f1ed
 }
 
+/* El acceso se mantiene directo: sin recuperación ni invitación a registro. */
+.auth-form[data-auth-form="login"] label>span,
+.auth-panel:has(.auth-form[data-auth-form="login"]) .auth-switch {
+  display:none
+}
+
 @media(max-width:600px) {
   .auth-page .auth-main {
     padding:90px 12px 25px;
