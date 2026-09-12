@@ -332,7 +332,8 @@ img {
 }
 
 .product {
-  background: var(--card);
+  /* Mantener el mismo tono base que las tarjetas del catálogo. */
+  background: #e3e3e0;
   transition: .45s var(--ease);
   overflow: hidden
 }
@@ -345,18 +346,19 @@ img {
 .product-image {
   height: clamp(255px, 24vw, 460px);
   overflow: hidden;
-  background: #ddd
+  background: #d8d8d5
 }
 
 .product-image img {
-  filter: grayscale(1) brightness(.9) contrast(1.08);
-  mix-blend-mode: multiply;
+  /* La imagen debe respetar los colores reales de la prenda. */
+  filter: none;
+  mix-blend-mode: normal;
   transition: .7s var(--ease)
 }
 
 .product:hover img {
   transform: scale(1.04);
-  filter: grayscale(1) brightness(1)
+  filter: none
 }
 
 .product-copy {
@@ -608,6 +610,13 @@ footer {
   letter-spacing: .1em;
   text-transform: uppercase;
   color: #999
+}
+
+/* El crédito es navegable, pero conserva la apariencia discreta del pie. */
+.copyright a {
+  color: inherit;
+  text-decoration: none;
+  cursor: default
 }
 
 .social {
@@ -928,7 +937,7 @@ footer {
 }
 
 .product {
-  background: #e7e7e5
+  background: #e3e3e0
 }
 
 .product-image {
@@ -2188,8 +2197,9 @@ footer[data-chapter] {
 }
 
 .catalog-image img {
-  filter: grayscale(1) contrast(1.05);
-  mix-blend-mode: multiply;
+  /* No desaturar ni alterar el color original de cada producto. */
+  filter: none;
+  mix-blend-mode: normal;
   transition: .7s var(--ease)
 }
 
@@ -3897,11 +3907,13 @@ footer[data-chapter] {
 
 .collection-cover>img {
   position: absolute;
-  inset: 0
+  inset: 0;
+  object-position: center center
 }
 
 .collection-cover .collection-shade {
-  background: linear-gradient(90deg, #050607de 0, #05060765 58%, transparent), linear-gradient(0deg, #050607cc, transparent 55%)
+  /* Mantiene el texto legible sin ocultar la fotografía de la colección. */
+  background: linear-gradient(90deg, #050607b8 0, #05060745 58%, transparent), linear-gradient(0deg, #050607a8, transparent 58%)
 }
 
 .collection-cover>div {
@@ -3913,6 +3925,10 @@ footer[data-chapter] {
 .collection-cover a {
   display: inline-block;
   margin-bottom: clamp(75px, 12vh, 145px);
+  padding: 10px 14px;
+  border: 1px solid #ffffff75;
+  background: #05060773;
+  color: #fff;
   font: 600 10px var(--display);
   letter-spacing: .12em;
   text-transform: uppercase
@@ -5431,6 +5447,24 @@ footer .footer-brand>.brand small {
 .collection-slide--soon.is-active img { filter:grayscale(1) brightness(.38) }
 .collection-arrow:disabled{opacity:.18;cursor:default;pointer-events:none}.collections-page.is-empty .collection-guide{display:none}
 
+/* Mensaje fijo que sustituye a la antigua guía de colecciones. */
+.collection-message {
+  min-height:min(48svh,540px);
+  padding:clamp(72px,10vw,140px) clamp(24px,8vw,150px);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:flex-start;
+  background:#f1f1ef;
+  color:#111214;
+  border-top:1px solid #d1d1cd
+}
+.collection-message>span { color:#738087;font:600 9px var(--display);letter-spacing:.18em;text-transform:uppercase }
+.collection-message h2 { max-width:800px;margin:20px 0 25px;font:600 clamp(58px,8vw,128px)/.78 var(--display);letter-spacing:-.025em;text-transform:uppercase }
+.collection-message p { max-width:490px;margin:0;color:#62635e;font-size:12px;line-height:1.8 }
+.collection-message a { min-width:190px;margin-top:32px;padding:15px 18px;display:flex;justify-content:space-between;gap:30px;background:#111214;color:#fff;font:600 10px var(--display);letter-spacing:.12em;text-transform:uppercase;transition:background .25s,transform .25s }
+.collection-message a:hover { background:#738087;transform:translateY(-3px) }
+
 .collection-arrow {
   position:absolute;
   z-index:20;
@@ -5481,6 +5515,8 @@ footer .footer-brand>.brand small {
 }
 
 @media(max-width:600px) {
+  .collection-message { min-height:420px;padding:65px 24px }
+  .collection-message h2 { font-size:16vw }
   .collections-page .collections-main { width:100% }
   .collections-page .collections-intro h1 { font-size:13.7vw;line-height:.84 }
   .collections-page .collection-showcase { width:100vw;height:100svh;min-height:650px;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw) }
@@ -5995,4 +6031,19 @@ footer .footer-brand>.brand small {
 .verify-steps,
 .verify-steps article {
   border-color: #e8e8e8
+}
+
+/* En móvil, la fotografía del encabezado debe cubrir toda la altura.
+   Así no queda visible su borde lateral contra un fondo de otro tono. */
+@media(max-width:600px) {
+  .catalog-hero {
+    background-color:#f7f7f7;
+    background-size:auto 90%;
+    background-position:calc(100% + 20px) center;
+  }
+
+  .catalog-hero::before {
+    background:linear-gradient(0deg,#f7f7f7f5 0%,#f7f7f7c9 24%,transparent 54%);
+    opacity:1;
+  }
 }

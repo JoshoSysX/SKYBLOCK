@@ -91,7 +91,6 @@ document.getElementById('collectionTagline').textContent = collection.tagline;
 document.getElementById('storyHeading').textContent = collection.heading;
 document.getElementById('storyOne').textContent = collection.story[0];
 document.getElementById('storyTwo').textContent = collection.story[1];
-document.getElementById('storyQuote').textContent = collection.quote;
 document.getElementById('productCount').textContent = collection.products.length;
 document.getElementById('collectionProductGrid').innerHTML = collection.products.map(([name, detail, price, image, slug]) => `
   <a class="catalog-card" href="producto.html?id=${slug}">

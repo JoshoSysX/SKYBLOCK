@@ -91,6 +91,24 @@ export default function App() {
     ventana?.postMessage({ tipo: 'SKYBLOCK_DATOS_PUBLICOS', datos }, location.origin)
     try {
       const documento = frame.current?.contentDocument
+      const footer = documento?.querySelector<HTMLElement>('.site-footer')
+      const socialColumn = [...(footer?.querySelectorAll<HTMLElement>('.footer-col') ?? [])].find(
+        (column) => column.querySelector('h4')?.textContent?.trim() === 'Síguenos',
+      )
+      if (socialColumn && !socialColumn.querySelector('[data-social="facebook"]')) {
+        const facebook = documento!.createElement('a')
+        facebook.dataset.social = 'facebook'
+        facebook.href = 'https://www.facebook.com/profile.php?id=61593904007232&locale=es_LA'
+        facebook.target = '_blank'
+        facebook.rel = 'noopener noreferrer'
+        facebook.textContent = 'Facebook'
+        socialColumn.append(facebook)
+      }
+      const copyright = footer?.querySelector<HTMLElement>('.copyright')
+      if (copyright && !copyright.dataset.joshosysxCredit) {
+        copyright.dataset.joshosysxCredit = 'true'
+        copyright.innerHTML = '© 2026 SKYBLOCK STUDIO<br>Todos los derechos reservados.<br><br>Diseñado y desarrollado por <a href="https://github.com/JoshoSysX" target="_blank" rel="noopener noreferrer">JoshoSysX</a><br>con pasión en Tarapoto.'
+      }
       if (documento?.title) document.title = documento.title
       const { user, esRolAdmin, esAdmin } = await obtenerAdmin()
       documento?.body.classList.toggle('skyblock-admin-auth', esAdmin)
