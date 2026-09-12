@@ -5997,10 +5997,12 @@ footer .footer-brand>.brand small {
   background-color: #fff
 }
 
-/* La fotografía del catálogo usa un blanco cálido; igualamos el lienzo para
+/* La fotografía del catálogo usa #FAFAFA; igualamos todo el lienzo para
    que no se perciba un corte de tono al adaptarse a cualquier pantalla. */
+body.catalog-page,
+.catalog-page,
 .catalog-hero {
-  background-color: #f7f7f7
+  background: #fafafa
 }
 
 .catalog-card,
