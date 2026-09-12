@@ -2554,7 +2554,7 @@ footer[data-chapter] {
 }
 
 .product-main-image img {
-  filter: grayscale(.75);
+  filter: none;
   transition: .45s var(--ease)
 }
 
@@ -2585,7 +2585,7 @@ footer[data-chapter] {
 }
 
 .product-thumbs img {
-  filter: grayscale(1)
+  filter: none
 }
 
 .product-info {
