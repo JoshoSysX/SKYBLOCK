@@ -5997,6 +5997,12 @@ footer .footer-brand>.brand small {
   background-color: #fff
 }
 
+/* La fotografía del catálogo usa un blanco cálido; igualamos el lienzo para
+   que no se perciba un corte de tono al adaptarse a cualquier pantalla. */
+.catalog-hero {
+  background-color: #f7f7f7
+}
+
 .catalog-card,
 .studio-post,
 .studio-post>footer {
