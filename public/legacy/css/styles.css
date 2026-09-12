@@ -1961,9 +1961,7 @@ footer[data-chapter] {
   min-height: 100svh;
   padding: 110px clamp(25px, 6.5vw, 106px) 70px;
   background-color: #f7f7f7;
-  background-image:
-    linear-gradient(90deg, rgba(255,255,255,.18) 0%, transparent 52%),
-    url('../assets/image/prductos.jpg');
+  background-image: url('../assets/image/prductos.jpg');
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -1976,15 +1974,7 @@ footer[data-chapter] {
 }
 
 .catalog-hero::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  background-image:
-    linear-gradient(90deg, transparent calc(25% - 1px), #1111110e 25%, transparent calc(25% + 1px)),
-    linear-gradient(90deg, transparent calc(50% - 1px), #1111110e 50%, transparent calc(50% + 1px)),
-    linear-gradient(90deg, transparent calc(75% - 1px), #1111110e 75%, transparent calc(75% + 1px));
-  pointer-events: none
+  display: none
 }
 
 .catalog-hero-copy {
