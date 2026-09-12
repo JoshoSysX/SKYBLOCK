@@ -2395,7 +2395,7 @@ footer[data-chapter] {
 
   .catalog-hero::before {
     display: block;
-    background: linear-gradient(0deg, #fafafa 0%, #fafafaf0 36%, #fafafa9c 56%, transparent 76%)
+    background: linear-gradient(0deg, #fafafae8 0%, #fafafac9 36%, #fafafa70 56%, transparent 76%)
   }
 
   .catalog-hero h1 {
@@ -6048,7 +6048,7 @@ body.catalog-page,
   }
 
   .catalog-hero::before {
-    background:linear-gradient(0deg,#fafafa 0%,#fafafaf0 36%,#fafafa9c 56%,transparent 76%);
+    background:linear-gradient(0deg,#fafafae8 0%,#fafafac9 36%,#fafafa70 56%,transparent 76%);
     opacity:1;
   }
 }
