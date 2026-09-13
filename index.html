@@ -23,6 +23,14 @@
     <title>SKYBLOCK STUDIO | Ropa urbana de edición limitada</title>
   </head>
   <body>
+    <script>
+      (() => {
+        const url = new URL(window.location.href)
+        if (!url.searchParams.has('__embed')) return
+        url.searchParams.delete('__embed')
+        history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
+      })()
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
