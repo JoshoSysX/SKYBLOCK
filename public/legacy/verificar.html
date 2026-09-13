@@ -17,11 +17,16 @@
   <nav class="mobile-nav" id="mobileNav"><a href="inicio.html">Inicio</a><a href="catalogo.html">Catálogo</a><a href="colecciones.html">Colecciones</a><a href="posts.html">Posts</a><a href="nosotros.html">Nosotros</a><a class="active" href="verificar.html">Autenticidad</a><a href="admin.html">Admin</a><a href="login.html">Iniciar sesión</a><a href="registro.html">Crear cuenta</a></nav>
 
   <main class="verify-main">
-    <section class="verify-hero verify-hero-compact">
-      <div class="verify-ambient" aria-hidden="true"></div>
-      <img class="verify-emblem" src="/cabra-02.png" alt="" aria-hidden="true">
+    <section class="verify-hero">
+      <div class="verify-orbit" aria-hidden="true"><span>SKB</span></div>
+      <div class="verify-copy">
+        <p class="verify-kicker">Archivo oficial / Protocolo 001</p>
+        <h1>LO REAL<br>DEJA HUELLA.</h1>
+        <p class="verify-lead">Cada pieza limitada lleva una identidad única. Ingresa el código de la etiqueta para comprobar su origen y descubrir su número dentro de la colección.</p>
+      </div>
 
       <form class="verify-console" id="verifyForm" novalidate>
+        <img class="verify-emblem" src="/cabra-02.png" alt="" aria-hidden="true">
         <div class="console-head"><span>Verificador oficial</span><i id="systemState">Sistema listo</i></div>
         <label for="codigoInput">Código de autenticidad</label>
         <div class="verify-search">
@@ -31,6 +36,7 @@
         <p class="verify-hint" id="verifyHint">Lo encontrarás impreso en la etiqueta interior. No distingue mayúsculas.</p>
         <div class="verify-message" id="verifyMessage" role="status" aria-live="polite"></div>
       </form>
+      <div class="verify-index"><span>01</span><i></i><span>25</span></div>
     </section>
 
     <section class="verify-story">
