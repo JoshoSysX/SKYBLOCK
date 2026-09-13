@@ -392,5 +392,6 @@ export default function App() {
     addEventListener('message', recibir); void enviar(); return () => removeEventListener('message', recibir)
   }, [cargarPublicos, enviar])
 
-  return <iframe ref={frame} className="legacy-frontend" src={`/legacy/${rutaInicial}.html${location.search}`} title="SKYBLOCK STUDIO" onLoad={enviar} />
+  const queryInterna = `${location.search}${location.search ? '&' : '?'}__embed=1`
+  return <iframe ref={frame} className="legacy-frontend" src={`/legacy/${rutaInicial}.html${queryInterna}`} title="SKYBLOCK STUDIO" onLoad={enviar} />
 }
