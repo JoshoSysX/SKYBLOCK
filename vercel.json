@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/legacy/catalogo.html",
+      "destination": "/catalogo",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

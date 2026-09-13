@@ -408,6 +408,7 @@ const seedVerificationCodes = [];
 
 const verificationModal = document.getElementById('verificationModal');
 const verificationCodeInput = document.getElementById('verificationCode');
+let verificationSavePending = false;
 const cleanText = (value) => String(value ?? '').replace(/[&<>'"]/g,(character) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
 const sha256 = async (text) => {
   const bytes = new TextEncoder().encode(text);
@@ -436,7 +437,8 @@ function openVerificationEditor(item = null) {
   document.getElementById('verificationId').value = item?.id || '';
   document.getElementById('verificationModalTitle').textContent = item ? 'Editar código' : 'Nuevo código';
   verificationCodeInput.required = !item;
-  verificationCodeInput.placeholder = item ? 'Déjalo vacío para conservar el código' : 'SKB-XXXX-XXXX';
+  verificationCodeInput.value = item?.code || '';
+  verificationCodeInput.placeholder = item ? (item?.code ? 'SKB-XXXX-XXXX' : 'Código anterior protegido: escribe uno nuevo') : 'SKB-XXXX-XXXX';
   document.getElementById('verificationSeries').value = item?.series || '';
   const collectionSelect = document.getElementById('verificationCollection');
   const names = collections.map((collection) => collection.name);
@@ -500,6 +502,7 @@ document.getElementById('verificationForm').addEventListener('submit',async (eve
   const item = {
     id:id || `verification-${Date.now()}`,
     hash,
+    code:rawCode || existing?.code || '',
     codeHint:rawCode ? `•••• ${rawCode.slice(-4)}` : existing.codeHint,
     series,
     collection:selectedCollection,
@@ -507,11 +510,11 @@ document.getElementById('verificationForm').addEventListener('submit',async (eve
     owner:document.getElementById('verificationOwner').value.trim() || 'Sin registrar',
     status:document.getElementById('verificationStatus').value
   };
-  const index = verificationCodes.findIndex((entry) => entry.id === item.id);
-  if (index >= 0) verificationCodes[index] = item; else verificationCodes.unshift(item);
+  const saveButton = event.currentTarget.querySelector('button[type="submit"]');
+  verificationSavePending = true;
+  saveButton.disabled = true;
+  status.textContent = 'Guardando código...';
   guardarEnSupabase('SKYBLOCK_ADMIN_GUARDAR_CODIGO',item);
-  saveVerificationCodes();renderVerificationCodes();closeVerificationEditor();
-  toast.textContent = index >= 0 ? 'Código actualizado.' : 'Código creado.';toast.classList.add('show');setTimeout(() => toast.classList.remove('show'),2600);
 });
 renderVerificationCodes();
 
@@ -535,6 +538,13 @@ window.addEventListener('message',(event) => {
     toast.textContent = event.data.mensaje;
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'),3000);
+    if (verificationSavePending) {
+      verificationSavePending = false;
+      const saveButton = document.querySelector('#verificationForm button[type="submit"]');
+      if (saveButton) saveButton.disabled = false;
+      if (event.data.ok) closeVerificationEditor();
+      else document.getElementById('verificationFormStatus').textContent = event.data.mensaje;
+    }
   }
 });
 parent.postMessage({tipo:'SKYBLOCK_SOLICITAR_DATOS'},location.origin);
