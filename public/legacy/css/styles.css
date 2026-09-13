@@ -3481,6 +3481,7 @@ footer[data-chapter] {
   text-align: center;
   background: #0e1113;
   border: 1px solid #52745b;
+  border-radius: 28px;
   color: #f4f4f1;
   transform: translateY(22px) scale(.98);
   transition: .45s var(--ease);
@@ -3496,6 +3497,7 @@ footer[data-chapter] {
   position: absolute;
   inset: 12px;
   border: 1px solid #ffffff0c;
+  border-radius: 18px;
   pointer-events: none
 }
 
