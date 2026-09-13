@@ -49,6 +49,14 @@ export default function App() {
   const frame = useRef<HTMLIFrameElement>(null)
   const [datos, setDatos] = useState<Datos>({ productos: [], colecciones: [], publicaciones: [] })
 
+  useEffect(() => {
+    const parametros = new URLSearchParams(location.search)
+    if (!parametros.has('__embed')) return
+    parametros.delete('__embed')
+    const consulta = parametros.toString()
+    history.replaceState(null, '', `${location.pathname}${consulta ? `?${consulta}` : ''}${location.hash}`)
+  }, [])
+
   const cargarPublicos = useCallback(async () => {
     const [p, c, posts] = await Promise.all([
       supabase.from('productos').select('*,tipo:tipos_producto(*),coleccion:colecciones(*),tallas:tallas_producto(*),imagenes(*)').in('estado', ['publicado', 'archivado']).order('creado_en', { ascending: false }),
@@ -392,6 +400,9 @@ export default function App() {
     addEventListener('message', recibir); void enviar(); return () => removeEventListener('message', recibir)
   }, [cargarPublicos, enviar])
 
-  const queryInterna = `${location.search}${location.search ? '&' : '?'}__embed=1`
+  const parametrosInternos = new URLSearchParams(location.search)
+  parametrosInternos.delete('__embed')
+  parametrosInternos.set('__embed', '1')
+  const queryInterna = `?${parametrosInternos.toString()}`
   return <iframe ref={frame} className="legacy-frontend" src={`/legacy/${rutaInicial}.html${queryInterna}`} title="SKYBLOCK STUDIO" onLoad={enviar} />
 }
