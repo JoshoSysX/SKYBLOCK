@@ -3654,7 +3654,8 @@ footer[data-chapter] {
   }
 
   .verify-copy h1 {
-    font-size: 22vw
+    font-size: clamp(58px,18vw,74px);
+    line-height: .82
   }
 
   .verify-lead {
@@ -3718,7 +3719,11 @@ footer[data-chapter] {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px
+  gap: 8px;
+  min-height: 92px;
+  padding: 16px;
+  border: 1px solid #ffffff24;
+  background: #ffffff03
 }
 
 .result-record:last-child {
