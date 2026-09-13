@@ -6067,6 +6067,7 @@ body.catalog-page,
 
 /* Verificador sin panel: símbolo, halo azul y buscador compacto. */
 .verify-console { overflow:visible;padding:0;border:0;box-shadow:none;backdrop-filter:none }
+.verify-console:after { display:none }
 .verify-console .verify-emblem { display:block;width:172px;height:auto;margin:0 auto 30px;filter:invert(1) grayscale(1) brightness(1.3) drop-shadow(0 0 28px #2d75b5a8);mix-blend-mode:screen;user-select:none }
 .verify-console { background:radial-gradient(ellipse 58% 52% at 50% 28%,#123b6870 0%,transparent 72%) }
 .verify-console .console-head,.verify-console>label,.verify-console .verify-hint { display:none }
