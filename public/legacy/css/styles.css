@@ -6070,6 +6070,7 @@ body.catalog-page,
 .verify-console .verify-search button { width:142px;min-width:142px;height:50px;margin:0;border:1px solid #ffffff5c;border-radius:999px;background:#1a1c21;color:#fff;padding:0 20px;justify-content:center;gap:12px }
 .verify-console .verify-search button:hover { background:#252a33 }
 .verify-console .verify-message:not(:empty) { color:#e9edf2;text-align:center }
+.verify-orbit span { display:none }
 
 @media(max-width:760px) {
   .verify-console .verify-emblem { width:128px;margin-bottom:24px }
