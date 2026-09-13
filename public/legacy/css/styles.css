@@ -3694,7 +3694,14 @@ footer[data-chapter] {
   }
 
   .verify-result {
-    padding: 55px 25px 32px
+    width: calc(100% - 12px);
+    max-height: calc(100svh - 32px);
+    padding: 55px 25px 32px;
+    border-radius: 24px
+  }
+
+  .verify-result:before {
+    border-radius: 15px
   }
 
   .verify-result h2 {
