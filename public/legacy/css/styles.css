@@ -3724,6 +3724,7 @@ footer[data-chapter] {
   padding: 16px;
   box-sizing: border-box;
   border: 1px solid #ffffff42;
+  border-radius: 10px;
   background: #ffffff03
 }
 
