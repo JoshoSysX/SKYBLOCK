@@ -1,10 +1,23 @@
 {
   "redirects": [
     {
-      "source": "/legacy/catalogo.html",
-      "destination": "/catalogo",
-      "permanent": true
-    }
+      "source": "/legacy/inicio.html",
+      "destination": "/",
+      "statusCode": 301
+    },
+    { "source": "/legacy/catalogo.html", "destination": "/catalogo", "statusCode": 301 },
+    { "source": "/legacy/colecciones.html", "destination": "/colecciones", "statusCode": 301 },
+    { "source": "/legacy/coleccion.html", "destination": "/coleccion", "statusCode": 301 },
+    { "source": "/legacy/producto.html", "destination": "/producto", "statusCode": 301 },
+    { "source": "/legacy/posts.html", "destination": "/posts", "statusCode": 301 },
+    { "source": "/legacy/nosotros.html", "destination": "/nosotros", "statusCode": 301 },
+    { "source": "/legacy/contacto.html", "destination": "/contacto", "statusCode": 301 },
+    { "source": "/legacy/privacidad.html", "destination": "/privacidad", "statusCode": 301 },
+    { "source": "/legacy/terminos.html", "destination": "/terminos", "statusCode": 301 },
+    { "source": "/legacy/verificar.html", "destination": "/verificar", "statusCode": 301 },
+    { "source": "/legacy/login.html", "destination": "/login", "statusCode": 301 },
+    { "source": "/legacy/registro.html", "destination": "/registro", "statusCode": 301 },
+    { "source": "/legacy/admin.html", "destination": "/admin", "statusCode": 301 }
   ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
