@@ -5523,14 +5523,12 @@ footer .footer-brand>.brand small {
 
 @media(max-width:900px) {
   .collections-page .collection-showcase { height:100svh;min-height:700px }
+  .collection-showcase { touch-action:pan-y }
   .collection-slide { top:53%;width:270px;height:500px }
   .collection-slide[data-position="-1"] { transform:translate(-50%,-50%) translateX(-245px) translateZ(-40px) rotateY(24deg) scale(.78) }
   .collection-slide[data-position="1"] { transform:translate(-50%,-50%) translateX(245px) translateZ(-40px) rotateY(-24deg) scale(.78) }
   .collection-slide[data-position="-2"],.collection-slide[data-position="2"] { opacity:0;pointer-events:none }
   .collection-active-copy { top:53% }
-  .collection-arrow { top:auto;bottom:27px }
-  .collection-arrow--prev { left:24px }
-  .collection-arrow--next { right:24px }
 }
 
 @media(max-width:600px) {
@@ -5547,7 +5545,6 @@ footer .footer-brand>.brand small {
   .collection-active-copy h2 { font-size:clamp(46px,14vw,61px);max-width:100% }
   .collection-active-copy p { font-size:10px;line-height:1.55 }
   .collection-active-copy .light-button { min-width:175px;height:46px }
-  .collection-arrow { width:43px;height:43px;bottom:22px }
   .collection-dots { bottom:42px }
   .collection-dots button { width:14px }
   .collection-dots button.active { width:28px }
