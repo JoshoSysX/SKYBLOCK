@@ -2,6 +2,10 @@
 
 Aplicación React, Vite y TypeScript para SKYBLOCK STUDIO. Conserva la dirección editorial del sitio HTML original y prepara Supabase Auth/PostgreSQL, Cloudinary y Resend sin incluir secretos.
 
+## Documentación
+
+La documentación funcional y técnica completa, incluyendo requisitos, arquitectura, base de datos, seguridad, despliegue, operación y diagramas, está disponible en [`docs/DOCUMENTACION_COMPLETA.md`](docs/DOCUMENTACION_COMPLETA.md).
+
 ## Inicio
 
 1. Usa Node.js 22 o superior.
