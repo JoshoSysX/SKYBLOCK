@@ -1,30 +1,400 @@
-(()=>{
-const money=(v,m='PEN')=>new Intl.NumberFormat('es-PE',{style:'currency',currency:m}).format(Number(v));
-const img=e=>[...(e.imagenes||[])].sort((a,b)=>a.posicion-b.posicion)[0]?.url_segura||'assets/image/skb-bloqueado.png';
-const esc=(v='')=>String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-const carouselImage=(url,width)=>{try{const u=new URL(url,location.href);if(u.hostname.endsWith('cloudinary.com')){const marker='/upload/';const at=u.pathname.indexOf(marker);if(at>=0)u.pathname=`${u.pathname.slice(0,at+marker.length)}f_auto,q_auto:good,c_limit,w_${width}/${u.pathname.slice(at+marker.length)}`}else if(u.hostname.endsWith('images.unsplash.com')){u.searchParams.set('auto','format');u.searchParams.set('fit','crop');u.searchParams.set('w',String(width));u.searchParams.set('q','82')}return u.href}catch{return url}};
-const carouselSrcSet=url=>[480,768].map(width=>`${carouselImage(url,width)} ${width}w`).join(',');
-function inicio(ps){ps=ps.filter(p=>p.estado==='publicado');const g=document.querySelector('.featured-grid');if(!g)return;if(!ps.length){g.innerHTML='<div class="catalog-empty-home"><h3>Aún no hay productos publicados.</h3><p>Las nuevas piezas aparecerán aquí cuando se publiquen desde el panel.</p></div>';return}g.innerHTML=ps.slice(0,4).map(p=>`<article class="product" tabindex="0" role="link"><div class="product-image"><img src="${esc(img(p))}" alt="${esc(p.imagenes?.[0]?.texto_alternativo||p.nombre)}"></div><div class="product-copy"><h3>${esc(p.tipo?.nombre||'Producto')} <span>${esc(p.nombre)}</span></h3><b>${money(p.precio,p.moneda)}</b><button class="buy">Ver producto <span>→</span></button></div></article>`).join('');[...g.children].forEach((card,i)=>{const abrir=()=>location.href=`producto.html?id=${encodeURIComponent(ps[i].slug)}`;card.onclick=abrir;card.onkeydown=e=>{if(e.key==='Enter')abrir()}})}
-function catalogo(ps){const g=document.getElementById('catalogGrid');if(!g)return;g.innerHTML=ps.map(p=>{const bloqueado=p.estado==='archivado';return `<article class="catalog-card${bloqueado?' catalog-card-blocked':''}" tabindex="${bloqueado?'-1':'0'}" ${bloqueado?'aria-disabled="true"':'role="link"'} data-blocked="${bloqueado}" data-slug="${esc(p.slug)}" data-category="${esc(p.tipo?.slug||'otros')}" data-name="${esc(p.nombre)}" data-price="${p.precio}"><div class="catalog-image">${bloqueado?'<span class="tag blocked-tag">Bloqueado</span>':p.es_limitado?'<span class="tag">Edición limitada</span>':''}<img src="${bloqueado?'assets/image/skb-bloqueado.png':esc(img(p))}" alt="${bloqueado?`Producto ${esc(p.nombre)} bloqueado temporalmente`:esc(p.imagenes?.[0]?.texto_alternativo||p.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(p.nombre)}</h2><p>${bloqueado?'Temporalmente no disponible':esc(p.descripcion)}</p></div><strong>${money(p.precio,p.moneda)}</strong><button class="quick-add" ${bloqueado?'disabled':''}>${bloqueado?'No disponible':'Ver producto'} <span>${bloqueado?'×':'→'}</span></button></div></article>`}).join('');const cards=[...g.querySelectorAll('.catalog-card')],search=document.getElementById('searchInput'),sort=document.getElementById('sortSelect'),count=document.getElementById('resultCount'),empty=document.getElementById('emptyState');let cat='all';const update=()=>{const q=search.value.trim().toLowerCase();let n=0;cards.forEach(t=>{const show=(cat==='all'||t.dataset.category===cat)&&t.dataset.name.toLowerCase().includes(q);t.classList.toggle('hidden',!show);if(show)n++});count.textContent=n;empty.classList.toggle('show',n===0)};document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{cat=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));update()});search.oninput=update;sort.onchange=()=>{const mode=sort.value;cards.sort((a,b)=>mode==='low'?+a.dataset.price-+b.dataset.price:mode==='high'?+b.dataset.price-+a.dataset.price:mode==='name'?a.dataset.name.localeCompare(b.dataset.name,'es'):0).forEach(t=>g.appendChild(t))};cards.forEach(t=>{if(t.dataset.blocked==='true')return;const open=()=>location.href=`producto.html?id=${encodeURIComponent(t.dataset.slug)}`;t.onclick=open;t.onkeydown=e=>{if(e.key==='Enter')open()}});update()}
-function producto(ps){if(!document.getElementById('productName'))return;const firstButton=thumbOne.closest('button'),secondButton=document.getElementById('thumbTwoButton'),thirdButton=document.getElementById('thumbThreeButton'),gallery=document.querySelector('.product-main-image'),galleryWrap=document.querySelector('.product-gallery'),thumbs=document.querySelector('.product-thumbs'),p=ps.find(x=>x.slug===new URLSearchParams(location.search).get('id'));if(!p){document.title='Producto no encontrado | SKYBLOCK STUDIO';productName.textContent='Producto no encontrado';productPrice.textContent='';productDescription.textContent='Este producto no existe, fue eliminado o ya no está publicado.';productDetails.textContent='';productTag.textContent='Catálogo';productImage.hidden=true;productImage.removeAttribute('src');thumbOne.removeAttribute('src');thumbTwo.removeAttribute('src');thumbThree.removeAttribute('src');firstButton.hidden=true;secondButton.hidden=true;thirdButton.hidden=true;thumbs.hidden=true;galleryWrap.classList.add('single-image');sizePicker.innerHTML='';sizeBlock.hidden=true;addToCart.hidden=true;gallery.classList.add('image-unavailable');return}document.title=`${p.nombre} | SKYBLOCK STUDIO`;productName.textContent=p.nombre;productPrice.textContent=money(p.precio,p.moneda);productDescription.textContent=p.descripcion||'';productDetails.textContent=p.materiales||'';productTag.textContent=p.es_limitado?'Edición limitada':(p.tipo?.nombre||'SKYBLOCK');sizeBlock.hidden=false;addToCart.hidden=false;const is=[...(p.imagenes||[])].filter(i=>i.url_segura).sort((a,b)=>a.posicion-b.posicion).slice(0,3),main=is[0],detail=is[1],secondary=is[2];thumbs.hidden=is.length<2;galleryWrap.classList.toggle('single-image',is.length<2);const unavailable=()=>{productImage.hidden=true;productImage.removeAttribute('src');firstButton.hidden=true;gallery.classList.add('image-unavailable')};if(main){productImage.onload=()=>{productImage.hidden=false;gallery.classList.remove('image-unavailable')};productImage.onerror=unavailable;productImage.src=main.url_segura;productImage.alt=main.texto_alternativo||p.nombre;thumbOne.src=main.url_segura;thumbOne.alt=`Vista principal de ${p.nombre}`;firstButton.hidden=false}else unavailable();if(detail){thumbTwo.src=detail.url_segura;thumbTwo.alt=`Vista secundaria 1 de ${p.nombre}`;secondButton.hidden=false}else{thumbTwo.removeAttribute('src');secondButton.hidden=true}if(secondary){thumbThree.src=secondary.url_segura;thumbThree.alt=`Vista secundaria 2 de ${p.nombre}`;thirdButton.hidden=false}else{thumbThree.removeAttribute('src');thirdButton.hidden=true}sizePicker.innerHTML='';(p.tallas||[]).forEach(t=>{const b=document.createElement('button');b.textContent=t.talla;b.title=t.stock>0?`${t.stock} disponible(s)`:'Consultar reposición';b.onclick=()=>{sizePicker.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('sizeError')?.classList.remove('show')};sizePicker.appendChild(b)});if(!(p.tallas||[]).length)sizePicker.innerHTML='<span class="size-empty">Sin tallas configuradas</span>'}
-function detalle(cs,ps){if(!document.getElementById('collectionTitle'))return;const c=cs.find(x=>x.slug===new URLSearchParams(location.search).get('id'));if(!c)return;const items=ps.filter(p=>p.coleccion_id===c.id&&p.estado==='publicado');document.title=`${c.nombre} | SKYBLOCK STUDIO`;collectionHero.src=img(c);collectionHero.alt=`Portada de ${c.nombre}`;collectionEdition.textContent=`Colección / ${c.numero_edicion}`;collectionTitle.textContent=`SKB — ${c.nombre}`;collectionTagline.textContent=c.descripcion;storyHeading.textContent=c.nombre;storyOne.textContent=c.historia;storyTwo.textContent='Una colección construida por SKYBLOCK STUDIO en Tarapoto.';productCount.textContent=items.length;collectionProductGrid.innerHTML=items.map(p=>`<a class="catalog-card" href="producto.html?id=${encodeURIComponent(p.slug)}"><div class="catalog-image"><span class="tag">Edición ${esc(c.numero_edicion)}</span><img src="${esc(img(p))}" alt="${esc(p.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(p.nombre)}</h2><p>${esc(p.descripcion)}</p></div><strong>${money(p.precio,p.moneda)}</strong><span class="collection-buy">Ver prenda <b>→</b></span></div></a>`).join('')}
-function colecciones(cs){
-  const tr=document.getElementById('collectionTrack');if(!tr)return;
-  const upcoming={nombre:'Próximamente',slug:'',imagenes:[{url_segura:'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=90',posicion:0}]};
-  cs=[...cs,upcoming];document.body.classList.remove('is-empty');
-  tr.innerHTML=cs.map((c,i)=>{const source=img(c);return `<article class="collection-slide ${c.slug?'':'collection-slide--soon'}" data-index="${i}" data-name="${esc(c.nombre)}" data-href="${c.slug?`coleccion.html?id=${encodeURIComponent(c.slug)}`:'#'}" data-image="${esc(source)}"><img src="${esc(carouselImage(source,768))}" srcset="${esc(carouselSrcSet(source))}" sizes="(max-width:600px) 72vw, (max-width:900px) 270px, 330px" loading="${i===0?'eager':'lazy'}" fetchpriority="${i===0?'high':'low'}" decoding="async" alt="${esc(c.nombre)}"></article>`}).join('');
-  const ss=[...tr.children],bg=document.getElementById('collectionCarouselBg'),n=document.getElementById('activeCollectionName'),l=document.getElementById('activeCollectionLink'),ct=document.getElementById('collectionCounter'),ds=document.getElementById('collectionDots'),carousel=document.getElementById('collectionCarousel'),next=document.getElementById('collectionNext'),prev=document.getElementById('collectionPrev'),multiple=ss.length>1,preloaded=new Set();
-  let a=0,gesture=null,ignoreClickUntil=0,dragFrame=0,pendingDragX=0;
-  ds.innerHTML='';next.disabled=!multiple;prev.disabled=!multiple;
-  const preload=x=>{const index=(x+ss.length)%ss.length,source=ss[index]?.dataset.image;if(!source||preloaded.has(source))return;preloaded.add(source);const image=new Image();image.src=carouselImage(source,768)};
-  const renderDrag=()=>{dragFrame=0;tr.style.setProperty('--collection-swipe-x',`${pendingDragX}px`)};
-  const queueDrag=x=>{pendingDragX=x;if(!dragFrame)dragFrame=requestAnimationFrame(renderDrag)};
-  const up=x=>{a=(x+ss.length)%ss.length;ss.forEach((s,i)=>{let p=i-a;if(p>Math.floor(ss.length/2))p-=ss.length;if(p<-Math.floor(ss.length/2))p+=ss.length;s.dataset.position=p;s.classList.toggle('is-active',p===0)});const s=ss[a];n.textContent=s.dataset.name;l.href=s.dataset.href;const soon=s.dataset.href==='#';l.innerHTML=soon?'Próximamente':'Ver colección <b>→</b>';l.classList.toggle('is-disabled',soon);l.setAttribute('aria-disabled',String(soon));l.onclick=soon?e=>e.preventDefault():null;bg.src=carouselImage(s.dataset.image,1280);ct.textContent=`${String(a+1).padStart(2,'0')} — ${String(ss.length).padStart(2,'0')}`;[...ds.children].forEach((x,i)=>x.classList.toggle('active',i===a));preload(a);preload(a+1);preload(a-1)};
-  ss.forEach((s,i)=>{if(multiple){const b=document.createElement('button');b.onclick=()=>up(i);ds.appendChild(b);s.onclick=()=>{if(Date.now()>=ignoreClickUntil)up(i)}}});
-  next.onclick=multiple?()=>up(a+1):null;prev.onclick=multiple?()=>up(a-1):null;
-  if(carousel?._collectionKeyboardHandler)document.removeEventListener('keydown',carousel._collectionKeyboardHandler);
-  if(multiple&&carousel){const finish=e=>{if(!gesture||e.pointerId!==gesture.id)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y,wasDragging=gesture.dragging;if(dragFrame)cancelAnimationFrame(dragFrame);dragFrame=0;tr.classList.remove('is-dragging');tr.style.removeProperty('--collection-swipe-x');gesture=null;if(wasDragging){ignoreClickUntil=Date.now()+450;if(Math.abs(dx)>=38&&Math.abs(dx)>Math.abs(dy))up(a+(dx<0?1:-1))}};carousel.onpointerdown=e=>{if(e.pointerType!=='touch')return;gesture={id:e.pointerId,x:e.clientX,y:e.clientY,dragging:false};carousel.setPointerCapture?.(e.pointerId)};carousel.onpointermove=e=>{if(!gesture||e.pointerId!==gesture.id)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;if(!gesture.dragging&&Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)){gesture.dragging=true;tr.classList.add('is-dragging')}if(gesture.dragging)queueDrag(Math.max(-120,Math.min(120,dx)))};carousel.onpointerup=finish;carousel.onpointercancel=finish;carousel._collectionKeyboardHandler=e=>{if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName||''))return;if(e.key==='ArrowLeft'){e.preventDefault();up(a-1)}if(e.key==='ArrowRight'){e.preventDefault();up(a+1)}};document.addEventListener('keydown',carousel._collectionKeyboardHandler)}
-  up(0)
-}
-addEventListener('message',e=>{if(e.origin!==location.origin||e.data?.tipo!=='SKYBLOCK_DATOS_PUBLICOS')return;const{productos=[],colecciones:cs=[]}=e.data.datos||{};inicio(productos);catalogo(productos);producto(productos);colecciones(cs);detalle(cs,productos)});parent.postMessage({tipo:'SKYBLOCK_SOLICITAR_DATOS'},location.origin);
-})();
+;(() => {
+  const money = (v, m = 'PEN') =>
+    new Intl.NumberFormat('es-PE', { style: 'currency', currency: m }).format(Number(v))
+  const img = (e) =>
+    [...(e.imagenes || [])].sort((a, b) => a.posicion - b.posicion)[0]?.url_segura ||
+    'assets/image/skb-bloqueado.png'
+  const esc = (v = '') =>
+    String(v).replace(
+      /[&<>'"]/g,
+      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c],
+    )
+  const carouselImage = (url, width) => {
+    try {
+      const u = new URL(url, location.href)
+      if (u.hostname.endsWith('cloudinary.com')) {
+        const marker = '/upload/'
+        const at = u.pathname.indexOf(marker)
+        if (at >= 0)
+          u.pathname = `${u.pathname.slice(0, at + marker.length)}f_auto,q_auto:good,c_limit,w_${width}/${u.pathname.slice(at + marker.length)}`
+      } else if (u.hostname.endsWith('images.unsplash.com')) {
+        u.searchParams.set('auto', 'format')
+        u.searchParams.set('fit', 'crop')
+        u.searchParams.set('w', String(width))
+        u.searchParams.set('q', '82')
+      }
+      return u.href
+    } catch {
+      return url
+    }
+  }
+  const carouselSrcSet = (url) =>
+    [480, 768].map((width) => `${carouselImage(url, width)} ${width}w`).join(',')
+  function inicio(ps) {
+    ps = ps.filter((p) => p.estado === 'publicado')
+    const g = document.querySelector('.featured-grid')
+    if (!g) return
+    if (!ps.length) {
+      g.innerHTML =
+        '<div class="catalog-empty-home"><h3>Aún no hay productos publicados.</h3><p>Las nuevas piezas aparecerán aquí cuando se publiquen desde el panel.</p></div>'
+      return
+    }
+    g.innerHTML = ps
+      .slice(0, 4)
+      .map(
+        (p) =>
+          `<article class="product" tabindex="0" role="link"><div class="product-image"><img src="${esc(img(p))}" alt="${esc(p.imagenes?.[0]?.texto_alternativo || p.nombre)}"></div><div class="product-copy"><h3>${esc(p.tipo?.nombre || 'Producto')} <span>${esc(p.nombre)}</span></h3><b>${money(p.precio, p.moneda)}</b><button class="buy">Ver producto <span>→</span></button></div></article>`,
+      )
+      .join('')
+    ;[...g.children].forEach((card, i) => {
+      const abrir = () => (location.href = `producto.html?id=${encodeURIComponent(ps[i].slug)}`)
+      card.onclick = abrir
+      card.onkeydown = (e) => {
+        if (e.key === 'Enter') abrir()
+      }
+    })
+  }
+  function catalogo(ps) {
+    const g = document.getElementById('catalogGrid')
+    if (!g) return
+    g.innerHTML = ps
+      .map((p) => {
+        const bloqueado = p.estado === 'archivado'
+        return `<article class="catalog-card${bloqueado ? ' catalog-card-blocked' : ''}" tabindex="${bloqueado ? '-1' : '0'}" ${bloqueado ? 'aria-disabled="true"' : 'role="link"'} data-blocked="${bloqueado}" data-slug="${esc(p.slug)}" data-category="${esc(p.tipo?.slug || 'otros')}" data-name="${esc(p.nombre)}" data-price="${p.precio}"><div class="catalog-image">${bloqueado ? '<span class="tag blocked-tag">Bloqueado</span>' : p.es_limitado ? '<span class="tag">Edición limitada</span>' : ''}<img src="${bloqueado ? 'assets/image/skb-bloqueado.png' : esc(img(p))}" alt="${bloqueado ? `Producto ${esc(p.nombre)} bloqueado temporalmente` : esc(p.imagenes?.[0]?.texto_alternativo || p.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(p.nombre)}</h2><p>${bloqueado ? 'Temporalmente no disponible' : esc(p.descripcion)}</p></div><strong>${money(p.precio, p.moneda)}</strong><button class="quick-add" ${bloqueado ? 'disabled' : ''}>${bloqueado ? 'No disponible' : 'Ver producto'} <span>${bloqueado ? '×' : '→'}</span></button></div></article>`
+      })
+      .join('')
+    const cards = [...g.querySelectorAll('.catalog-card')],
+      search = document.getElementById('searchInput'),
+      sort = document.getElementById('sortSelect'),
+      count = document.getElementById('resultCount'),
+      empty = document.getElementById('emptyState')
+    let cat = 'all'
+    const update = () => {
+      const q = search.value.trim().toLowerCase()
+      let n = 0
+      cards.forEach((t) => {
+        const show = (cat === 'all' || t.dataset.category === cat) && t.dataset.name.toLowerCase().includes(q)
+        t.classList.toggle('hidden', !show)
+        if (show) n++
+      })
+      count.textContent = n
+      empty.classList.toggle('show', n === 0)
+    }
+    document.querySelectorAll('[data-filter]').forEach(
+      (b) =>
+        (b.onclick = () => {
+          cat = b.dataset.filter
+          document.querySelectorAll('[data-filter]').forEach((x) => x.classList.toggle('active', x === b))
+          update()
+        }),
+    )
+    search.oninput = update
+    sort.onchange = () => {
+      const mode = sort.value
+      cards
+        .sort((a, b) =>
+          mode === 'low'
+            ? +a.dataset.price - +b.dataset.price
+            : mode === 'high'
+              ? +b.dataset.price - +a.dataset.price
+              : mode === 'name'
+                ? a.dataset.name.localeCompare(b.dataset.name, 'es')
+                : 0,
+        )
+        .forEach((t) => g.appendChild(t))
+    }
+    cards.forEach((t) => {
+      if (t.dataset.blocked === 'true') return
+      const open = () => (location.href = `producto.html?id=${encodeURIComponent(t.dataset.slug)}`)
+      t.onclick = open
+      t.onkeydown = (e) => {
+        if (e.key === 'Enter') open()
+      }
+    })
+    update()
+  }
+  function producto(ps) {
+    if (!document.getElementById('productName')) return
+    const firstButton = thumbOne.closest('button'),
+      secondButton = document.getElementById('thumbTwoButton'),
+      thirdButton = document.getElementById('thumbThreeButton'),
+      gallery = document.querySelector('.product-main-image'),
+      galleryWrap = document.querySelector('.product-gallery'),
+      thumbs = document.querySelector('.product-thumbs'),
+      edition = document.getElementById('productEdition'),
+      detailsSection = document.getElementById('productDetailsSection'),
+      p = ps.find((x) => x.slug === new URLSearchParams(location.search).get('id'))
+    if (!p) {
+      document.title = 'Producto no encontrado | SKYBLOCK STUDIO'
+      productName.textContent = 'Producto no encontrado'
+      productPrice.textContent = ''
+      productDescription.textContent = 'Este producto no existe, fue eliminado o ya no está publicado.'
+      productDetails.textContent = ''
+      if (edition) edition.hidden = true
+      if (detailsSection) detailsSection.hidden = true
+      productTag.textContent = 'Catálogo'
+      productImage.hidden = true
+      productImage.removeAttribute('src')
+      thumbOne.removeAttribute('src')
+      thumbTwo.removeAttribute('src')
+      thumbThree.removeAttribute('src')
+      firstButton.hidden = true
+      secondButton.hidden = true
+      thirdButton.hidden = true
+      thumbs.hidden = true
+      galleryWrap.classList.add('single-image')
+      sizePicker.innerHTML = ''
+      sizeBlock.hidden = true
+      addToCart.hidden = true
+      gallery.classList.add('image-unavailable')
+      return
+    }
+    document.title = `${p.nombre} | SKYBLOCK STUDIO`
+    productName.textContent = p.nombre
+    productPrice.textContent = money(p.precio, p.moneda)
+    productDescription.textContent = p.descripcion || ''
+    productDetails.textContent = p.materiales || ''
+    if (detailsSection) detailsSection.hidden = !String(p.materiales || '').trim()
+    if (edition) {
+      edition.hidden = !p.es_limitado
+      edition.textContent = p.es_limitado
+        ? `Edición / ${p.coleccion?.numero_edicion || '001'} · No restock`
+        : ''
+    }
+    productTag.textContent = p.es_limitado ? 'Edición limitada' : p.tipo?.nombre || 'SKYBLOCK'
+    sizeBlock.hidden = false
+    addToCart.hidden = false
+    const is = [...(p.imagenes || [])]
+        .filter((i) => i.url_segura)
+        .sort((a, b) => a.posicion - b.posicion)
+        .slice(0, 3),
+      main = is[0],
+      detail = is[1],
+      secondary = is[2]
+    thumbs.hidden = is.length < 2
+    galleryWrap.classList.toggle('single-image', is.length < 2)
+    const unavailable = () => {
+      productImage.hidden = true
+      productImage.removeAttribute('src')
+      firstButton.hidden = true
+      gallery.classList.add('image-unavailable')
+    }
+    if (main) {
+      productImage.onload = () => {
+        productImage.hidden = false
+        gallery.classList.remove('image-unavailable')
+      }
+      productImage.onerror = unavailable
+      productImage.src = main.url_segura
+      productImage.alt = main.texto_alternativo || p.nombre
+      thumbOne.src = main.url_segura
+      thumbOne.alt = `Vista principal de ${p.nombre}`
+      firstButton.hidden = false
+    } else unavailable()
+    if (detail) {
+      thumbTwo.src = detail.url_segura
+      thumbTwo.alt = `Vista secundaria 1 de ${p.nombre}`
+      secondButton.hidden = false
+    } else {
+      thumbTwo.removeAttribute('src')
+      secondButton.hidden = true
+    }
+    if (secondary) {
+      thumbThree.src = secondary.url_segura
+      thumbThree.alt = `Vista secundaria 2 de ${p.nombre}`
+      thirdButton.hidden = false
+    } else {
+      thumbThree.removeAttribute('src')
+      thirdButton.hidden = true
+    }
+    sizePicker.innerHTML = ''
+    ;(p.tallas || []).forEach((t) => {
+      const b = document.createElement('button')
+      b.textContent = t.talla
+      b.title = t.stock > 0 ? `${t.stock} disponible(s)` : 'Consultar reposición'
+      b.onclick = () => {
+        sizePicker.querySelectorAll('button').forEach((x) => x.classList.remove('active'))
+        b.classList.add('active')
+        document.getElementById('sizeError')?.classList.remove('show')
+      }
+      sizePicker.appendChild(b)
+    })
+    if (!(p.tallas || []).length)
+      sizePicker.innerHTML = '<span class="size-empty">Sin tallas configuradas</span>'
+  }
+  function detalle(cs, ps) {
+    if (!document.getElementById('collectionTitle')) return
+    const c = cs.find((x) => x.slug === new URLSearchParams(location.search).get('id'))
+    if (!c) return
+    const items = ps.filter((p) => p.coleccion_id === c.id && p.estado === 'publicado')
+    document.title = `${c.nombre} | SKYBLOCK STUDIO`
+    collectionHero.src = img(c)
+    collectionHero.alt = `Portada de ${c.nombre}`
+    collectionEdition.textContent = `Colección / ${c.numero_edicion}`
+    collectionTitle.textContent = `SKB — ${c.nombre}`
+    collectionTagline.textContent = c.descripcion
+    storyHeading.textContent = c.nombre
+    storyOne.textContent = c.historia
+    storyTwo.textContent = 'Una colección construida por SKYBLOCK STUDIO en Tarapoto.'
+    productCount.textContent = items.length
+    collectionProductGrid.innerHTML = items
+      .map(
+        (p) =>
+          `<a class="catalog-card" href="producto.html?id=${encodeURIComponent(p.slug)}"><div class="catalog-image"><span class="tag">Edición ${esc(c.numero_edicion)}</span><img src="${esc(img(p))}" alt="${esc(p.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(p.nombre)}</h2><p>${esc(p.descripcion)}</p></div><strong>${money(p.precio, p.moneda)}</strong><span class="collection-buy">Ver prenda <b>→</b></span></div></a>`,
+      )
+      .join('')
+  }
+  function colecciones(cs) {
+    const tr = document.getElementById('collectionTrack')
+    if (!tr) return
+    const upcoming = {
+      nombre: 'Próximamente',
+      slug: '',
+      imagenes: [
+        {
+          url_segura:
+            'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=90',
+          posicion: 0,
+        },
+      ],
+    }
+    cs = [...cs, upcoming]
+    document.body.classList.remove('is-empty')
+    tr.innerHTML = cs
+      .map((c, i) => {
+        const source = img(c)
+        return `<article class="collection-slide ${c.slug ? '' : 'collection-slide--soon'}" data-index="${i}" data-name="${esc(c.nombre)}" data-href="${c.slug ? `coleccion.html?id=${encodeURIComponent(c.slug)}` : '#'}" data-image="${esc(source)}"><img src="${esc(carouselImage(source, 768))}" srcset="${esc(carouselSrcSet(source))}" sizes="(max-width:600px) 72vw, (max-width:900px) 270px, 330px" loading="${i === 0 ? 'eager' : 'lazy'}" fetchpriority="${i === 0 ? 'high' : 'low'}" decoding="async" alt="${esc(c.nombre)}"></article>`
+      })
+      .join('')
+    const ss = [...tr.children],
+      bg = document.getElementById('collectionCarouselBg'),
+      n = document.getElementById('activeCollectionName'),
+      l = document.getElementById('activeCollectionLink'),
+      ct = document.getElementById('collectionCounter'),
+      ds = document.getElementById('collectionDots'),
+      carousel = document.getElementById('collectionCarousel'),
+      next = document.getElementById('collectionNext'),
+      prev = document.getElementById('collectionPrev'),
+      multiple = ss.length > 1,
+      preloaded = new Set()
+    let a = 0,
+      gesture = null,
+      ignoreClickUntil = 0,
+      dragFrame = 0,
+      pendingDragX = 0
+    ds.innerHTML = ''
+    next.disabled = !multiple
+    prev.disabled = !multiple
+    const preload = (x) => {
+      const index = (x + ss.length) % ss.length,
+        source = ss[index]?.dataset.image
+      if (!source || preloaded.has(source)) return
+      preloaded.add(source)
+      const image = new Image()
+      image.src = carouselImage(source, 768)
+    }
+    const renderDrag = () => {
+      dragFrame = 0
+      tr.style.setProperty('--collection-swipe-x', `${pendingDragX}px`)
+    }
+    const queueDrag = (x) => {
+      pendingDragX = x
+      if (!dragFrame) dragFrame = requestAnimationFrame(renderDrag)
+    }
+    const up = (x) => {
+      a = (x + ss.length) % ss.length
+      ss.forEach((s, i) => {
+        let p = i - a
+        if (p > Math.floor(ss.length / 2)) p -= ss.length
+        if (p < -Math.floor(ss.length / 2)) p += ss.length
+        s.dataset.position = p
+        s.classList.toggle('is-active', p === 0)
+      })
+      const s = ss[a]
+      n.textContent = s.dataset.name
+      l.href = s.dataset.href
+      const soon = s.dataset.href === '#'
+      l.innerHTML = soon ? 'Próximamente' : 'Ver colección <b>→</b>'
+      l.classList.toggle('is-disabled', soon)
+      l.setAttribute('aria-disabled', String(soon))
+      l.onclick = soon ? (e) => e.preventDefault() : null
+      bg.src = carouselImage(s.dataset.image, 1280)
+      ct.textContent = `${String(a + 1).padStart(2, '0')} — ${String(ss.length).padStart(2, '0')}`
+      ;[...ds.children].forEach((x, i) => x.classList.toggle('active', i === a))
+      preload(a)
+      preload(a + 1)
+      preload(a - 1)
+    }
+    ss.forEach((s, i) => {
+      if (multiple) {
+        const b = document.createElement('button')
+        b.onclick = () => up(i)
+        ds.appendChild(b)
+        s.onclick = () => {
+          if (Date.now() >= ignoreClickUntil) up(i)
+        }
+      }
+    })
+    next.onclick = multiple ? () => up(a + 1) : null
+    prev.onclick = multiple ? () => up(a - 1) : null
+    if (carousel?._collectionKeyboardHandler)
+      document.removeEventListener('keydown', carousel._collectionKeyboardHandler)
+    if (multiple && carousel) {
+      const finish = (e) => {
+        if (!gesture || e.pointerId !== gesture.id) return
+        const dx = e.clientX - gesture.x,
+          dy = e.clientY - gesture.y,
+          wasDragging = gesture.dragging
+        if (dragFrame) cancelAnimationFrame(dragFrame)
+        dragFrame = 0
+        tr.classList.remove('is-dragging')
+        tr.style.removeProperty('--collection-swipe-x')
+        gesture = null
+        if (wasDragging) {
+          ignoreClickUntil = Date.now() + 450
+          if (Math.abs(dx) >= 38 && Math.abs(dx) > Math.abs(dy)) up(a + (dx < 0 ? 1 : -1))
+        }
+      }
+      carousel.onpointerdown = (e) => {
+        if (e.pointerType !== 'touch') return
+        gesture = { id: e.pointerId, x: e.clientX, y: e.clientY, dragging: false }
+        carousel.setPointerCapture?.(e.pointerId)
+      }
+      carousel.onpointermove = (e) => {
+        if (!gesture || e.pointerId !== gesture.id) return
+        const dx = e.clientX - gesture.x,
+          dy = e.clientY - gesture.y
+        if (!gesture.dragging && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) {
+          gesture.dragging = true
+          tr.classList.add('is-dragging')
+        }
+        if (gesture.dragging) queueDrag(Math.max(-120, Math.min(120, dx)))
+      }
+      carousel.onpointerup = finish
+      carousel.onpointercancel = finish
+      carousel._collectionKeyboardHandler = (e) => {
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || '')) return
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault()
+          up(a - 1)
+        }
+        if (e.key === 'ArrowRight') {
+          e.preventDefault()
+          up(a + 1)
+        }
+      }
+      document.addEventListener('keydown', carousel._collectionKeyboardHandler)
+    }
+    up(0)
+  }
+  addEventListener('message', (e) => {
+    if (e.origin !== location.origin || e.data?.tipo !== 'SKYBLOCK_DATOS_PUBLICOS') return
+    const { productos = [], colecciones: cs = [] } = e.data.datos || {}
+    inicio(productos)
+    catalogo(productos)
+    producto(productos)
+    colecciones(cs)
+    detalle(cs, productos)
+  })
+  parent.postMessage({ tipo: 'SKYBLOCK_SOLICITAR_DATOS' }, location.origin)
+})()

@@ -28,7 +28,7 @@
         </div>
       </div>
       <div class="product-info">
-        <p class="product-edition">Edición / 001 · No restock</p>
+        <p class="product-edition" id="productEdition" hidden></p>
         <h1 id="productName"></h1>
         <p class="product-price" id="productPrice"></p>
         <p class="product-description" id="productDescription"></p>
@@ -39,8 +39,8 @@
         </div>
         <button class="add-to-cart" id="addToCart" hidden>Consultar disponibilidad <span>→</span></button>
         <div class="product-perks"><p>◇ Envíos a todo Tarapoto</p><p>□ Pagos seguros y protegidos</p></div>
-        <details open><summary>Detalles y materiales</summary><p id="productDetails">Algodón Jersey 20/1, Cortes deportivos, Bordado frontal central <strong>SKB</strong>.</p></details>
-        <details><summary>Disponibilidad</summary><p>Consulta directamente con SKYBLOCK STUDIO para conocer tallas, unidades disponibles y detalles del lanzamiento.</p></details>
+        <details id="productDetailsSection" open><summary>Detalles y materiales</summary><p id="productDetails"></p></details>
+        <details><summary>Disponibilidad</summary><p>Consulta directamente con SKYBLOCK STUDIO para conocer tallas, unidades disponibles y detalles del producto.</p></details>
       </div>
     </section>
 
@@ -48,7 +48,6 @@
   </main>
   <div class="toast" id="toast" role="status"></div>
   <script src="js/producto.js"></script><script src="js/supabase-bridge.js"></script>
-  <script>addEventListener('message',event=>{if(event.origin===location.origin&&event.data?.tipo==='SKYBLOCK_DATOS_PUBLICOS'&&document.getElementById('productName')?.textContent!=='Producto no encontrado')document.getElementById('productDetails').innerHTML='Algodón Jersey 20/1, Cortes deportivos, Bordado frontal central <strong>SKB</strong>.'})</script>
     <footer class="site-footer">
     <div class="footer-brand"><a class="brand" href="inicio.html">SKYBLOCK<small>STUDIO</small></a><p>CONSTRUYE. CREA. DOMINA.</p><div class="social">◎ ♪ ▷ ◇</div></div>
     <div class="footer-col"><h4>Tienda</h4><a href="catalogo.html">Todos los productos</a></div>

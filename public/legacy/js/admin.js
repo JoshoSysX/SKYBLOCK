@@ -134,6 +134,7 @@ function openProductEditor(product = null) {
   productCollectionSelect.value = product?.collection || collectionNames[0] || '';
   document.getElementById('productPrice').value = product?.price ?? '';
   document.getElementById('productDescription').value = product?.description || '';
+  document.getElementById('productMaterials').value = product?.materials || '';
   document.getElementById('productLimited').checked = Boolean(product?.limited);
   document.getElementById('productLimitedUnits').value = product?.limitedUnits || '';
   document.getElementById('productLimitedUnitsField').hidden = !product?.limited;
@@ -295,6 +296,7 @@ document.getElementById('adminProductForm').addEventListener('submit', (event) =
     collection:document.getElementById('productCollection').value,
     price:Number(document.getElementById('productPrice').value),
     description:document.getElementById('productDescription').value.trim(),
+    materials:document.getElementById('productMaterials').value.trim(),
     sizes:selectedSizes,
     limited:isLimited,
     limitedUnits:isLimited ? limitedUnits : null,

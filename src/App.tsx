@@ -9,6 +9,18 @@ const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const paginas = new Set(['inicio','catalogo','colecciones','coleccion','producto','posts','nosotros','contacto','privacidad','terminos','verificar','login','registro','admin'])
 const rutaInicial = paginas.has(location.pathname.split('/').filter(Boolean)[0] || '') ? location.pathname.split('/').filter(Boolean)[0] : 'inicio'
+const urlLegacy = (pagina:string, search = '') => {
+  const parametros = new URLSearchParams(search)
+  parametros.delete('__embed')
+  parametros.set('__embed', '1')
+  return `/legacy/${pagina}.html?${parametros.toString()}`
+}
+const urlPublica = (pagina:string, search = '') => {
+  const parametros = new URLSearchParams(search)
+  parametros.delete('__embed')
+  const query = parametros.toString()
+  return `/${pagina}${query ? `?${query}` : ''}`
+}
 const SEO:Record<string,{title:string;description:string;path:string;index?:boolean}> = {
   inicio:{title:'SKYBLOCK STUDIO | Ropa urbana de edición limitada',description:'SKYBLOCK STUDIO, marca de ropa urbana de ediciones limitadas creada en Tarapoto, Perú. Del bloque para el cielo.',path:'/'},
   catalogo:{title:'Catálogo de ropa urbana | SKYBLOCK STUDIO',description:'Descubre prendas urbanas, diseños exclusivos y ediciones limitadas de SKYBLOCK STUDIO en Tarapoto.',path:'/catalogo'},
@@ -57,9 +69,21 @@ export default function App() {
     history.replaceState(null, '', `${location.pathname}${consulta ? `?${consulta}` : ''}${location.hash}`)
   }, [])
 
+  useEffect(() => {
+    const restaurarRuta = () => {
+      const pagina = location.pathname.split('/').filter(Boolean)[0] || 'inicio'
+      if (!paginas.has(pagina) || !frame.current) return
+      const destino = urlLegacy(pagina, location.search)
+      const actual = `${frame.current.contentWindow?.location.pathname || ''}${frame.current.contentWindow?.location.search || ''}`
+      if (actual !== destino) frame.current.src = destino
+    }
+    addEventListener('popstate', restaurarRuta)
+    return () => removeEventListener('popstate', restaurarRuta)
+  }, [])
+
   const cargarPublicos = useCallback(async () => {
     const [p, c, posts] = await Promise.all([
-      supabase.from('productos').select('*,tipo:tipos_producto(*),coleccion:colecciones(*),tallas:tallas_producto(*),imagenes(*)').in('estado', ['publicado', 'archivado']).order('creado_en', { ascending: false }),
+      supabase.from('productos').select('*,tipo:tipos_producto(*),coleccion:colecciones!inner(*),tallas:tallas_producto(*),imagenes(*)').in('estado', ['publicado', 'archivado']).eq('coleccion.estado', 'publicado').order('creado_en', { ascending: false }),
       supabase.from('colecciones').select('*,imagenes(*)').eq('estado', 'publicado').order('publicado_en', { ascending: false }),
       supabase.from('publicaciones').select('*,imagenes(*)').eq('estado', 'publicado').lte('publicado_en', new Date().toISOString()).order('publicado_en', { ascending: false }),
     ])
@@ -97,9 +121,39 @@ export default function App() {
 
   const enviar = useCallback(async () => {
     const ventana = frame.current?.contentWindow
+    if (!ventana) return
+    const rutaIframe = ventana.location.pathname
+    const esRutaLegacy = rutaIframe.startsWith('/legacy/')
+    const paginaIframe = esRutaLegacy
+      ? rutaIframe.split('/').pop()?.replace(/\.html$/, '') || 'inicio'
+      : rutaIframe.split('/').filter(Boolean)[0] || 'inicio'
+    if (paginas.has(paginaIframe)) {
+      const rutaLimpia = urlPublica(paginaIframe, ventana.location.search)
+      const rutaNavegador = `${location.pathname}${location.search}`
+      if (rutaNavegador !== rutaLimpia) history.pushState(null, '', rutaLimpia)
+      // Si Vercel abrió accidentalmente la aplicación dentro del iframe, se recupera
+      // la página legacy correcta y se evita una aplicación anidada.
+      if (!esRutaLegacy) {
+        ventana.location.replace(urlLegacy(paginaIframe, ventana.location.search))
+        return
+      }
+    }
     ventana?.postMessage({ tipo: 'SKYBLOCK_DATOS_PUBLICOS', datos }, location.origin)
     try {
       const documento = frame.current?.contentDocument
+      if (documento?.documentElement.dataset.skyblockNavigationBridge !== 'ready') {
+        documento!.documentElement.dataset.skyblockNavigationBridge = 'ready'
+        documento?.addEventListener('click', (event) => {
+          const enlace = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href]')
+          if (!enlace || enlace.target === '_blank' || event.defaultPrevented) return
+          const destino = new URL(enlace.href, ventana.location.href)
+          if (destino.origin !== location.origin || !destino.pathname.startsWith('/legacy/') || !destino.pathname.endsWith('.html')) return
+          event.preventDefault()
+          destino.searchParams.delete('__embed')
+          destino.searchParams.set('__embed', '1')
+          ventana.location.href = `${destino.pathname}?${destino.searchParams.toString()}${destino.hash}`
+        })
+      }
       const aplicarFotoPerfil = () => documento?.querySelectorAll<HTMLElement>('.post-avatar, .posts-profile-mark').forEach((avatar) => {
         avatar.textContent = ''
         avatar.style.backgroundImage = `url("${profileImage}")`
@@ -131,13 +185,9 @@ export default function App() {
       documento?.body.classList.toggle('skyblock-admin-auth', esAdmin)
       documento?.body.classList.toggle('skyblock-signed-out', !user)
       ventana?.postMessage({ tipo: 'SKYBLOCK_ESTADO_AUTH', conectado: Boolean(user), esAdmin }, location.origin)
-      const ruta = ventana?.location.pathname || ''
+      const ruta = ventana.location.pathname || ''
       const pagina = ruta.split('/').pop()?.replace(/\.html$/, '') || 'inicio'
-      if (paginas.has(pagina)) {
-        const rutaLimpia = `/${pagina}${ventana?.location.search || ''}`
-        if (`${location.pathname}${location.search}` !== rutaLimpia) history.replaceState(null, '', rutaLimpia)
-        actualizarSeo(pagina)
-      }
+      if (paginas.has(pagina)) actualizarSeo(pagina)
       if (ruta.endsWith('/admin.html') && !user) { ventana!.location.href = 'login.html'; return }
       if (ruta.endsWith('/admin.html') && !esAdmin) { ventana!.location.href = esRolAdmin ? 'login.html' : 'inicio.html'; return }
       if (ruta.endsWith('/admin.html')) {
@@ -225,7 +275,7 @@ export default function App() {
     ])
     const error = productos.error || colecciones.error || tipos.error || codigos.error
     const cs = (colecciones.data ?? []).map((c: any) => ({ id:c.id, name:c.nombre, slug:c.slug, edition:c.numero_edicion, status:c.estado === 'publicado' ? 'published' : c.estado === 'archivado' ? 'upcoming' : 'draft', limited:false, description:c.descripcion, story:c.historia, cover:[...(c.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0))[0]?.url_segura || '' }))
-    const ps = (productos.data ?? []).map((p: any) => { const images=[...(p.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0)); return { id:p.id, name:p.nombre, type:p.tipo?.nombre || '', collection:p.coleccion?.nombre || '', price:Number(p.precio), description:p.descripcion, sizes:Object.fromEntries((p.tallas || []).map((t:any)=>[t.talla,t.stock])), limited:p.es_limitado, limitedUnits:p.unidades_limitadas, blocked:p.estado === 'archivado', image:images[0]?.url_segura || '', gallery:images.slice(1).map((i:FilaImagen)=>i.url_segura) } })
+    const ps = (productos.data ?? []).map((p: any) => { const images=[...(p.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0)); return { id:p.id, name:p.nombre, type:p.tipo?.nombre || '', collection:p.coleccion?.nombre || '', price:Number(p.precio), description:p.descripcion, materials:p.materiales || '', sizes:Object.fromEntries((p.tallas || []).map((t:any)=>[t.talla,t.stock])), limited:p.es_limitado, limitedUnits:p.unidades_limitadas, blocked:p.estado === 'archivado', image:images[0]?.url_segura || '', gallery:images.slice(1).map((i:FilaImagen)=>i.url_segura) } })
     const codes = (codigos.data ?? []).map((c:any) => ({ id:c.id, hash:String(c.codigo_hmac || '').replace(/^\\x/,''), code:String(c.codigo_admin || ''), codeHint:`•••• ${c.ultimos_cuatro}`, series:c.numero_serie, collection:c.coleccion?.nombre || '', product:c.producto?.nombre || '', owner:c.propietario_nombre || 'Sin registrar', status:c.estado === 'bloqueado' || c.estado === 'anulado' ? 'blocked' : 'active' }))
     return { productos: ps, colecciones: cs, tipos: (tipos.data ?? []).map((t:any)=>t.nombre), codigos: codes, error: error?.message || '' }
   }
@@ -267,13 +317,15 @@ export default function App() {
             if (result.error) throw result.error
           } else if (e.data.tipo === 'SKYBLOCK_ADMIN_GUARDAR_PRODUCTO') {
             const idValido = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(d.id || ''))
+            if (!String(d.collection || '').trim()) throw new Error('Debes seleccionar una colección para el producto')
             const { data:coleccion, error:ce } = await supabase.from('colecciones').select('id').eq('nombre',d.collection).single(); if (ce) throw ce
             let { data:tipo } = await supabase.from('tipos_producto').select('id').eq('nombre',d.type).maybeSingle()
             if (!tipo) { const created=await supabase.from('tipos_producto').insert({nombre:d.type,slug:String(d.type).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}).select('id').single(); if(created.error)throw created.error; tipo=created.data }
+            if (!String(d.materials || '').trim()) throw new Error('Indica los materiales y acabados del producto')
             const limitedUnits=Number(d.limitedUnits||0);if(d.limited&&limitedUnits<1)throw new Error('Indica cuántas prendas limitadas tendrá el diseño')
             const totalStock=Object.values(d.sizes||{}).reduce((sum:number,stock:any)=>sum+Number(stock||0),0);if(d.limited&&limitedUnits<totalStock)throw new Error(`La cantidad limitada no puede ser menor al stock total (${totalStock})`)
             if(idValido&&d.limited){const codigos=await supabase.from('codigos_autenticidad').select('id',{count:'exact',head:true}).eq('producto_id',d.id);if(codigos.error)throw codigos.error;if((codigos.count||0)>limitedUnits)throw new Error(`Este diseño ya tiene ${codigos.count} códigos y no puede reducirse a ${limitedUnits} prendas`)}
-            const payload={tipo_producto_id:tipo.id,coleccion_id:coleccion.id,nombre:String(d.name||'').trim(),slug:String(d.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),precio:Number(d.price),moneda:'PEN',descripcion:String(d.description||'').trim(),estado:d.blocked?'archivado':'publicado',es_limitado:Boolean(d.limited),unidades_limitadas:d.limited?limitedUnits:null,creado_por:user.id}
+            const payload={tipo_producto_id:tipo.id,coleccion_id:coleccion.id,nombre:String(d.name||'').trim(),slug:String(d.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),precio:Number(d.price),moneda:'PEN',descripcion:String(d.description||'').trim(),materiales:String(d.materials||'').trim(),estado:d.blocked?'archivado':'publicado',es_limitado:Boolean(d.limited),unidades_limitadas:d.limited?limitedUnits:null,creado_por:user.id}
             const saved=idValido?await supabase.from('productos').update(payload).eq('id',d.id).select('id').single():await supabase.from('productos').insert(payload).select('id').single(); if(saved.error)throw saved.error
             const tallasEliminadas=await supabase.from('tallas_producto').delete().eq('producto_id',saved.data.id);if(tallasEliminadas.error)throw tallasEliminadas.error
             const tallas=Object.entries(d.sizes||{}).map(([talla,stock])=>({producto_id:saved.data.id,talla,stock:Number(stock)}));if(!tallas.length)throw new Error('Selecciona al menos una talla');if(tallas.length){const tr=await supabase.from('tallas_producto').insert(tallas).select('talla');if(tr.error)throw tr.error;if((tr.data||[]).length!==tallas.length)throw new Error('No se guardaron todas las tallas seleccionadas')}
@@ -400,9 +452,5 @@ export default function App() {
     addEventListener('message', recibir); void enviar(); return () => removeEventListener('message', recibir)
   }, [cargarPublicos, enviar])
 
-  const parametrosInternos = new URLSearchParams(location.search)
-  parametrosInternos.delete('__embed')
-  parametrosInternos.set('__embed', '1')
-  const queryInterna = `?${parametrosInternos.toString()}`
-  return <iframe ref={frame} className="legacy-frontend" src={`/legacy/${rutaInicial}.html${queryInterna}`} title="SKYBLOCK STUDIO" onLoad={enviar} />
+  return <iframe ref={frame} className="legacy-frontend" src={urlLegacy(rutaInicial, location.search)} title="SKYBLOCK STUDIO" onLoad={enviar} />
 }

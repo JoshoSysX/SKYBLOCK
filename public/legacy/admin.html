@@ -123,7 +123,8 @@
           <label>Nombre del producto<input id="productName" required maxlength="90" placeholder="Ej. Camiseta Extragrande Void"></label>
           <div class="admin-form-row"><label>Tipo<select id="productType" required></select></label><label>Colección<select id="productCollection" required><option value="">Primero crea una colección</option></select></label></div>
           <div class="admin-form-row"><label>Costo / Precio<input id="productPrice" type="number" required min="0" step="0.01" placeholder="39.99"></label><label>Stock total<input id="productTotalStock" type="number" readonly value="0"></label></div>
-          <label>Descripción<textarea id="productDescription" required maxlength="600" rows="4" placeholder="Describe el diseño, materiales y concepto del producto"></textarea></label>
+          <label>Descripción del diseño<textarea id="productDescription" required maxlength="600" rows="4" placeholder="Describe el concepto, corte y detalles visuales del producto"></textarea></label>
+          <label>Materiales y acabados<textarea id="productMaterials" required maxlength="500" rows="3" placeholder="Ej. Algodón Jersey 20/1, cuello reforzado, bordado frontal y costuras dobles"></textarea><small>Esta información aparecerá en “Detalles y materiales” dentro del producto.</small></label>
           <fieldset class="admin-size-stock"><legend>Tallas disponibles y stock</legend>
             <label class="admin-size-option"><span><input id="sizeXSAvailable" type="checkbox">XS</span><input id="stockXS" type="number" min="0" value="0" disabled aria-label="Stock talla XS"></label>
             <label class="admin-size-option"><span><input id="sizeSAvailable" type="checkbox">S</span><input id="stockS" type="number" min="0" value="0" disabled aria-label="Stock talla S"></label>
