@@ -5921,18 +5921,22 @@ footer .footer-brand>.brand small {
 .admin-product-editor-actions .admin-secondary,.admin-product-editor-actions .admin-primary { min-width:160px }
 .admin-product-editor>#adminFormStatus { min-height:16px;margin:12px 0 0;color:#9b4e42;font-size:9px;text-align:right }
 
-.admin-product-inventory article { grid-template-columns:64px minmax(190px,1.5fr) 100px 100px 70px 145px;gap:16px }
+.admin-product-inventory { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding-top:24px }
+.admin-product-inventory article { min-height:0;padding:20px;display:grid;grid-template-columns:72px minmax(0,1fr) auto;grid-template-areas:'image info price' 'image stock tag' 'actions actions actions';align-items:center;gap:12px 16px;background:#f5f5f2;border:1px solid #d3d3ce }
+.admin-product-inventory article>img { grid-area:image;width:72px;height:72px }
+.admin-product-inventory article>div:first-of-type { grid-area:info;min-width:0 }
+.admin-product-inventory article>strong { grid-area:price;justify-self:end }
+.admin-product-inventory article>em { grid-area:stock;align-self:start }
+.admin-product-inventory article>i { grid-area:tag;justify-self:end;width:max-content;padding:6px 8px;background:#151617;color:#fff;font:600 7px var(--display);font-style:normal;letter-spacing:.08em;text-transform:uppercase }
 .admin-product-inventory article>div small { margin-top:2px;color:#999;font-size:7px;text-transform:uppercase }
-.admin-product-inventory article>i { width:max-content;padding:6px 8px;background:#151617;color:#fff;font:600 7px var(--display);font-style:normal;letter-spacing:.08em;text-transform:uppercase }
 .admin-product-inventory article>i.standard { background:#dadad5;color:#666 }
 .admin-product-inventory article>button { justify-self:end }
-.admin-product-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));justify-content:flex-end;gap:6px}.admin-product-actions button{border:1px solid #bbb;background:transparent;padding:8px;color:#555;font:600 7px var(--display);letter-spacing:.06em;text-transform:uppercase;cursor:pointer}.admin-product-actions .admin-product-stock{border-color:#87939a;color:#36434a}.admin-product-actions .admin-product-stock.add{background:#edf2f3}.admin-product-actions .admin-product-stock.remove{background:#f7efed;color:#8e2923;border-color:#c69c96}.admin-product-actions .admin-product-lock{background:#171819;border-color:#171819;color:#fff}.admin-product-actions .admin-product-lock.unlock{background:#7f8a91;border-color:#7f8a91}.admin-product-actions .admin-product-delete{border-color:#b55a52;color:#9d2e25}.admin-product-actions .admin-product-delete:hover{background:#9d2e25;color:#fff}.admin-product-actions button:disabled{opacity:.45;cursor:wait}.admin-product-inventory article.is-blocked{background:#e6e6e1}.admin-product-inventory article.is-blocked>img{object-fit:contain;background:#fff}.admin-product-inventory article>em.blocked{color:#9b3d35}.catalog-card-blocked{background:#f0f0ee;cursor:not-allowed!important}.catalog-card-blocked .catalog-image,.catalog-card-blocked .catalog-image img{background:#eeeeec}.catalog-card-blocked .catalog-image img{object-fit:contain;filter:none!important;transform:none!important}.catalog-card-blocked:hover{transform:none}.catalog-card-blocked .quick-add{opacity:.55;cursor:not-allowed}.blocked-tag{background:#a33b32!important;color:#fff!important}
+.admin-product-actions{grid-area:actions;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));justify-content:flex-end;gap:6px;margin-top:8px!important;padding-top:12px;border-top:1px solid #d7d7d2}.admin-product-actions button{border:1px solid #bbb;background:transparent;padding:8px;color:#555;font:600 7px var(--display);letter-spacing:.06em;text-transform:uppercase;cursor:pointer}.admin-product-actions .admin-product-stock{border-color:#87939a;color:#36434a}.admin-product-actions .admin-product-stock.add{background:#edf2f3}.admin-product-actions .admin-product-stock.remove{background:#f7efed;color:#8e2923;border-color:#c69c96}.admin-product-actions .admin-product-lock{background:#171819;border-color:#171819;color:#fff}.admin-product-actions .admin-product-lock.unlock{background:#7f8a91;border-color:#7f8a91}.admin-product-actions .admin-product-delete{border-color:#b55a52;color:#9d2e25}.admin-product-actions .admin-product-delete:hover{background:#9d2e25;color:#fff}.admin-product-actions button:disabled{opacity:.45;cursor:wait}.admin-product-inventory article.is-blocked{background:#e6e6e1}.admin-product-inventory article.is-blocked>img{object-fit:contain;background:#fff}.admin-product-inventory article>em.blocked{color:#9b3d35}.catalog-card-blocked{background:#f0f0ee;cursor:not-allowed!important}.catalog-card-blocked .catalog-image,.catalog-card-blocked .catalog-image img{background:#eeeeec}.catalog-card-blocked .catalog-image img{object-fit:contain;filter:none!important;transform:none!important}.catalog-card-blocked:hover{transform:none}.catalog-card-blocked .quick-add{opacity:.55;cursor:not-allowed}.blocked-tag{background:#a33b32!important;color:#fff!important}
 .admin-empty-products { padding:45px 20px;color:#777;font-size:10px;text-align:center }
 
 @media(max-width:900px) {
   .admin-product-editor-grid { grid-template-columns:1fr }
-  .admin-product-inventory article { grid-template-columns:58px minmax(150px,1fr) 80px 80px 60px }
-  .admin-product-inventory article>i { display:none }
+  .admin-product-inventory { grid-template-columns:1fr }
   .admin-collection-editor-grid { grid-template-columns:1fr }
 }
 
@@ -5944,9 +5948,7 @@ footer .footer-brand>.brand small {
   .admin-main-image-preview { height:280px }
   .admin-product-editor-actions { position:sticky;z-index:3;bottom:-32px;margin-inline:-18px;padding:14px 18px;background:#f5f5f2 }
   .admin-product-editor-actions .admin-secondary,.admin-product-editor-actions .admin-primary { min-width:0;flex:1 }
-  .admin-product-inventory article { grid-template-columns:52px minmax(0,1fr) auto }
-  .admin-product-inventory article>strong { display:block }
-  .admin-product-inventory article>em,.admin-product-inventory article>i { display:none }
+  .admin-product-inventory article { padding:16px;grid-template-columns:58px minmax(0,1fr) auto;gap:10px }
   .admin-title-actions { width:100%;display:grid;grid-template-columns:1fr 1fr }
   .admin-collection-modal { padding:0 }
   .admin-collection-editor { max-height:100svh;min-height:100svh;padding:32px 18px }
