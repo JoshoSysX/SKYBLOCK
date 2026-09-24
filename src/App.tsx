@@ -9,17 +9,20 @@ const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
+const LEGACY_BUILD = 'stock-mode-20260923'
 const paginas = new Set(['inicio','catalogo','colecciones','coleccion','producto','posts','nosotros','contacto','privacidad','terminos','verificar','login','registro','admin'])
 const rutaInicial = paginas.has(location.pathname.split('/').filter(Boolean)[0] || '') ? location.pathname.split('/').filter(Boolean)[0] : 'inicio'
 const urlLegacy = (pagina:string, search = '') => {
   const parametros = new URLSearchParams(search)
   parametros.delete('__embed')
   parametros.set('__embed', '1')
+  parametros.set('_skb', LEGACY_BUILD)
   return `/legacy/${pagina}.html?${parametros.toString()}`
 }
 const urlPublica = (pagina:string, search = '') => {
   const parametros = new URLSearchParams(search)
   parametros.delete('__embed')
+  parametros.delete('_skb')
   const query = parametros.toString()
   return `/${pagina}${query ? `?${query}` : ''}`
 }
