@@ -8,6 +8,7 @@ type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: st
 const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
+const BRAND_UPPER = 'SKYBLOCK STUDIO'
 const paginas = new Set(['inicio','catalogo','colecciones','coleccion','producto','posts','nosotros','contacto','privacidad','terminos','verificar','login','registro','admin'])
 const rutaInicial = paginas.has(location.pathname.split('/').filter(Boolean)[0] || '') ? location.pathname.split('/').filter(Boolean)[0] : 'inicio'
 const urlLegacy = (pagina:string, search = '') => {
@@ -23,19 +24,19 @@ const urlPublica = (pagina:string, search = '') => {
   return `/${pagina}${query ? `?${query}` : ''}`
 }
 const SEO:Record<string,{title:string;description:string;path:string;index?:boolean}> = {
-  inicio:{title:`${BRAND} | Ropa urbana de edición limitada`,description:`${BRAND}, marca de ropa urbana de ediciones limitadas creada en Tarapoto, Perú. Del bloque para el cielo.`,path:'/'},
-  catalogo:{title:`Catálogo de ropa urbana | ${BRAND}`,description:`Descubre prendas urbanas, diseños exclusivos y ediciones limitadas de ${BRAND}.`,path:'/catalogo'},
-  colecciones:{title:`Colecciones limitadas | ${BRAND}`,description:`Conoce las colecciones y colaboraciones de ropa urbana creadas por ${BRAND}.`,path:'/colecciones'},
-  coleccion:{title:`Colección | ${BRAND}`,description:`Historia, concepto y prendas de una colección limitada de ${BRAND}.`,path:'/coleccion'},
-  producto:{title:`Producto | ${BRAND}`,description:`Consulta el diseño, tallas, disponibilidad y autenticidad de esta prenda ${BRAND}.`,path:'/producto'},
-  posts:{title:`Novedades y procesos | ${BRAND}`,description:`Publicaciones, procesos creativos, lanzamientos y novedades de ${BRAND}.`,path:'/posts'},
-  nosotros:{title:`Nuestra historia | ${BRAND}`,description:`Conoce el origen de Skyblock, su historia en Tarapoto y el movimiento Del bloque para el cielo.`,path:'/nosotros'},
-  contacto:{title:`Contacto en Tarapoto | ${BRAND}`,description:`Contacta con ${BRAND} para consultar productos, tallas, disponibilidad y colaboraciones.`,path:'/contacto'},
-  verificar:{title:`Verificar autenticidad | ${BRAND}`,description:`Verifica el código, diseño, colección y número de serie de tu prenda ${BRAND}.`,path:'/verificar'},
-  privacidad:{title:`Política de privacidad | ${BRAND}`,description:`Conoce cómo ${BRAND} trata y protege tus datos personales conforme a las normas peruanas.`,path:'/privacidad'},
-  terminos:{title:`Términos y condiciones | ${BRAND}`,description:`Términos y condiciones de uso y contratación de ${BRAND} conforme a la normativa peruana.`,path:'/terminos'},
-  login:{title:`Iniciar sesión | ${BRAND}`,description:`Acceso privado a ${BRAND}.`,path:'/login',index:false},
-  registro:{title:`Crear cuenta | ${BRAND}`,description:`Registro de cuenta en ${BRAND}.`,path:'/registro',index:false},
+  inicio:{title:`${BRAND} | Ropa urbana de edición limitada`,description:`${BRAND_UPPER}, marca de ropa urbana de ediciones limitadas creada en Tarapoto, Perú. Del bloque para el cielo.`,path:'/'},
+  catalogo:{title:`Catálogo de ropa urbana | ${BRAND}`,description:`Descubre prendas urbanas, diseños exclusivos y ediciones limitadas de ${BRAND_UPPER}.`,path:'/catalogo'},
+  colecciones:{title:`Colecciones limitadas | ${BRAND}`,description:`Conoce las colecciones y colaboraciones de ropa urbana creadas por ${BRAND_UPPER}.`,path:'/colecciones'},
+  coleccion:{title:`Colección | ${BRAND}`,description:`Historia, concepto y prendas de una colección limitada de ${BRAND_UPPER}.`,path:'/coleccion'},
+  producto:{title:`Producto | ${BRAND}`,description:`Consulta el diseño, tallas, disponibilidad y autenticidad de esta prenda ${BRAND_UPPER}.`,path:'/producto'},
+  posts:{title:`Novedades y procesos | ${BRAND}`,description:`Publicaciones, procesos creativos, lanzamientos y novedades de ${BRAND_UPPER}.`,path:'/posts'},
+  nosotros:{title:`Nuestra historia | ${BRAND}`,description:`Conoce el origen de SKYBLOCK, su historia en Tarapoto y el movimiento Del bloque para el cielo.`,path:'/nosotros'},
+  contacto:{title:`Contacto en Tarapoto | ${BRAND}`,description:`Contacta con ${BRAND_UPPER} para consultar productos, tallas, disponibilidad y colaboraciones.`,path:'/contacto'},
+  verificar:{title:`Verificar autenticidad | ${BRAND}`,description:`Verifica el código, diseño, colección y número de serie de tu prenda ${BRAND_UPPER}.`,path:'/verificar'},
+  privacidad:{title:`Política de privacidad | ${BRAND}`,description:`Conoce cómo ${BRAND_UPPER} trata y protege tus datos personales conforme a las normas peruanas.`,path:'/privacidad'},
+  terminos:{title:`Términos y condiciones | ${BRAND}`,description:`Términos y condiciones de uso y contratación de ${BRAND_UPPER} conforme a la normativa peruana.`,path:'/terminos'},
+  login:{title:`Iniciar sesión | ${BRAND}`,description:`Acceso privado a ${BRAND_UPPER}.`,path:'/login',index:false},
+  registro:{title:`Crear cuenta | ${BRAND}`,description:`Registro de cuenta en ${BRAND_UPPER}.`,path:'/registro',index:false},
   admin:{title:`Panel administrativo | ${BRAND}`,description:`Panel privado de administración.`,path:'/admin',index:false},
 }
 const upsertMeta = (selector:string,attribute:string,value:string) => {
@@ -161,21 +162,6 @@ export default function App() {
         avatar.style.backgroundSize = 'cover'
         avatar.style.backgroundPosition = 'center'
       })
-      const aplicarNombreMarca = () => {
-        if (!documento) return
-        const walker = documento.createTreeWalker(documento.body, NodeFilter.SHOW_TEXT)
-        const nodes: Text[] = []
-        while (walker.nextNode()) nodes.push(walker.currentNode as Text)
-        nodes.forEach((node) => { if (node.nodeValue?.includes('SKYBLOCK STUDIO')) node.nodeValue = node.nodeValue.replaceAll('SKYBLOCK STUDIO', BRAND) })
-        documento.querySelectorAll<HTMLElement>('.brand, .admin-brand > a').forEach((brand) => {
-          const title = [...brand.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.nodeValue?.trim())
-          if (title) title.nodeValue = 'Skyblock'
-          brand.querySelector('small')?.replaceChildren('Studio')
-        })
-        documento.title = documento.title.replaceAll('SKYBLOCK STUDIO', BRAND)
-        documento.querySelectorAll<HTMLMetaElement>('meta[content]').forEach((meta) => { meta.content = meta.content.replaceAll('SKYBLOCK STUDIO', BRAND) })
-      }
-      aplicarNombreMarca()
       aplicarFotoPerfil()
       window.setTimeout(aplicarFotoPerfil, 0)
       const footer = documento?.querySelector<HTMLElement>('.site-footer')
@@ -194,7 +180,7 @@ export default function App() {
       const copyright = footer?.querySelector<HTMLElement>('.copyright')
       if (copyright && !copyright.dataset.joshosysxCredit) {
         copyright.dataset.joshosysxCredit = 'true'
-        copyright.innerHTML = `© 2026 ${BRAND}<br>Todos los derechos reservados.<br><br>Diseñado y desarrollado por <a href="https://github.com/JoshoSysX" target="_blank" rel="noopener noreferrer">JoshoSysX</a><br>con pasión en Tarapoto.`
+        copyright.innerHTML = `© 2026 ${BRAND_UPPER}<br>Todos los derechos reservados.<br><br>Diseñado y desarrollado por <a href="https://github.com/JoshoSysX" target="_blank" rel="noopener noreferrer">JoshoSysX</a><br>con pasión en Tarapoto.`
       }
       if (documento?.title) document.title = documento.title
       const { user, esRolAdmin, esAdmin } = await obtenerAdmin()
