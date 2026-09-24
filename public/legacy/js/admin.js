@@ -251,11 +251,13 @@ function closeStockAdjustment() {
 
 function openStockAdjustment(product, direction) {
   if (product.stockUnlimited) return;
-  pendingStockAdjustment = { product, direction };
   const bySize = usesStockBySize(product);
+  pendingStockAdjustment = { product, direction, bySize };
   document.getElementById('stockAdjustmentTitle').textContent = direction === 'add' ? 'Agregar stock' : 'Quitar stock';
   document.getElementById('stockAdjustmentProduct').textContent = product.name;
-  document.getElementById('stockAdjustmentSizeField').hidden = !bySize;
+  stockAdjustmentModal.dataset.stockMode = bySize ? 'sizes' : 'single';
+  const sizeField = document.getElementById('stockAdjustmentSizeField');
+  sizeField.hidden = !bySize;
   const sizeSelect = document.getElementById('stockAdjustmentSize');
   sizeSelect.innerHTML = Object.keys(product.sizes || {}).map((size) => `<option value="${size}">${size}${bySize ? ` · ${product.sizes[size]} disponibles` : ''}</option>`).join('');
   document.getElementById('stockAdjustmentAmount').value = '';
@@ -271,12 +273,12 @@ stockAdjustmentModal.addEventListener('click', (event) => { if (event.target ===
 document.getElementById('stockAdjustmentForm').addEventListener('submit', (event) => {
   event.preventDefault();
   if (!pendingStockAdjustment) return;
-  const { product, direction } = pendingStockAdjustment;
+  const { product, direction, bySize } = pendingStockAdjustment;
   const amount = Number(document.getElementById('stockAdjustmentAmount').value);
   const status = document.getElementById('stockAdjustmentStatus');
   if (!Number.isInteger(amount) || amount < 1) { status.textContent = 'Indica una cantidad válida.'; return; }
   const multiplier = direction === 'add' ? 1 : -1;
-  if (usesStockBySize(product)) {
+  if (bySize) {
     const size = document.getElementById('stockAdjustmentSize').value;
     const next = Number(product.sizes?.[size] || 0) + multiplier * amount;
     if (next < 0) { status.textContent = 'No puedes retirar más unidades de las disponibles en esta talla.'; return; }
