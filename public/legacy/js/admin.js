@@ -72,7 +72,8 @@ function renderProductTypes(selectedType = '') {
   document.getElementById('productTypeList').innerHTML = productTypes.map((type) => `<span>${String(type).toUpperCase()}<button type="button" data-delete-product-type="${type}" aria-label="Eliminar ${String(type).toUpperCase()}">×</button></span>`).join('');
 }
 
-const productStock = (product) => !product.stockUnlimited && !product.stockBySize && product.stockAvailable !== null && product.stockAvailable !== undefined && Number.isFinite(Number(product.stockAvailable))
+const usesStockBySize = (product) => product?.stockBySize === true || product?.stockBySize === 'true';
+const productStock = (product) => !product.stockUnlimited && !usesStockBySize(product) && product.stockAvailable !== null && product.stockAvailable !== undefined && Number.isFinite(Number(product.stockAvailable))
   ? Number(product.stockAvailable)
   : Object.values(product.sizes || {}).reduce((total,value) => total + Number(value || 0),0);
 const money = (value) => new Intl.NumberFormat('es-PE',{ style:'currency',currency:'PEN' }).format(value);
@@ -95,7 +96,7 @@ function renderProducts() {
     const availableSizes = Object.keys(product.sizes || {}).join(' · ') || 'Sin tallas definidas';
     const stockBySize = Object.entries(product.sizes || {}).filter(([, amount]) => Number(amount) > 0).map(([size, amount]) => `${size}: ${amount}`).join(' · ');
     const limitedCounter = product.limited ? `Stock ${stock}/${Number(product.limitedUnits)}` : `${stock} en stock`;
-    const stockLabel = product.blocked ? 'Bloqueado' : product.stockUnlimited ? '' : stock > 0 ? `${limitedCounter}${product.stockBySize ? ` · ${stockBySize}` : ''}` : '';
+    const stockLabel = product.blocked ? 'Bloqueado' : product.stockUnlimited ? '' : stock > 0 ? `${limitedCounter}${usesStockBySize(product) ? ` · ${stockBySize}` : ''}` : '';
     const stockActions = product.stockUnlimited ? '' : `<button type="button" class="admin-product-stock add" data-adjust-stock="add" data-product-id="${product.id}">+ Stock</button>${stock > 0 ? `<button type="button" class="admin-product-stock remove" data-adjust-stock="remove" data-product-id="${product.id}">− Stock</button>` : ''}`;
     const stockStatus = stockLabel ? `<em class="${product.blocked ? 'blocked' : stock <= 5 ? 'low' : ''}">${stockLabel}</em>` : '<span class="admin-stock-empty" aria-hidden="true"></span>';
     return `<article class="${product.blocked ? 'is-blocked' : ''}"><img src="${product.blocked ? 'assets/image/skb-bloqueado.png' : product.image}" alt="${product.blocked ? `Producto ${product.name} bloqueado` : product.name}"><div><b>${product.name}</b><span>SKB — ${product.collection}</span><small>${String(product.type).toUpperCase()} · ${availableSizes}</small></div><strong>${money(product.price)}</strong>${stockStatus}${product.limited ? '<i>Limitada</i>' : '<i class="standard">Regular</i>'}<div class="admin-product-actions">${stockActions}<button type="button" class="admin-product-lock ${product.blocked ? 'unlock' : ''}" data-toggle-product="${product.id}">${product.blocked ? 'Desbloquear' : 'Bloquear'}</button><button type="button" data-edit-product="${product.id}" aria-label="Editar ${product.name}">Editar</button><button type="button" class="admin-product-delete" data-delete-product="${product.id}" aria-label="Eliminar ${product.name}">Eliminar</button></div></article>`;
@@ -149,9 +150,9 @@ function openProductEditor(product = null) {
   document.getElementById('productDescription').value = product?.description || '';
   document.getElementById('productMaterials').value = product?.materials || '';
   document.getElementById('productLimited').checked = Boolean(product?.limited);
-  document.getElementById('productStockBySize').checked = Boolean(product?.stockBySize);
+  document.getElementById('productStockBySize').checked = usesStockBySize(product);
   document.getElementById('productStockUnlimited').checked = product ? Boolean(product.stockUnlimited) : true;
-  document.getElementById('productStockSingle').checked = product ? !product.stockBySize && !product.stockUnlimited : false;
+  document.getElementById('productStockSingle').checked = product ? !usesStockBySize(product) && !product.stockUnlimited : false;
   document.getElementById('productLimitedUnits').value = product?.limitedUnits || '';
   document.getElementById('productAvailableStock').value = product?.stockAvailable ?? productStock(product || {});
   syncLimitedStockFields();
@@ -251,7 +252,7 @@ function closeStockAdjustment() {
 function openStockAdjustment(product, direction) {
   if (product.stockUnlimited) return;
   pendingStockAdjustment = { product, direction };
-  const bySize = Boolean(product.stockBySize);
+  const bySize = usesStockBySize(product);
   document.getElementById('stockAdjustmentTitle').textContent = direction === 'add' ? 'Agregar stock' : 'Quitar stock';
   document.getElementById('stockAdjustmentProduct').textContent = product.name;
   document.getElementById('stockAdjustmentSizeField').hidden = !bySize;
@@ -275,7 +276,7 @@ document.getElementById('stockAdjustmentForm').addEventListener('submit', (event
   const status = document.getElementById('stockAdjustmentStatus');
   if (!Number.isInteger(amount) || amount < 1) { status.textContent = 'Indica una cantidad válida.'; return; }
   const multiplier = direction === 'add' ? 1 : -1;
-  if (product.stockBySize) {
+  if (usesStockBySize(product)) {
     const size = document.getElementById('stockAdjustmentSize').value;
     const next = Number(product.sizes?.[size] || 0) + multiplier * amount;
     if (next < 0) { status.textContent = 'No puedes retirar más unidades de las disponibles en esta talla.'; return; }
