@@ -5927,6 +5927,7 @@ footer .footer-brand>.brand small {
 .admin-product-inventory article>div:first-of-type { grid-area:info;min-width:0 }
 .admin-product-inventory article>strong { grid-area:price;justify-self:end }
 .admin-product-inventory article>em { grid-area:stock;align-self:start }
+.admin-product-inventory .admin-stock-empty { grid-area:stock;min-height:1px }
 .admin-product-inventory article>i { grid-area:tag;justify-self:end;width:max-content;padding:6px 8px;background:#151617;color:#fff;font:600 7px var(--display);font-style:normal;letter-spacing:.08em;text-transform:uppercase }
 .admin-product-inventory article>div small { margin-top:2px;color:#999;font-size:7px;text-transform:uppercase }
 .admin-product-inventory article>i.standard { background:#dadad5;color:#666 }
