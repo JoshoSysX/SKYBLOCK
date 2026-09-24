@@ -9,7 +9,7 @@ const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
-const LEGACY_BUILD = 'size-order-20260924'
+const LEGACY_BUILD = 'product-size-picker-20260924'
 const ORDEN_TALLAS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Única']
 const ordenarTallas = <T extends { talla?: string }>(tallas: T[] = []) => [...tallas].sort((a, b) => {
   const posicionA = ORDEN_TALLAS.indexOf(String(a.talla || ''))

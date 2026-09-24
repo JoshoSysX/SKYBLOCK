@@ -219,8 +219,14 @@
       thumbThree.removeAttribute('src')
       thirdButton.hidden = true
     }
+    const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Única']
+    const orderedSizes = [...(p.tallas || [])].sort((a, b) => {
+      const aIndex = sizeOrder.indexOf(a.talla)
+      const bIndex = sizeOrder.indexOf(b.talla)
+      return (aIndex < 0 ? sizeOrder.length : aIndex) - (bIndex < 0 ? sizeOrder.length : bIndex)
+    })
     sizePicker.innerHTML = ''
-    ;(p.tallas || []).forEach((t) => {
+    orderedSizes.forEach((t) => {
       const b = document.createElement('button')
       b.textContent = t.talla
       b.title = p.stock_ilimitado || Number(p.stock_disponible) > 0 || t.stock > 0 ? 'Talla disponible' : 'Consultar reposición'
@@ -231,7 +237,7 @@
       }
       sizePicker.appendChild(b)
     })
-    if (!(p.tallas || []).length)
+    if (!orderedSizes.length)
       sizePicker.innerHTML = '<span class="size-empty">Sin tallas configuradas</span>'
   }
   function detalle(cs, ps) {
