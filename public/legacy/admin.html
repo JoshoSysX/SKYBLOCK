@@ -122,20 +122,22 @@
         <section class="admin-product-fields">
           <label>Nombre del producto<input id="productName" required maxlength="90" placeholder="Ej. Camiseta Extragrande Void"></label>
           <div class="admin-form-row"><label>Tipo<select id="productType" required></select></label><label>Colección<select id="productCollection" required><option value="">Primero crea una colección</option></select></label></div>
-          <div class="admin-form-row"><label>Costo / Precio<input id="productPrice" type="number" required min="0" step="0.01" placeholder="39.99"></label><label>Stock total<input id="productTotalStock" type="number" readonly value="0"></label></div>
+          <div class="admin-form-row"><label>Costo / Precio<input id="productPrice" type="number" required min="0" step="0.01" placeholder="39.99"></label></div>
           <label>Descripción del diseño<textarea id="productDescription" required maxlength="600" rows="4" placeholder="Describe el concepto, corte y detalles visuales del producto"></textarea></label>
           <label>Materiales y acabados<textarea id="productMaterials" required maxlength="500" rows="3" placeholder="Ej. Algodón Jersey 20/1, cuello reforzado, bordado frontal y costuras dobles"></textarea><small>Esta información aparecerá en “Detalles y materiales” dentro del producto.</small></label>
-          <fieldset class="admin-size-stock"><legend>Tallas disponibles y stock</legend>
-            <label class="admin-size-option"><span><input id="sizeXSAvailable" type="checkbox">XS</span><input id="stockXS" type="number" min="0" value="0" disabled aria-label="Stock talla XS"></label>
-            <label class="admin-size-option"><span><input id="sizeSAvailable" type="checkbox">S</span><input id="stockS" type="number" min="0" value="0" disabled aria-label="Stock talla S"></label>
-            <label class="admin-size-option"><span><input id="sizeMAvailable" type="checkbox">M</span><input id="stockM" type="number" min="0" value="0" disabled aria-label="Stock talla M"></label>
-            <label class="admin-size-option"><span><input id="sizeLAvailable" type="checkbox">L</span><input id="stockL" type="number" min="0" value="0" disabled aria-label="Stock talla L"></label>
-            <label class="admin-size-option"><span><input id="sizeXLAvailable" type="checkbox">XL</span><input id="stockXL" type="number" min="0" value="0" disabled aria-label="Stock talla XL"></label>
-            <label class="admin-size-option"><span><input id="sizeXXLAvailable" type="checkbox">XXL</span><input id="stockXXL" type="number" min="0" value="0" disabled aria-label="Stock talla XXL"></label>
-            <label class="admin-size-option"><span><input id="sizeOneAvailable" type="checkbox">Única</span><input id="stockOne" type="number" min="0" value="0" disabled aria-label="Stock talla única"></label>
+          <fieldset class="admin-size-stock"><legend>Tallas disponibles</legend>
+            <label class="admin-size-option"><span><input id="sizeXSAvailable" type="checkbox">XS</span><input class="stock-by-size-input" id="stockXS" type="number" min="0" value="0" aria-label="Stock talla XS" hidden disabled></label>
+            <label class="admin-size-option"><span><input id="sizeSAvailable" type="checkbox">S</span><input class="stock-by-size-input" id="stockS" type="number" min="0" value="0" aria-label="Stock talla S" hidden disabled></label>
+            <label class="admin-size-option"><span><input id="sizeMAvailable" type="checkbox">M</span><input class="stock-by-size-input" id="stockM" type="number" min="0" value="0" aria-label="Stock talla M" hidden disabled></label>
+            <label class="admin-size-option"><span><input id="sizeLAvailable" type="checkbox">L</span><input class="stock-by-size-input" id="stockL" type="number" min="0" value="0" aria-label="Stock talla L" hidden disabled></label>
+            <label class="admin-size-option"><span><input id="sizeXLAvailable" type="checkbox">XL</span><input class="stock-by-size-input" id="stockXL" type="number" min="0" value="0" aria-label="Stock talla XL" hidden disabled></label>
+            <label class="admin-size-option"><span><input id="sizeXXLAvailable" type="checkbox">XXL</span><input class="stock-by-size-input" id="stockXXL" type="number" min="0" value="0" aria-label="Stock talla XXL" hidden disabled></label>
+            <label class="admin-size-option"><span><input id="sizeOneAvailable" type="checkbox">Única</span><input class="stock-by-size-input" id="stockOne" type="number" min="0" value="0" aria-label="Stock talla única" hidden disabled></label>
           </fieldset>
           <label class="admin-check-row"><input id="productLimited" type="checkbox"><span><b>Prenda limitada</b><small>Marcar como edición limitada y sin reposición.</small></span></label>
-          <label id="productLimitedUnitsField" hidden>Cantidad total de prendas limitadas<input id="productLimitedUnits" type="number" min="1" step="1" placeholder="Ej. 25"><small>Debe ser igual o mayor al stock total y será el máximo de códigos para este diseño.</small></label>
+          <div class="admin-stock-mode" id="productStockModeField" role="radiogroup" aria-label="Forma de administrar el stock"><span>Administrar stock</span><label><input id="productStockSingle" name="productStockMode" type="radio" checked>Stock único</label><label><input id="productStockBySize" name="productStockMode" type="radio">Por tallas</label><label id="productStockUnlimitedOption"><input id="productStockUnlimited" name="productStockMode" type="radio">Stock ilimitado</label></div>
+          <label id="productLimitedUnitsField" hidden>Total de prendas limitadas<input id="productLimitedUnits" type="number" min="1" step="1" placeholder="Ej. 25"><small>Es el límite original de la edición y el máximo de códigos para este diseño.</small></label>
+          <label id="productAvailableStockField" hidden>Stock disponible<input id="productAvailableStock" type="number" min="0" step="1" placeholder="Ej. 25"><small>Actualiza este número cuando salgan prendas. En el catálogo se mostrará como Stock disponible / total.</small></label>
         </section>
         <section class="admin-product-media">
           <label class="admin-product-upload" for="productMainImage"><span>Imagen principal</span><small>JPG, PNG o WEBP · Máximo 150 MB</small><input id="productMainImage" type="file" accept="image/jpeg,image/png,image/webp"></label>

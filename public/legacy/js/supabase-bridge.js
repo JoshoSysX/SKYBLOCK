@@ -11,7 +11,9 @@
     )
   const limitedStock = (p) => {
     if (!p.es_limitado || !Number.isFinite(Number(p.unidades_limitadas))) return ''
-    const available = (p.tallas || []).reduce((total, size) => total + Math.max(0, Number(size.stock) || 0), 0)
+    const available = !p.stock_por_talla && p.stock_disponible !== null && p.stock_disponible !== undefined && Number.isFinite(Number(p.stock_disponible))
+      ? Math.max(0, Number(p.stock_disponible))
+      : (p.tallas || []).reduce((total, size) => total + Math.max(0, Number(size.stock) || 0), 0)
     return `<span class="limited-stock">Stock ${available}/${Number(p.unidades_limitadas)}</span>`
   }
   const carouselImage = (url, width) => {
@@ -160,9 +162,7 @@
     const stock = document.getElementById('productLimitedStock')
     if (stock) {
       stock.hidden = !p.es_limitado
-      stock.textContent = p.es_limitado
-        ? `Stock ${((p.tallas || []).reduce((total, size) => total + Math.max(0, Number(size.stock) || 0), 0))}/${Number(p.unidades_limitadas)}`
-        : ''
+      stock.textContent = p.es_limitado ? limitedStock(p).replace(/<[^>]+>/g, '') : ''
     }
     productDescription.textContent = p.descripcion || ''
     productDetails.textContent = p.materiales || ''
@@ -223,7 +223,7 @@
     ;(p.tallas || []).forEach((t) => {
       const b = document.createElement('button')
       b.textContent = t.talla
-      b.title = t.stock > 0 ? `${t.stock} disponible(s)` : 'Consultar reposición'
+      b.title = p.stock_ilimitado || Number(p.stock_disponible) > 0 || t.stock > 0 ? 'Talla disponible' : 'Consultar reposición'
       b.onclick = () => {
         sizePicker.querySelectorAll('button').forEach((x) => x.classList.remove('active'))
         b.classList.add('active')

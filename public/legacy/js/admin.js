@@ -65,12 +65,14 @@ function saveProductTypes() {
 function renderProductTypes(selectedType = '') {
   const select = document.getElementById('productType');
   if (selectedType && !productTypes.includes(selectedType)) productTypes.push(selectedType);
-  select.innerHTML = '<option value="">Selecciona un tipo</option>' + productTypes.map((type) => `<option value="${type}">${type}</option>`).join('');
+  select.innerHTML = '<option value="">Selecciona un tipo</option>' + productTypes.map((type) => `<option value="${type}">${String(type).toUpperCase()}</option>`).join('');
   select.value = selectedType || productTypes[0];
-  document.getElementById('productTypeList').innerHTML = productTypes.map((type) => `<span>${type}<button type="button" data-delete-product-type="${type}" aria-label="Eliminar ${type}">×</button></span>`).join('');
+  document.getElementById('productTypeList').innerHTML = productTypes.map((type) => `<span>${String(type).toUpperCase()}<button type="button" data-delete-product-type="${type}" aria-label="Eliminar ${String(type).toUpperCase()}">×</button></span>`).join('');
 }
 
-const productStock = (product) => Object.values(product.sizes || {}).reduce((total,value) => total + Number(value || 0),0);
+const productStock = (product) => !product.stockUnlimited && !product.stockBySize && product.stockAvailable !== null && product.stockAvailable !== undefined && Number.isFinite(Number(product.stockAvailable))
+  ? Number(product.stockAvailable)
+  : Object.values(product.sizes || {}).reduce((total,value) => total + Number(value || 0),0);
 const money = (value) => new Intl.NumberFormat('es-PE',{ style:'currency',currency:'PEN' }).format(value);
 
 function saveProducts() {
@@ -83,13 +85,13 @@ function renderProducts() {
   const visible = products.filter((product) => {
     const stock = productStock(product);
     const matchesSearch = `${product.name} ${product.collection}`.toLowerCase().includes(query);
-    const matchesFilter = filter === 'all' || (filter === 'stock' && stock > 0) || (filter === 'low' && stock <= 5) || (filter === 'limited' && product.limited);
+    const matchesFilter = filter === 'all' || (filter === 'stock' && (product.stockUnlimited || stock > 0)) || (filter === 'low' && !product.stockUnlimited && stock <= 5) || (filter === 'limited' && product.limited);
     return matchesSearch && matchesFilter;
   });
   document.getElementById('adminProductList').innerHTML = visible.map((product) => {
     const stock = productStock(product);
     const availableSizes = Object.keys(product.sizes || {}).join(' · ') || 'Sin tallas definidas';
-    return `<article class="${product.blocked ? 'is-blocked' : ''}"><img src="${product.blocked ? 'assets/image/skb-bloqueado.png' : product.image}" alt="${product.blocked ? `Producto ${product.name} bloqueado` : product.name}"><div><b>${product.name}</b><span>SKB — ${product.collection}</span><small>${product.type} · ${availableSizes}</small></div><strong>${money(product.price)}</strong><em class="${product.blocked ? 'blocked' : stock <= 5 ? 'low' : ''}">${product.blocked ? 'Bloqueado' : `${stock} en stock`}</em>${product.limited ? '<i>Limitada</i>' : '<i class="standard">Regular</i>'}<div class="admin-product-actions"><button type="button" class="admin-product-lock ${product.blocked ? 'unlock' : ''}" data-toggle-product="${product.id}">${product.blocked ? 'Desbloquear' : 'Bloquear'}</button><button type="button" data-edit-product="${product.id}" aria-label="Editar ${product.name}">Editar</button><button type="button" class="admin-product-delete" data-delete-product="${product.id}" aria-label="Eliminar ${product.name}">Eliminar</button></div></article>`;
+    return `<article class="${product.blocked ? 'is-blocked' : ''}"><img src="${product.blocked ? 'assets/image/skb-bloqueado.png' : product.image}" alt="${product.blocked ? `Producto ${product.name} bloqueado` : product.name}"><div><b>${product.name}</b><span>SKB — ${product.collection}</span><small>${String(product.type).toUpperCase()} · ${availableSizes}</small></div><strong>${money(product.price)}</strong><em class="${product.blocked ? 'blocked' : !product.stockUnlimited && stock <= 5 ? 'low' : ''}">${product.blocked ? 'Bloqueado' : product.stockUnlimited ? 'Stock ilimitado' : `${stock} en stock`}</em>${product.limited ? '<i>Limitada</i>' : '<i class="standard">Regular</i>'}<div class="admin-product-actions"><button type="button" class="admin-product-lock ${product.blocked ? 'unlock' : ''}" data-toggle-product="${product.id}">${product.blocked ? 'Desbloquear' : 'Bloquear'}</button><button type="button" data-edit-product="${product.id}" aria-label="Editar ${product.name}">Editar</button><button type="button" class="admin-product-delete" data-delete-product="${product.id}" aria-label="Eliminar ${product.name}">Eliminar</button></div></article>`;
   }).join('') || '<p class="admin-empty-products">No hay productos que coincidan con la búsqueda.</p>';
   document.getElementById('adminProductCount').textContent = products.length;
   document.getElementById('adminPublishedProducts').textContent = String(products.length).padStart(2,'0');
@@ -98,21 +100,25 @@ renderProducts();
 document.getElementById('adminProductSearch').addEventListener('input', renderProducts);
 document.getElementById('adminProductFilter').addEventListener('change', renderProducts);
 
-function updateTotalStock() {
-  const total = sizeOptions.reduce((sum,size) => {
-    const available = document.getElementById(`size${size.id}Available`).checked;
-    return sum + (available ? Number(document.getElementById(`stock${size.id}`).value || 0) : 0);
-  },0);
-  document.getElementById('productTotalStock').value = total;
-  document.getElementById('productLimitedUnits').min = Math.max(1,total);
-}
-
-function syncSizeOption(size,resetWhenDisabled = true) {
-  const checkbox = document.getElementById(`size${size.id}Available`);
-  const stockInput = document.getElementById(`stock${size.id}`);
-  stockInput.disabled = !checkbox.checked;
-  if (!checkbox.checked && resetWhenDisabled) stockInput.value = 0;
-  updateTotalStock();
+function syncLimitedStockFields() {
+  const isLimited = document.getElementById('productLimited').checked;
+  const stockBySize = document.getElementById('productStockBySize').checked;
+  let stockUnlimited = document.getElementById('productStockUnlimited').checked;
+  document.getElementById('productLimitedUnitsField').hidden = !isLimited;
+  document.getElementById('productStockUnlimitedOption').hidden = isLimited;
+  if (isLimited && stockUnlimited) {
+    document.getElementById('productStockSingle').checked = true;
+    stockUnlimited = false;
+  }
+  document.getElementById('productAvailableStockField').hidden = stockUnlimited || stockBySize;
+  document.getElementById('productLimitedUnits').required = isLimited;
+  document.getElementById('productAvailableStock').required = !stockUnlimited && !stockBySize;
+  sizeOptions.forEach((size) => {
+    const selected = document.getElementById(`size${size.id}Available`).checked;
+    const input = document.getElementById(`stock${size.id}`);
+    input.hidden = !isLimited || !stockBySize;
+    input.disabled = !isLimited || !stockBySize || !selected;
+  });
 }
 
 function openProductEditor(product = null) {
@@ -136,22 +142,24 @@ function openProductEditor(product = null) {
   document.getElementById('productDescription').value = product?.description || '';
   document.getElementById('productMaterials').value = product?.materials || '';
   document.getElementById('productLimited').checked = Boolean(product?.limited);
+  document.getElementById('productStockBySize').checked = Boolean(product?.stockBySize);
+  document.getElementById('productStockUnlimited').checked = product ? Boolean(product.stockUnlimited) : true;
+  document.getElementById('productStockSingle').checked = product ? !product.stockBySize && !product.stockUnlimited : false;
   document.getElementById('productLimitedUnits').value = product?.limitedUnits || '';
-  document.getElementById('productLimitedUnitsField').hidden = !product?.limited;
-  document.getElementById('productLimitedUnits').required = Boolean(product?.limited);
+  document.getElementById('productAvailableStock').value = product?.stockAvailable ?? productStock(product || {});
+  syncLimitedStockFields();
   const defaultSizes = product ? Object.keys(product.sizes || {}) : [];
   sizeOptions.forEach((size) => {
     const available = defaultSizes.includes(size.key);
     document.getElementById(`size${size.id}Available`).checked = available;
     document.getElementById(`stock${size.id}`).value = product?.sizes?.[size.key] || 0;
-    syncSizeOption(size,false);
   });
+  syncLimitedStockFields();
   productMainImageData = product?.image || '';
   productGalleryData = [...(product?.gallery || [])].slice(0,2);
   document.getElementById('productMainPreview').innerHTML = productMainImageData ? `<img src="${productMainImageData}" alt="Vista previa principal">` : '<span>Vista previa principal</span>';
   document.getElementById('productGalleryPreview').innerHTML = productGalleryData.map((image,index) => `<img src="${image}" alt="Imagen adicional ${index + 1}">`).join('');
   document.getElementById('adminFormStatus').textContent = '';
-  updateTotalStock();
   modal.classList.add('open');
   modal.setAttribute('aria-hidden','false');
 }
@@ -167,7 +175,7 @@ document.getElementById('closeProductTypes').addEventListener('click',() => { pr
 productTypeModal.addEventListener('click',(event) => { if (event.target === productTypeModal) document.getElementById('closeProductTypes').click(); });
 document.getElementById('addProductType').addEventListener('click',() => {
   const input = document.getElementById('newProductType');
-  const type = input.value.trim();
+  const type = input.value.trim().toUpperCase();
   if (!type || productTypes.some((item) => item.toLowerCase() === type.toLowerCase())) return;
   productTypes.push(type);
   saveProductTypes();
@@ -220,15 +228,11 @@ document.getElementById('adminProductList').addEventListener('click',async (even
   }
   if (editButton) openProductEditor(products.find((product) => product.id === editButton.dataset.editProduct));
 });
-sizeOptions.forEach((size) => {
-  document.getElementById(`stock${size.id}`).addEventListener('input',updateTotalStock);
-  document.getElementById(`size${size.id}Available`).addEventListener('change',() => syncSizeOption(size));
-});
 document.getElementById('productLimited').addEventListener('change',(event) => {
-  document.getElementById('productLimitedUnitsField').hidden = !event.target.checked;
-  document.getElementById('productLimitedUnits').required = event.target.checked;
-  updateTotalStock();
+  syncLimitedStockFields();
 });
+document.querySelectorAll('input[name="productStockMode"]').forEach((input) => input.addEventListener('change', syncLimitedStockFields));
+sizeOptions.forEach((size) => document.getElementById(`size${size.id}Available`).addEventListener('change', syncLimitedStockFields));
 
 function closeProductEditor() {
   modal.classList.remove('open');
@@ -276,16 +280,27 @@ document.getElementById('adminProductForm').addEventListener('submit', (event) =
     return;
   }
   if (!productMainImageData) { status.textContent = 'Selecciona una imagen principal.';return; }
+  const isLimited = document.getElementById('productLimited').checked;
+  const stockBySize = document.getElementById('productStockBySize').checked;
+  const stockUnlimited = document.getElementById('productStockUnlimited').checked;
   const selectedSizes = sizeOptions.reduce((sizes,size) => {
-    if (document.getElementById(`size${size.id}Available`).checked) sizes[size.key] = Number(document.getElementById(`stock${size.id}`).value || 0);
+    if (document.getElementById(`size${size.id}Available`).checked) sizes[size.key] = stockBySize ? Number(document.getElementById(`stock${size.id}`).value || 0) : 0;
     return sizes;
   },{});
   if (!Object.keys(selectedSizes).length) { status.textContent = 'Selecciona al menos una talla disponible.';return; }
-  const totalStock = Object.values(selectedSizes).reduce((sum,stock) => sum + Number(stock || 0),0);
-  const isLimited = document.getElementById('productLimited').checked;
   const limitedUnits = Number(document.getElementById('productLimitedUnits').value);
-  if (isLimited && (!Number.isInteger(limitedUnits) || limitedUnits < totalStock)) {
-    status.textContent = `La cantidad limitada debe ser igual o mayor al stock total (${totalStock}).`;
+  const stockAvailable = Number(document.getElementById('productAvailableStock').value);
+  if (isLimited && (!Number.isInteger(limitedUnits) || limitedUnits < 1)) {
+    status.textContent = 'Indica el total de prendas limitadas.';
+    return;
+  }
+  const totalBySize = Object.values(selectedSizes).reduce((total, value) => total + Number(value || 0), 0);
+  if (isLimited && stockBySize && totalBySize > limitedUnits) {
+    status.textContent = 'El stock por tallas no puede superar el total de prendas limitadas.';
+    return;
+  }
+  if (!stockUnlimited && !stockBySize && (!Number.isInteger(stockAvailable) || stockAvailable < 0 || (isLimited && stockAvailable > limitedUnits))) {
+    status.textContent = 'El stock disponible debe estar entre 0 y el total de prendas limitadas.';
     return;
   }
   const id = document.getElementById('productId').value || `product-${Date.now()}`;
@@ -300,6 +315,9 @@ document.getElementById('adminProductForm').addEventListener('submit', (event) =
     sizes:selectedSizes,
     limited:isLimited,
     limitedUnits:isLimited ? limitedUnits : null,
+    stockAvailable:!stockUnlimited && !stockBySize ? stockAvailable : null,
+    stockBySize:!stockUnlimited && stockBySize,
+    stockUnlimited:!isLimited && stockUnlimited,
     blocked:products.find((item) => item.id === id)?.blocked || false,
     image:productMainImageData,
     gallery:productGalleryData

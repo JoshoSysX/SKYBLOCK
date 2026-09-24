@@ -5896,6 +5896,11 @@ footer .footer-brand>.brand small {
 .admin-size-stock legend { padding:0 7px;color:#666;font:600 8px var(--display);letter-spacing:.1em;text-transform:uppercase }
 .admin-size-stock label { margin:0;text-align:center }
 .admin-size-stock input { text-align:center }
+.admin-stock-mode { display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0 18px;font:600 8px var(--display);letter-spacing:.08em;text-transform:uppercase }
+.admin-stock-mode>span { color:#666;margin-right:4px }
+.admin-stock-mode label { margin:0!important;border:1px solid #c9c9c4;padding:8px 10px;cursor:pointer }
+.admin-stock-mode label:has(input:checked) { background:#151617;border-color:#151617;color:#fff }
+.admin-stock-mode input { position:absolute;opacity:0;pointer-events:none }
 .admin-size-option { padding:10px;background:#ecece8;border:1px solid transparent }
 .admin-size-option:has(>span input:checked) { border-color:#111;background:#f7f7f4 }
 .admin-size-option>span { min-height:22px;display:flex;align-items:center;justify-content:center;gap:7px;color:#111;font:600 9px var(--display) }
