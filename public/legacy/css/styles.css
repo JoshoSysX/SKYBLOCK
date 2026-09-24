@@ -2239,6 +2239,16 @@ footer[data-chapter] {
   font-size: 13px
 }
 
+.limited-stock,
+.product-limited-stock {
+  display: block;
+  margin-top: 7px;
+  color: #666661;
+  font: 600 8px var(--display);
+  letter-spacing: .08em;
+  text-transform: uppercase
+}
+
 .catalog-copy p {
   font-size: 9px;
   color: #6b6b68;
@@ -2611,6 +2621,11 @@ footer[data-chapter] {
 .product-price {
   font-size: 17px;
   margin: 0 0 28px
+}
+
+.product-limited-stock {
+  margin: -17px 0 25px;
+  font-size: 9px
 }
 
 .product-description {

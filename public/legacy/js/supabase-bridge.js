@@ -9,6 +9,11 @@
       /[&<>'"]/g,
       (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c],
     )
+  const limitedStock = (p) => {
+    if (!p.es_limitado || !Number.isFinite(Number(p.unidades_limitadas))) return ''
+    const available = (p.tallas || []).reduce((total, size) => total + Math.max(0, Number(size.stock) || 0), 0)
+    return `<span class="limited-stock">Stock ${available}/${Number(p.unidades_limitadas)}</span>`
+  }
   const carouselImage = (url, width) => {
     try {
       const u = new URL(url, location.href)
@@ -60,7 +65,7 @@
     g.innerHTML = ps
       .map((p) => {
         const bloqueado = p.estado === 'archivado'
-        return `<article class="catalog-card${bloqueado ? ' catalog-card-blocked' : ''}" tabindex="${bloqueado ? '-1' : '0'}" ${bloqueado ? 'aria-disabled="true"' : 'role="link"'} data-blocked="${bloqueado}" data-slug="${esc(p.slug)}" data-category="${esc(p.tipo?.slug || 'otros')}" data-name="${esc(p.nombre)}" data-price="${p.precio}"><div class="catalog-image">${bloqueado ? '<span class="tag blocked-tag">Bloqueado</span>' : p.es_limitado ? '<span class="tag">Edición limitada</span>' : ''}<img src="${bloqueado ? 'assets/image/skb-bloqueado.png' : esc(img(p))}" alt="${bloqueado ? `Producto ${esc(p.nombre)} bloqueado temporalmente` : esc(p.imagenes?.[0]?.texto_alternativo || p.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(p.nombre)}</h2></div><strong>${money(p.precio, p.moneda)}</strong><button class="quick-add" ${bloqueado ? 'disabled' : ''}>${bloqueado ? 'No disponible' : 'Ver producto'} <span>${bloqueado ? '×' : '→'}</span></button></div></article>`
+        return `<article class="catalog-card${bloqueado ? ' catalog-card-blocked' : ''}" tabindex="${bloqueado ? '-1' : '0'}" ${bloqueado ? 'aria-disabled="true"' : 'role="link"'} data-blocked="${bloqueado}" data-slug="${esc(p.slug)}" data-category="${esc(p.tipo?.slug || 'otros')}" data-name="${esc(p.nombre)}" data-price="${p.precio}"><div class="catalog-image">${bloqueado ? '<span class="tag blocked-tag">Bloqueado</span>' : p.es_limitado ? '<span class="tag">Edición limitada</span>' : ''}<img src="${bloqueado ? 'assets/image/skb-bloqueado.png' : esc(img(p))}" alt="${bloqueado ? `Producto ${esc(p.nombre)} bloqueado temporalmente` : esc(p.imagenes?.[0]?.texto_alternativo || p.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(p.nombre)}</h2>${bloqueado ? '' : limitedStock(p)}</div><strong>${money(p.precio, p.moneda)}</strong><button class="quick-add" ${bloqueado ? 'disabled' : ''}>${bloqueado ? 'No disponible' : 'Ver producto'} <span>${bloqueado ? '×' : '→'}</span></button></div></article>`
       })
       .join('')
     const cards = [...g.querySelectorAll('.catalog-card')],
@@ -152,6 +157,13 @@
     document.title = `${p.nombre} | SKYBLOCK STUDIO`
     productName.textContent = p.nombre
     productPrice.textContent = money(p.precio, p.moneda)
+    const stock = document.getElementById('productLimitedStock')
+    if (stock) {
+      stock.hidden = !p.es_limitado
+      stock.textContent = p.es_limitado
+        ? `Stock ${((p.tallas || []).reduce((total, size) => total + Math.max(0, Number(size.stock) || 0), 0))}/${Number(p.unidades_limitadas)}`
+        : ''
+    }
     productDescription.textContent = p.descripcion || ''
     productDetails.textContent = p.materiales || ''
     if (detailsSection) detailsSection.hidden = !String(p.materiales || '').trim()
@@ -240,7 +252,7 @@
     collectionProductGrid.innerHTML = items
       .map(
         (p) =>
-          `<a class="catalog-card" href="producto.html?id=${encodeURIComponent(p.slug)}"><div class="catalog-image"><span class="tag">Edición ${esc(c.numero_edicion)}</span><img src="${esc(img(p))}" alt="${esc(p.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(p.nombre)}</h2></div><strong>${money(p.precio, p.moneda)}</strong><span class="collection-buy">Ver prenda <b>→</b></span></div></a>`,
+          `<a class="catalog-card" href="producto.html?id=${encodeURIComponent(p.slug)}"><div class="catalog-image"><span class="tag">Edición ${esc(c.numero_edicion)}</span><img src="${esc(img(p))}" alt="${esc(p.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(p.nombre)}</h2>${limitedStock(p)}</div><strong>${money(p.precio, p.moneda)}</strong><span class="collection-buy">Ver prenda <b>→</b></span></div></a>`,
       )
       .join('')
   }
