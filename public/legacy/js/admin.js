@@ -116,8 +116,8 @@ function syncLimitedStockFields() {
   sizeOptions.forEach((size) => {
     const selected = document.getElementById(`size${size.id}Available`).checked;
     const input = document.getElementById(`stock${size.id}`);
-    input.hidden = !isLimited || !stockBySize;
-    input.disabled = !isLimited || !stockBySize || !selected;
+    input.hidden = !stockBySize;
+    input.disabled = !stockBySize || !selected;
   });
 }
 
