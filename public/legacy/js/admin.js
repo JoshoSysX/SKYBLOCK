@@ -120,8 +120,6 @@ function renderDashboard() {
     ];
     readiness.innerHTML = checks.map((check) => `<div><span class="${check.complete ? 'ready' : ''}">${check.complete ? '✓' : '!'}</span><b>${check.label}</b><strong>${check.value}</strong></div>`).join('');
   }
-  const salesInsight = document.getElementById('dashboardSalesInsight');
-  if (salesInsight) salesInsight.innerHTML = '<article><span>Más vendido</span><b>Sin datos de ventas</b><small>Se activará al registrar pedidos.</small></article><article><span>Menor rotación</span><b>Sin datos de ventas</b><small>Se activará al registrar pedidos.</small></article><article><span>Demanda por talla</span><b>Sin datos de ventas</b><small>Se activará al registrar pedidos.</small></article>';
 }
 
 function saveProducts() {
@@ -148,7 +146,8 @@ function renderProducts(updateDashboard = true) {
     return `<article class="${product.blocked ? 'is-blocked' : ''}"><img src="${product.blocked ? 'assets/image/skb-bloqueado.png' : product.image}" alt="${product.blocked ? `Producto ${product.name} bloqueado` : product.name}"><div><b>${product.name}</b><span>SKB — ${product.collection}</span><small>${String(product.type).toUpperCase()} · ${availableSizes}</small></div><strong>${money(product.price)}</strong>${stockStatus}${product.limited ? '<i>Limitada</i>' : '<i class="standard">Regular</i>'}<div class="admin-product-actions">${stockActions}<button type="button" class="admin-product-lock ${product.blocked ? 'unlock' : ''}" data-toggle-product="${product.id}">${product.blocked ? 'Desbloquear' : 'Bloquear'}</button><button type="button" data-edit-product="${product.id}" aria-label="Editar ${product.name}">Editar</button><button type="button" class="admin-product-delete" data-delete-product="${product.id}" aria-label="Eliminar ${product.name}">Eliminar</button></div></article>`;
   }).join('') || '<p class="admin-empty-products">No hay productos que coincidan con la búsqueda.</p>';
   document.getElementById('adminProductCount').textContent = products.length;
-  document.getElementById('adminPublishedProducts').textContent = String(products.length).padStart(2,'0');
+  const publishedProducts = document.getElementById('adminPublishedProducts');
+  if (publishedProducts) publishedProducts.textContent = String(products.length).padStart(2,'0');
   if (updateDashboard) renderDashboard();
 }
 renderProducts(false);
