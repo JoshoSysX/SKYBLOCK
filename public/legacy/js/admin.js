@@ -89,22 +89,21 @@ function renderDashboard() {
   const lowStock = measuredProducts.filter((product) => productStock(product) > 0 && productStock(product) <= 5);
   const outOfStock = measuredProducts.filter((product) => productStock(product) === 0);
   const limitedProducts = activeProducts.filter((product) => product.limited);
-  const limitedAvailable = limitedProducts.reduce((total, product) => total + productStock(product), 0);
-  const limitedOriginal = limitedProducts.reduce((total, product) => total + Number(product.limitedUnits || 0), 0);
-  const withImage = activeProducts.filter((product) => Boolean(product.image)).length;
-  const withSizes = activeProducts.filter((product) => Object.keys(product.sizes || {}).length > 0).length;
-  const publishedCollections = collections.filter((collection) => collection.status === 'published').length;
+  const unlimitedProducts = activeProducts.filter((product) => product.stockUnlimited);
+  const stockRanking = measuredProducts.filter((product) => productStock(product) > 0).sort((a, b) => productStock(b) - productStock(a));
+  const highestStock = stockRanking[0];
+  const lowestStock = stockRanking[stockRanking.length - 1];
   const priorities = [...outOfStock.map((product) => ({ product, kind:'Agotado', detail:'Sin unidades disponibles', level:'critical' })), ...lowStock.map((product) => ({ product, kind:'Stock bajo', detail:`Quedan ${productStock(product)} unidad${productStock(product) === 1 ? '' : 'es'}`, level:'warning' }))].slice(0, 5);
 
   setDashboardText('dashboardProductTotal', String(activeProducts.length).padStart(2, '0'));
-  setDashboardText('dashboardProductNote', `${products.length - activeProducts.length ? `${products.length - activeProducts.length} bloqueado(s) · ` : ''}${publishedCollections} colección(es) publicada(s)`);
+  setDashboardText('dashboardProductNote', activeProducts.length ? `${products.length - activeProducts.length} bloqueado(s) fuera del catálogo` : 'Crea productos para ver alertas');
   setDashboardText('dashboardUnitsAvailable', String(unitsAvailable).padStart(2, '0'));
-  setDashboardText('dashboardUnitsNote', `${activeProducts.filter((product) => product.stockUnlimited).length} producto(s) con stock ilimitado`);
-  setDashboardText('dashboardLowStock', String(priorities.length).padStart(2, '0'));
-  setDashboardText('dashboardLowStockNote', priorities.length ? `${outOfStock.length} agotado(s) · ${lowStock.length} con stock bajo` : 'Inventario bajo control');
-  setDashboardText('dashboardLimitedProgress', limitedOriginal ? `${limitedAvailable}/${limitedOriginal}` : '—');
-  setDashboardText('dashboardLimitedNote', limitedProducts.length ? `${limitedProducts.length} edición(es) limitada(s) activa(s)` : 'Sin ediciones limitadas activas');
-  setDashboardText('adminDashboardSubtitle', activeProducts.length ? `${activeProducts.length} productos activos · información actualizada desde tu inventario.` : 'Crea tu primer producto para activar las métricas del negocio.');
+  setDashboardText('dashboardUnitsNote', unlimitedProducts.length ? `${unlimitedProducts.length} producto(s) con stock ilimitado` : 'Solo productos con stock medible');
+  setDashboardText('dashboardOutOfStock', String(outOfStock.length).padStart(2, '0'));
+  setDashboardText('dashboardOutOfStockNote', outOfStock.length ? 'Reponer o pausar en catálogo' : 'No hay productos agotados');
+  setDashboardText('dashboardLowStock', String(lowStock.length).padStart(2, '0'));
+  setDashboardText('dashboardLowStockNote', lowStock.length ? '5 unidades o menos' : 'No hay alertas de reposición');
+  setDashboardText('adminDashboardSubtitle', activeProducts.length ? 'Revisa primero los agotados y las piezas con pocas unidades.' : 'Crea productos y configura su stock para activar estas alertas.');
 
   const priorityList = document.getElementById('dashboardPriorityList');
   if (priorityList) priorityList.innerHTML = priorities.length
@@ -114,13 +113,15 @@ function renderDashboard() {
   const readiness = document.getElementById('dashboardReadiness');
   if (readiness) {
     const checks = [
-      { label:'Productos con imagen', value:`${withImage}/${activeProducts.length || 0}`, complete:activeProducts.length === withImage },
-      { label:'Productos con tallas', value:`${withSizes}/${activeProducts.length || 0}`, complete:activeProducts.length === withSizes },
-      { label:'Colecciones publicadas', value:String(publishedCollections), complete:publishedCollections > 0 },
-      { label:'Códigos de autenticidad', value:String(verificationCodes.length), complete:verificationCodes.length > 0 },
+      { label:'Mayor stock', value:highestStock ? `${highestStock.name} · ${productStock(highestStock)}` : 'Sin datos', complete:Boolean(highestStock) },
+      { label:'Menor stock disponible', value:lowestStock ? `${lowestStock.name} · ${productStock(lowestStock)}` : 'Sin datos', complete:Boolean(lowestStock) },
+      { label:'Stock ilimitado', value:unlimitedProducts.length ? `${unlimitedProducts.length} producto(s)` : 'Ninguno', complete:unlimitedProducts.length > 0 },
+      { label:'Ediciones limitadas', value:limitedProducts.length ? `${limitedProducts.length} producto(s)` : 'Ninguna', complete:limitedProducts.length > 0 },
     ];
     readiness.innerHTML = checks.map((check) => `<div><span class="${check.complete ? 'ready' : ''}">${check.complete ? '✓' : '!'}</span><b>${check.label}</b><strong>${check.value}</strong></div>`).join('');
   }
+  const salesInsight = document.getElementById('dashboardSalesInsight');
+  if (salesInsight) salesInsight.innerHTML = '<article><span>Más vendido</span><b>Sin datos de ventas</b><small>Se activará al registrar pedidos.</small></article><article><span>Menor rotación</span><b>Sin datos de ventas</b><small>Se activará al registrar pedidos.</small></article><article><span>Demanda por talla</span><b>Sin datos de ventas</b><small>Se activará al registrar pedidos.</small></article>';
 }
 
 function saveProducts() {
