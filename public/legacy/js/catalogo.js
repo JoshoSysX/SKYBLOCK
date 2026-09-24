@@ -29,7 +29,7 @@ cards.forEach((card) => {
   card.dataset.price = String(product.price);
   card.dataset.blocked = String(Boolean(product.blocked));
   card.querySelector('.catalog-copy h2').textContent = product.name;
-  card.querySelector('.catalog-copy p').textContent = product.description;
+  card.querySelector('.catalog-copy p')?.remove();
   card.querySelector('.catalog-copy strong').textContent = new Intl.NumberFormat('es-PE',{style:'currency',currency:'PEN'}).format(product.price);
   const imageWrap = card.querySelector('.catalog-image');
   const image = imageWrap.querySelector('img');
