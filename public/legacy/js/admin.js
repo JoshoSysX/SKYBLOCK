@@ -77,12 +77,57 @@ const productStock = (product) => !product.stockUnlimited && !usesStockBySize(pr
   ? Number(product.stockAvailable)
   : Object.values(product.sizes || {}).reduce((total,value) => total + Number(value || 0),0);
 const money = (value) => new Intl.NumberFormat('es-PE',{ style:'currency',currency:'PEN' }).format(value);
+const setDashboardText = (id, value) => { const element = document.getElementById(id); if (element) element.textContent = value; };
+const escapeDashboard = (value) => String(value || '').replace(/[&<>'"]/g, (character) => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' })[character]);
+
+function renderDashboard() {
+  const hour = new Date().getHours();
+  setDashboardText('adminGreeting', hour < 12 ? 'Buenos días.' : hour < 19 ? 'Buenas tardes.' : 'Buenas noches.');
+  const activeProducts = products.filter((product) => !product.blocked);
+  const measuredProducts = activeProducts.filter((product) => !product.stockUnlimited);
+  const unitsAvailable = measuredProducts.reduce((total, product) => total + productStock(product), 0);
+  const lowStock = measuredProducts.filter((product) => productStock(product) > 0 && productStock(product) <= 5);
+  const outOfStock = measuredProducts.filter((product) => productStock(product) === 0);
+  const limitedProducts = activeProducts.filter((product) => product.limited);
+  const limitedAvailable = limitedProducts.reduce((total, product) => total + productStock(product), 0);
+  const limitedOriginal = limitedProducts.reduce((total, product) => total + Number(product.limitedUnits || 0), 0);
+  const withImage = activeProducts.filter((product) => Boolean(product.image)).length;
+  const withSizes = activeProducts.filter((product) => Object.keys(product.sizes || {}).length > 0).length;
+  const publishedCollections = collections.filter((collection) => collection.status === 'published').length;
+  const priorities = [...outOfStock.map((product) => ({ product, kind:'Agotado', detail:'Sin unidades disponibles', level:'critical' })), ...lowStock.map((product) => ({ product, kind:'Stock bajo', detail:`Quedan ${productStock(product)} unidad${productStock(product) === 1 ? '' : 'es'}`, level:'warning' }))].slice(0, 5);
+
+  setDashboardText('dashboardProductTotal', String(activeProducts.length).padStart(2, '0'));
+  setDashboardText('dashboardProductNote', `${products.length - activeProducts.length ? `${products.length - activeProducts.length} bloqueado(s) · ` : ''}${publishedCollections} colección(es) publicada(s)`);
+  setDashboardText('dashboardUnitsAvailable', String(unitsAvailable).padStart(2, '0'));
+  setDashboardText('dashboardUnitsNote', `${activeProducts.filter((product) => product.stockUnlimited).length} producto(s) con stock ilimitado`);
+  setDashboardText('dashboardLowStock', String(priorities.length).padStart(2, '0'));
+  setDashboardText('dashboardLowStockNote', priorities.length ? `${outOfStock.length} agotado(s) · ${lowStock.length} con stock bajo` : 'Inventario bajo control');
+  setDashboardText('dashboardLimitedProgress', limitedOriginal ? `${limitedAvailable}/${limitedOriginal}` : '—');
+  setDashboardText('dashboardLimitedNote', limitedProducts.length ? `${limitedProducts.length} edición(es) limitada(s) activa(s)` : 'Sin ediciones limitadas activas');
+  setDashboardText('adminDashboardSubtitle', activeProducts.length ? `${activeProducts.length} productos activos · información actualizada desde tu inventario.` : 'Crea tu primer producto para activar las métricas del negocio.');
+
+  const priorityList = document.getElementById('dashboardPriorityList');
+  if (priorityList) priorityList.innerHTML = priorities.length
+    ? priorities.map(({ product, kind, detail, level }) => `<article class="${level}"><img src="${escapeDashboard(product.image)}" alt="${escapeDashboard(product.name)}"><div><span>${kind}</span><b>${escapeDashboard(product.name)}</b><small>${detail}</small></div><button type="button" data-dashboard-edit-product="${escapeDashboard(product.id)}">Revisar →</button></article>`).join('')
+    : '<div class="dashboard-empty"><b>Todo en orden.</b><span>No hay productos agotados ni con stock bajo.</span></div>';
+
+  const readiness = document.getElementById('dashboardReadiness');
+  if (readiness) {
+    const checks = [
+      { label:'Productos con imagen', value:`${withImage}/${activeProducts.length || 0}`, complete:activeProducts.length === withImage },
+      { label:'Productos con tallas', value:`${withSizes}/${activeProducts.length || 0}`, complete:activeProducts.length === withSizes },
+      { label:'Colecciones publicadas', value:String(publishedCollections), complete:publishedCollections > 0 },
+      { label:'Códigos de autenticidad', value:String(verificationCodes.length), complete:verificationCodes.length > 0 },
+    ];
+    readiness.innerHTML = checks.map((check) => `<div><span class="${check.complete ? 'ready' : ''}">${check.complete ? '✓' : '!'}</span><b>${check.label}</b><strong>${check.value}</strong></div>`).join('');
+  }
+}
 
 function saveProducts() {
   return;
 }
 
-function renderProducts() {
+function renderProducts(updateDashboard = true) {
   const query = document.getElementById('adminProductSearch').value.toLowerCase();
   const filter = document.getElementById('adminProductFilter').value;
   const visible = products.filter((product) => {
@@ -103,10 +148,19 @@ function renderProducts() {
   }).join('') || '<p class="admin-empty-products">No hay productos que coincidan con la búsqueda.</p>';
   document.getElementById('adminProductCount').textContent = products.length;
   document.getElementById('adminPublishedProducts').textContent = String(products.length).padStart(2,'0');
+  if (updateDashboard) renderDashboard();
 }
-renderProducts();
+renderProducts(false);
 document.getElementById('adminProductSearch').addEventListener('input', renderProducts);
 document.getElementById('adminProductFilter').addEventListener('change', renderProducts);
+document.addEventListener('click', (event) => {
+  const action = event.target.closest('[data-dashboard-action]')?.dataset.dashboardAction;
+  const productId = event.target.closest('[data-dashboard-edit-product]')?.dataset.dashboardEditProduct;
+  if (productId) { showView('productos'); openProductEditor(products.find((product) => product.id === productId)); return; }
+  if (!action) return;
+  showView(action);
+  if (action === 'verificacion') document.getElementById('newVerificationCode')?.click();
+});
 
 function syncLimitedStockFields() {
   const isLimited = document.getElementById('productLimited').checked;
