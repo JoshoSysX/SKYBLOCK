@@ -9,7 +9,13 @@ const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
-const LEGACY_BUILD = 'admin-data-fix-20260923'
+const LEGACY_BUILD = 'size-order-20260924'
+const ORDEN_TALLAS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Única']
+const ordenarTallas = <T extends { talla?: string }>(tallas: T[] = []) => [...tallas].sort((a, b) => {
+  const posicionA = ORDEN_TALLAS.indexOf(String(a.talla || ''))
+  const posicionB = ORDEN_TALLAS.indexOf(String(b.talla || ''))
+  return (posicionA < 0 ? ORDEN_TALLAS.length : posicionA) - (posicionB < 0 ? ORDEN_TALLAS.length : posicionB)
+})
 const paginas = new Set(['inicio','catalogo','colecciones','coleccion','producto','posts','nosotros','contacto','privacidad','terminos','verificar','login','registro','admin'])
 const rutaInicial = paginas.has(location.pathname.split('/').filter(Boolean)[0] || '') ? location.pathname.split('/').filter(Boolean)[0] : 'inicio'
 const urlLegacy = (pagina:string, search = '') => {
@@ -94,7 +100,7 @@ export default function App() {
     ])
     const next = p.error || c.error || posts.error
       ? { productos: [], colecciones: [], publicaciones: [], error: 'No se pudieron cargar los datos.' }
-      : { productos: p.data ?? [], colecciones: c.data ?? [], publicaciones: posts.data ?? [] }
+      : { productos: (p.data ?? []).map((producto: any) => ({ ...producto, tallas: ordenarTallas(producto.tallas || []) })), colecciones: c.data ?? [], publicaciones: posts.data ?? [] }
     setDatos(next)
     return next
   }, [])
@@ -280,7 +286,7 @@ export default function App() {
     ])
     const error = productos.error || colecciones.error || tipos.error || codigos.error
     const cs = (colecciones.data ?? []).map((c: any) => ({ id:c.id, name:c.nombre, slug:c.slug, edition:c.numero_edicion, status:c.estado === 'publicado' ? 'published' : c.estado === 'archivado' ? 'upcoming' : 'draft', limited:false, description:c.descripcion, story:c.historia, cover:[...(c.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0))[0]?.url_segura || '' }))
-    const ps = (productos.data ?? []).map((p: any) => { const images=[...(p.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0)); const sizes=Object.fromEntries((p.tallas || []).map((t:any)=>[t.talla,t.stock])); const stockBySize=p.stock_por_talla === true || p.stock_por_talla === 'true'; const stockUnlimited=p.stock_ilimitado === true || p.stock_ilimitado === 'true'; return { id:p.id, name:p.nombre, type:p.tipo?.nombre || '', collection:p.coleccion?.nombre || '', price:Number(p.precio), description:p.descripcion, materials:p.materiales || '', sizes, limited:p.es_limitado, limitedUnits:p.unidades_limitadas, stockBySize, stockUnlimited, stockAvailable:p.stock_disponible ?? Object.values(sizes).reduce((sum:number,stock:any)=>sum+Number(stock||0),0), blocked:p.estado === 'archivado', image:images[0]?.url_segura || '', gallery:images.slice(1).map((i:FilaImagen)=>i.url_segura) } })
+    const ps = (productos.data ?? []).map((p: any) => { const images=[...(p.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0)); const sizes=Object.fromEntries(ordenarTallas(p.tallas || []).map((t:any)=>[t.talla,t.stock])); const stockBySize=p.stock_por_talla === true || p.stock_por_talla === 'true'; const stockUnlimited=p.stock_ilimitado === true || p.stock_ilimitado === 'true'; return { id:p.id, name:p.nombre, type:p.tipo?.nombre || '', collection:p.coleccion?.nombre || '', price:Number(p.precio), description:p.descripcion, materials:p.materiales || '', sizes, limited:p.es_limitado, limitedUnits:p.unidades_limitadas, stockBySize, stockUnlimited, stockAvailable:p.stock_disponible ?? Object.values(sizes).reduce((sum:number,stock:any)=>sum+Number(stock||0),0), blocked:p.estado === 'archivado', image:images[0]?.url_segura || '', gallery:images.slice(1).map((i:FilaImagen)=>i.url_segura) } })
     const codes = (codigos.data ?? []).map((c:any) => ({ id:c.id, hash:String(c.codigo_hmac || '').replace(/^\\x/,''), code:String(c.codigo_admin || ''), codeHint:`•••• ${c.ultimos_cuatro}`, series:c.numero_serie, collection:c.coleccion?.nombre || '', product:c.producto?.nombre || '', owner:c.propietario_nombre || 'Sin registrar', status:c.estado === 'bloqueado' || c.estado === 'anulado' ? 'blocked' : 'active' }))
     return { productos: ps, colecciones: cs, tipos: (tipos.data ?? []).map((t:any)=>t.nombre), codigos: codes, error: error?.message || '' }
   }

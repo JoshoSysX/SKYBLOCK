@@ -57,6 +57,7 @@ let productGalleryData = [];
 const MAX_IMAGE_SIZE_MB = 150;
 const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 const sizeOptions = [{ key:'XS',id:'XS' },{ key:'S',id:'S' },{ key:'M',id:'M' },{ key:'L',id:'L' },{ key:'XL',id:'XL' },{ key:'XXL',id:'XXL' },{ key:'Única',id:'One' }];
+const orderedSizeKeys = (sizes = {}) => [...sizeOptions.map((size) => size.key).filter((size) => Object.prototype.hasOwnProperty.call(sizes, size)), ...Object.keys(sizes).filter((size) => !sizeOptions.some((option) => option.key === size)).sort()];
 let productTypes;
 productTypes = [];
 
@@ -137,8 +138,8 @@ function renderProducts(updateDashboard = true) {
   });
   document.getElementById('adminProductList').innerHTML = visible.map((product) => {
     const stock = productStock(product);
-    const availableSizes = Object.keys(product.sizes || {}).join(' · ') || 'Sin tallas definidas';
-    const stockBySize = Object.entries(product.sizes || {}).filter(([, amount]) => Number(amount) > 0).map(([size, amount]) => `${size}: ${amount}`).join(' · ');
+    const availableSizes = orderedSizeKeys(product.sizes).join(' · ') || 'Sin tallas definidas';
+    const stockBySize = orderedSizeKeys(product.sizes).filter((size) => Number(product.sizes[size]) > 0).map((size) => `${size}: ${product.sizes[size]}`).join(' · ');
     const limitedCounter = product.limited ? `Stock ${stock}/${Number(product.limitedUnits)}` : `${stock} en stock`;
     const stockLabel = product.blocked ? 'Bloqueado' : product.stockUnlimited ? '' : stock > 0 ? `${limitedCounter}${usesStockBySize(product) ? ` · ${stockBySize}` : ''}` : '';
     const stockActions = product.stockUnlimited ? '' : `<button type="button" class="admin-product-stock add" data-adjust-stock="add" data-product-id="${product.id}">+ Stock</button>${stock > 0 ? `<button type="button" class="admin-product-stock remove" data-adjust-stock="remove" data-product-id="${product.id}">− Stock</button>` : ''}`;
@@ -210,7 +211,7 @@ function openProductEditor(product = null) {
   document.getElementById('productLimitedUnits').value = product?.limitedUnits || '';
   document.getElementById('productAvailableStock').value = product?.stockAvailable ?? productStock(product || {});
   syncLimitedStockFields();
-  const defaultSizes = product ? Object.keys(product.sizes || {}) : [];
+  const defaultSizes = product ? orderedSizeKeys(product.sizes) : [];
   sizeOptions.forEach((size) => {
     const available = defaultSizes.includes(size.key);
     document.getElementById(`size${size.id}Available`).checked = available;
@@ -313,7 +314,7 @@ function openStockAdjustment(product, direction) {
   const sizeField = document.getElementById('stockAdjustmentSizeField');
   sizeField.hidden = !bySize;
   const sizeSelect = document.getElementById('stockAdjustmentSize');
-  sizeSelect.innerHTML = Object.keys(product.sizes || {}).map((size) => `<option value="${size}">${size}${bySize ? ` · ${product.sizes[size]} disponibles` : ''}</option>`).join('');
+  sizeSelect.innerHTML = orderedSizeKeys(product.sizes).map((size) => `<option value="${size}">${size}${bySize ? ` · ${product.sizes[size]} disponibles` : ''}</option>`).join('');
   document.getElementById('stockAdjustmentAmount').value = '';
   document.getElementById('stockAdjustmentStatus').textContent = '';
   stockAdjustmentModal.classList.add('open');
