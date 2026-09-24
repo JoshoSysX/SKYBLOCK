@@ -4,6 +4,8 @@ const sidebar = document.getElementById('adminSidebar');
 const menuToggle = document.getElementById('adminMenuToggle');
 const modal = document.getElementById('productModal');
 const toast = document.getElementById('adminToast');
+const stockAdjustmentModal = document.getElementById('stockAdjustmentModal');
+let pendingStockAdjustment = null;
 
 const confirmModal = document.getElementById('adminConfirm');
 const confirmTitle = document.getElementById('adminConfirmTitle');
@@ -91,7 +93,8 @@ function renderProducts() {
   document.getElementById('adminProductList').innerHTML = visible.map((product) => {
     const stock = productStock(product);
     const availableSizes = Object.keys(product.sizes || {}).join(' · ') || 'Sin tallas definidas';
-    return `<article class="${product.blocked ? 'is-blocked' : ''}"><img src="${product.blocked ? 'assets/image/skb-bloqueado.png' : product.image}" alt="${product.blocked ? `Producto ${product.name} bloqueado` : product.name}"><div><b>${product.name}</b><span>SKB — ${product.collection}</span><small>${String(product.type).toUpperCase()} · ${availableSizes}</small></div><strong>${money(product.price)}</strong><em class="${product.blocked ? 'blocked' : !product.stockUnlimited && stock <= 5 ? 'low' : ''}">${product.blocked ? 'Bloqueado' : product.stockUnlimited ? 'Stock ilimitado' : `${stock} en stock`}</em>${product.limited ? '<i>Limitada</i>' : '<i class="standard">Regular</i>'}<div class="admin-product-actions"><button type="button" class="admin-product-lock ${product.blocked ? 'unlock' : ''}" data-toggle-product="${product.id}">${product.blocked ? 'Desbloquear' : 'Bloquear'}</button><button type="button" data-edit-product="${product.id}" aria-label="Editar ${product.name}">Editar</button><button type="button" class="admin-product-delete" data-delete-product="${product.id}" aria-label="Eliminar ${product.name}">Eliminar</button></div></article>`;
+    const stockActions = product.stockUnlimited ? '' : `<button type="button" class="admin-product-stock add" data-adjust-stock="add" data-product-id="${product.id}">+ Stock</button><button type="button" class="admin-product-stock remove" data-adjust-stock="remove" data-product-id="${product.id}">− Stock</button>`;
+    return `<article class="${product.blocked ? 'is-blocked' : ''}"><img src="${product.blocked ? 'assets/image/skb-bloqueado.png' : product.image}" alt="${product.blocked ? `Producto ${product.name} bloqueado` : product.name}"><div><b>${product.name}</b><span>SKB — ${product.collection}</span><small>${String(product.type).toUpperCase()} · ${availableSizes}</small></div><strong>${money(product.price)}</strong><em class="${product.blocked ? 'blocked' : !product.stockUnlimited && stock <= 5 ? 'low' : ''}">${product.blocked ? 'Bloqueado' : product.stockUnlimited ? 'Stock ilimitado' : `${stock} en stock`}</em>${product.limited ? '<i>Limitada</i>' : '<i class="standard">Regular</i>'}<div class="admin-product-actions">${stockActions}<button type="button" class="admin-product-lock ${product.blocked ? 'unlock' : ''}" data-toggle-product="${product.id}">${product.blocked ? 'Desbloquear' : 'Bloquear'}</button><button type="button" data-edit-product="${product.id}" aria-label="Editar ${product.name}">Editar</button><button type="button" class="admin-product-delete" data-delete-product="${product.id}" aria-label="Eliminar ${product.name}">Eliminar</button></div></article>`;
   }).join('') || '<p class="admin-empty-products">No hay productos que coincidan con la búsqueda.</p>';
   document.getElementById('adminProductCount').textContent = products.length;
   document.getElementById('adminPublishedProducts').textContent = String(products.length).padStart(2,'0');
@@ -201,6 +204,12 @@ document.getElementById('adminProductList').addEventListener('click',async (even
   const editButton = event.target.closest('[data-edit-product]');
   const toggleButton = event.target.closest('[data-toggle-product]');
   const deleteButton = event.target.closest('[data-delete-product]');
+  const stockButton = event.target.closest('[data-adjust-stock]');
+  if (stockButton) {
+    const product = products.find((item) => item.id === stockButton.dataset.productId);
+    if (product) openStockAdjustment(product, stockButton.dataset.adjustStock);
+    return;
+  }
   if (toggleButton) {
     const product = products.find((item) => item.id === toggleButton.dataset.toggleProduct);
     if (!product) return;
@@ -227,6 +236,60 @@ document.getElementById('adminProductList').addEventListener('click',async (even
     return;
   }
   if (editButton) openProductEditor(products.find((product) => product.id === editButton.dataset.editProduct));
+});
+
+function closeStockAdjustment() {
+  pendingStockAdjustment = null;
+  stockAdjustmentModal.classList.remove('open');
+  stockAdjustmentModal.setAttribute('aria-hidden','true');
+}
+
+function openStockAdjustment(product, direction) {
+  if (product.stockUnlimited) return;
+  pendingStockAdjustment = { product, direction };
+  const bySize = Boolean(product.stockBySize);
+  document.getElementById('stockAdjustmentTitle').textContent = direction === 'add' ? 'Agregar stock' : 'Quitar stock';
+  document.getElementById('stockAdjustmentProduct').textContent = product.name;
+  document.getElementById('stockAdjustmentSizeField').hidden = !bySize;
+  const sizeSelect = document.getElementById('stockAdjustmentSize');
+  sizeSelect.innerHTML = Object.keys(product.sizes || {}).map((size) => `<option value="${size}">${size}${bySize ? ` · ${product.sizes[size]} disponibles` : ''}</option>`).join('');
+  document.getElementById('stockAdjustmentAmount').value = '';
+  document.getElementById('stockAdjustmentStatus').textContent = '';
+  stockAdjustmentModal.classList.add('open');
+  stockAdjustmentModal.setAttribute('aria-hidden','false');
+  setTimeout(() => document.getElementById('stockAdjustmentAmount').focus(), 0);
+}
+
+document.getElementById('closeStockAdjustment').addEventListener('click', closeStockAdjustment);
+document.getElementById('cancelStockAdjustment').addEventListener('click', closeStockAdjustment);
+stockAdjustmentModal.addEventListener('click', (event) => { if (event.target === stockAdjustmentModal) closeStockAdjustment(); });
+document.getElementById('stockAdjustmentForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (!pendingStockAdjustment) return;
+  const { product, direction } = pendingStockAdjustment;
+  const amount = Number(document.getElementById('stockAdjustmentAmount').value);
+  const status = document.getElementById('stockAdjustmentStatus');
+  if (!Number.isInteger(amount) || amount < 1) { status.textContent = 'Indica una cantidad válida.'; return; }
+  const multiplier = direction === 'add' ? 1 : -1;
+  if (product.stockBySize) {
+    const size = document.getElementById('stockAdjustmentSize').value;
+    const next = Number(product.sizes?.[size] || 0) + multiplier * amount;
+    if (next < 0) { status.textContent = 'No puedes retirar más unidades de las disponibles en esta talla.'; return; }
+    const total = Object.values(product.sizes || {}).reduce((sum, value) => sum + Number(value || 0), 0) + multiplier * amount;
+    if (product.limited && total > Number(product.limitedUnits)) { status.textContent = 'El stock no puede superar el límite de la edición.'; return; }
+    product.sizes[size] = next;
+  } else {
+    const next = Number(product.stockAvailable || 0) + multiplier * amount;
+    if (next < 0) { status.textContent = 'No puedes retirar más unidades de las disponibles.'; return; }
+    if (product.limited && next > Number(product.limitedUnits)) { status.textContent = 'El stock no puede superar el límite de la edición.'; return; }
+    product.stockAvailable = next;
+  }
+  guardarEnSupabase('SKYBLOCK_ADMIN_GUARDAR_PRODUCTO', product);
+  renderProducts();
+  toast.textContent = direction === 'add' ? 'Stock agregado.' : 'Stock actualizado.';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2600);
+  closeStockAdjustment();
 });
 document.getElementById('productLimited').addEventListener('change',(event) => {
   syncLimitedStockFields();
