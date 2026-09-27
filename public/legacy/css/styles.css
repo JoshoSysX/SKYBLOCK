@@ -6330,3 +6330,14 @@ body.catalog-page,
 .posts-profile-socials svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.8; }
 .posts-profile-socials .social-fill { fill:currentColor; stroke:none; }
 @media(max-width:700px){.posts-profile-socials{position:static;justify-content:flex-start;padding:0 19px 20px}.posts-profile-socials a{width:36px;height:36px}}
+
+/* Perfil de escritorio: identidad compacta junto al avatar y portada protagonista. */
+@media(min-width:701px){
+  .posts-profile-cover{height:300px!important}
+  .posts-profile-mark{position:absolute!important;top:234px;left:34px;width:132px!important;height:132px!important;margin:0!important}
+  .posts-profile-content{min-height:178px!important;padding:28px 220px 30px 202px!important}
+  .posts-profile-content>h2{font-size:34px!important}
+  .posts-profile-content>.posts-profile-count{margin:11px 0 12px!important}
+  .posts-profile-content>#postsProfileBio{max-width:620px!important}
+  .posts-profile-socials{right:38px;bottom:34px}
+}
