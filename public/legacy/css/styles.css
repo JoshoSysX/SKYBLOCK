@@ -6335,7 +6335,7 @@ body.catalog-page,
 @media(min-width:701px){
   .posts-layout{width:min(1120px,calc(100% - 24px))!important}
   .posts-profile-cover{height:360px!important}
-  .posts-profile-mark{position:absolute!important;top:294px;left:30px;width:132px!important;height:132px!important;margin:0!important}
+  .posts-profile-mark{position:absolute!important;top:334px;left:30px;width:132px!important;height:132px!important;margin:0!important}
   .posts-profile-content{min-height:178px!important;padding:28px 190px 30px 188px!important}
   .posts-profile-content>h2{font-size:34px!important}
   .posts-profile-content>.posts-profile-count{margin:11px 0 12px!important}

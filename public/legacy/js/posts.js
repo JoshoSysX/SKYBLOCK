@@ -9,6 +9,11 @@ const esc=(value='')=>{const node=document.createElement('span');node.textConten
 const images=(post)=>[...(post.imagenes||[])].sort((a,b)=>Number(a.posicion||0)-Number(b.posicion||0));
 const likedKey=(id)=>`skyblock-post-liked-${id}`;
 const isLiked=(id)=>localStorage.getItem(likedKey(id))==='1';
+const publicPostsUrl=()=>`${location.origin}/posts`;
+async function copyLink(url){
+  if(navigator.clipboard?.writeText){try{await navigator.clipboard.writeText(url);return true}catch{}}
+  const field=document.createElement('textarea');field.value=url;field.setAttribute('readonly','');field.style.cssText='position:fixed;opacity:0;pointer-events:none';document.body.append(field);field.select();const copied=document.execCommand('copy');field.remove();return copied;
+}
 
 function applyProfile(raw={}) {
   const profile={...defaultProfile,...raw};
@@ -36,8 +41,8 @@ postsFeed.addEventListener('click',async(event)=>{
   if(like){const id=like.dataset.likePost;const liked=!isLiked(id);liked?localStorage.setItem(likedKey(id),'1'):localStorage.removeItem(likedKey(id));like.classList.toggle('liked',liked);like.setAttribute('aria-pressed',String(liked));like.querySelector('span').textContent=liked?'♥':'♡';like.querySelector('em').textContent=liked?'Te gusta':'Me gusta';return}
   const share=event.target.closest('[data-share-post]');
   if(!share)return;
-  const post=share.closest('.studio-post');const title=post?.querySelector('h2')?.textContent||'SKYBLOCK STUDIO';const text=post?.querySelector('.post-copy p')?.textContent||'';
-  try{if(navigator.share)await navigator.share({title,text,url:location.href});else{await navigator.clipboard.writeText(location.href);share.querySelector('em').textContent='Enlace copiado';setTimeout(()=>{share.querySelector('em').textContent='Compartir'},1800)}}catch(error){if(error?.name!=='AbortError')share.querySelector('em').textContent='No se pudo compartir'}
+  const post=share.closest('.studio-post');const title=post?.querySelector('h2')?.textContent||'SKYBLOCK STUDIO';const text=post?.querySelector('.post-copy p')?.textContent||'';const url=publicPostsUrl();const label=share.querySelector('em');
+  try{if(navigator.share){await navigator.share({title,text,url});label.textContent='Compartido'}else if(await copyLink(url)){label.textContent='Enlace copiado'}else throw new Error('copy-failed')}catch(error){if(error?.name==='AbortError'){label.textContent='Compartir';return}label.textContent=await copyLink(url)?'Enlace copiado':'No se pudo compartir'}finally{setTimeout(()=>{label.textContent='Compartir'},2200)}
 });
 postsFeed.addEventListener('scroll',(event)=>{const track=event.target.closest?.('.post-carousel-track');if(!track)return;const count=track.closest('[data-carousel]').querySelector('.post-carousel-count');if(count)count.textContent=`${Math.round(track.scrollLeft/track.clientWidth)+1} / ${track.children.length}`},true);
 
