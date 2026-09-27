@@ -897,46 +897,6 @@ footer {
   }
 }
 
-/* Posts se presenta como un perfil editorial: portada, avatar y feed central. */
-.posts-page { background:#f4f4f0; }
-.posts-intro { display:none; }
-.posts-layout { width:min(1040px,calc(100% - 40px)); display:block; padding:64px 0 110px; }
-.posts-profile { position:relative; top:auto; width:100%; overflow:visible; border:1px solid #d3d3ce; background:#fff; color:#171819; }
-.posts-profile-cover { height:270px; background:linear-gradient(118deg,#1a1d20,#080909 68%); background-size:cover; background-position:center; }
-.posts-profile-mark { width:132px; height:132px; margin:-66px 0 0 34px; border:4px solid #fff; background-color:#c9d1d6; }
-.posts-profile-content { min-height:178px; padding:16px 34px 26px; }
-.posts-profile h2 { margin:0 0 5px; color:#151617; font-size:30px; letter-spacing:.02em; }
-.posts-profile-content>p { max-width:580px; margin:0; color:#575a5b; font-size:12px; line-height:1.65; }
-.posts-profile-details { display:flex; flex-wrap:wrap; gap:7px 24px; margin:14px 0 17px; color:#767a7b; font-size:10px; }
-.posts-profile-details li::before { color:#171819; }
-.posts-profile-content>div:not(.posts-profile-mark) { position:absolute; top:285px; right:34px; margin:0; padding:0 0 0 20px; border:0; border-left:1px solid #deded9; }
-.posts-profile-content>div b { color:#171819; }
-.posts-profile-content>div span { color:#777; }
-.posts-profile-content>a { position:absolute; right:34px; bottom:26px; min-width:190px; padding:13px 16px; border:1px solid #202123; background:#171819; color:#fff; }
-.posts-feed { width:min(100%,820px); margin:26px auto 0; gap:18px; }
-.studio-post { border-radius:0; border-color:#deded9; box-shadow:none; }
-.studio-post>header { min-height:72px; padding:14px 20px; }
-.studio-post .post-avatar { width:42px; height:42px; }
-.post-copy { padding:5px 20px 19px; }
-.post-copy h2 { font-size:clamp(25px,3vw,36px); }
-.studio-post>img { aspect-ratio:auto; max-height:680px; object-fit:cover; }
-.studio-post>footer { padding:8px 12px; border-top:0; }
-.studio-post>footer .post-action { flex:0 0 auto; min-width:120px; }
-@media(max-width:700px) {
-  .posts-layout { width:min(100% - 24px,680px); padding:28px 0 65px; }
-  .posts-profile-cover { height:156px; }
-  .posts-profile-mark { width:98px; height:98px; margin:-49px 0 0 19px; }
-  .posts-profile-content { min-height:auto; padding:14px 19px 20px; }
-  .posts-profile h2 { font-size:25px; }
-  .posts-profile-details { display:grid; gap:7px; margin-bottom:16px; }
-  .posts-profile-content>div:not(.posts-profile-mark) { position:static; display:flex; width:max-content; margin:14px 0; padding:0 0 0 15px; border-left:1px solid #deded9; }
-  .posts-profile-content>a { position:static; width:100%; min-width:0; box-sizing:border-box; }
-  .posts-feed { margin-top:18px; }
-  .studio-post>header { padding-inline:14px; }
-  .post-copy { padding-inline:14px; }
-  .studio-post>footer .post-action { min-width:0; flex:1 1 0; }
-}
-
 /* Layout inspirado en la composición editorial de referencia */
 .shipping-bar {
   height: 38px;
@@ -6208,29 +6168,31 @@ body.catalog-page,
 }
 
 /* Composición final de Posts: perfil editorial completo, como la referencia. */
-.posts-page { background:#f4f4f0; }
+.posts-page,.posts-main { background:#f4f4f0; }
 .posts-intro { display:none; }
 .posts-layout { width:min(1040px,calc(100% - 40px)); display:block; padding:64px 0 110px; }
-.posts-profile { position:relative; top:auto; width:100%; overflow:visible; border:1px solid #d3d3ce; background:#fff; color:#171819; }
-.posts-profile-cover { height:270px; background:linear-gradient(118deg,#1a1d20,#080909 68%); background-size:cover; background-position:center; }
-.posts-profile-mark { width:132px; height:132px; margin:-66px 0 0 34px; border:4px solid #fff; background-color:#c9d1d6; }
-.posts-profile-content { min-height:178px; padding:16px 34px 26px; }
+.posts-profile { position:relative; top:auto; width:100%; overflow:visible; border:1px solid #dfdfda; border-radius:16px; background:#fff; color:#171819; box-shadow:0 10px 28px #191a1b08; }
+.posts-profile-cover { height:240px; border-radius:15px 15px 0 0; background:linear-gradient(118deg,#1a1d20,#080909 68%); background-size:cover; background-position:center; }
+.posts-profile-mark { width:116px; height:116px; margin:-58px 0 0 34px; border:4px solid #fff; background-color:#c9d1d6; }
+.posts-profile-content { min-height:164px; padding:14px 34px 25px; }
 .posts-profile h2 { margin:0 0 5px; color:#151617; font-size:30px; letter-spacing:.02em; }
 .posts-profile-content>p { max-width:580px; margin:0; color:#575a5b; font-size:12px; line-height:1.65; }
 .posts-profile-details { display:flex; flex-wrap:wrap; gap:7px 24px; margin:14px 0 17px; color:#767a7b; font-size:10px; }
 .posts-profile-details li::before { color:#171819; }
-.posts-profile-content>div:not(.posts-profile-mark) { position:absolute; top:285px; right:34px; margin:0; padding:0 0 0 20px; border:0; border-left:1px solid #deded9; }
+.posts-profile-content>div:not(.posts-profile-mark) { display:flex; width:max-content; margin:14px 0 0; padding:0 0 0 15px; border:0; border-left:1px solid #deded9; }
 .posts-profile-content>div b { color:#171819; }
 .posts-profile-content>div span { color:#777; }
-.posts-profile-content>a { position:absolute; right:34px; bottom:26px; min-width:190px; padding:13px 16px; border:1px solid #202123; background:#171819; color:#fff; }
-.posts-feed { width:min(100%,820px); margin:26px auto 0; display:grid; gap:18px; }
-.studio-post { border-radius:0; border-color:#deded9; box-shadow:none; }
+.posts-profile-content>a { position:absolute; right:34px; bottom:26px; min-width:190px; padding:13px 16px; border:1px solid #202123; border-radius:8px; background:#171819; color:#fff; }
+.posts-feed { width:min(100%,820px); margin:28px auto 0; display:grid; gap:16px; }
+.studio-post { overflow:hidden; border:1px solid #e1e1dc; border-radius:14px; background:#fff; box-shadow:0 8px 22px #191a1a08; transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease; }
+.studio-post:hover { border-color:#c9cac5; box-shadow:0 14px 30px #191a1a0d; transform:translateY(-1px); }
 .studio-post>header { min-height:72px; padding:14px 20px; }
 .studio-post .post-avatar { width:42px; height:42px; }
+.studio-post .post-avatar.has-image { color:transparent; }
 .post-copy { padding:5px 20px 19px; }
 .post-copy h2 { font-size:clamp(25px,3vw,36px); }
-.studio-post>img { aspect-ratio:auto; max-height:680px; object-fit:cover; }
-.studio-post>footer { padding:8px 12px; border-top:0; }
+.studio-post>img { width:calc(100% - 28px); margin:0 14px; border-radius:8px; aspect-ratio:auto; max-height:680px; object-fit:cover; }
+.studio-post>footer { padding:9px 12px 10px; border-top:0; }
 .studio-post>footer .post-action { flex:0 0 auto; min-width:120px; }
 .admin-profile-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(320px,.72fr); gap:24px; align-items:start; }
 .admin-profile-preview-wrap { min-height:100%; padding:20px; border:1px solid #d4d4ce; background:#171819; }
@@ -6245,16 +6207,19 @@ body.catalog-page,
 .admin-profile-preview-content small { display:block; margin-top:13px; color:#838687; font-size:8px; line-height:1.5; }
 @media(max-width:700px) {
   .posts-layout { width:min(100% - 24px,680px); padding:28px 0 65px; }
-  .posts-profile-cover { height:156px; }
-  .posts-profile-mark { width:98px; height:98px; margin:-49px 0 0 19px; }
+  .posts-profile { border-radius:12px; }
+  .posts-profile-cover { height:156px; border-radius:11px 11px 0 0; }
+  .posts-profile-mark { width:96px; height:96px; margin:-48px 0 0 19px; }
   .posts-profile-content { min-height:auto; padding:14px 19px 20px; }
   .posts-profile h2 { font-size:25px; }
   .posts-profile-details { display:grid; gap:7px; margin-bottom:16px; }
-  .posts-profile-content>div:not(.posts-profile-mark) { position:static; display:flex; width:max-content; margin:14px 0; padding:0 0 0 15px; border-left:1px solid #deded9; }
+  .posts-profile-content>div:not(.posts-profile-mark) { margin:14px 0; }
   .posts-profile-content>a { position:static; width:100%; min-width:0; box-sizing:border-box; }
   .posts-feed { margin-top:18px; }
+  .studio-post { border-radius:12px; }
   .studio-post>header { padding-inline:14px; }
   .post-copy { padding-inline:14px; }
+  .studio-post>img { width:calc(100% - 20px); margin:0 10px; border-radius:7px; }
   .studio-post>footer .post-action { min-width:0; flex:1 1 0; }
   .admin-profile-layout { grid-template-columns:1fr; }
 }
