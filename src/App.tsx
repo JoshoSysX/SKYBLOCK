@@ -10,7 +10,7 @@ const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
-const LEGACY_BUILD = 'posts-profile-clean-20260926'
+const LEGACY_BUILD = 'posts-carousel-admin-20260926'
 const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   nombre: BRAND_UPPER,
   biografia: '',
@@ -429,18 +429,21 @@ export default function App() {
               ? await supabase.from('publicaciones').update(payload).eq('id', id).select('id').single()
               : await supabase.from('publicaciones').insert({ ...payload, slug: `${String(d.titulo || 'post').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Date.now()}` }).select('id').single()
             if (saved.error) throw saved.error
-            if (d.archivo instanceof File) {
-              const cloud = await subirCloudinary(d.archivo)
+            const archivos = Array.isArray(d.archivos) ? d.archivos.filter((archivo: unknown): archivo is File => archivo instanceof File).slice(0, 10) : d.archivo instanceof File ? [d.archivo] : []
+            if (archivos.length) {
               if (id) await eliminarImagenesRelacion('publicacion_id',saved.data.id)
-              const imageResult = await supabase.from('imagenes').insert({ publicacion_id: saved.data.id, identificador_publico: cloud.public_id, url_segura: cloud.secure_url, tipo_recurso: cloud.resource_type, formato: cloud.format, ancho: cloud.width, alto: cloud.height, bytes: cloud.bytes, texto_alternativo: String(d.alt || d.titulo || '').trim(), posicion: 0, subido_por: user.id })
-              if (imageResult.error) throw imageResult.error
+              for (let posicion = 0; posicion < archivos.length; posicion += 1) {
+                const cloud = await subirCloudinary(archivos[posicion])
+                const imageResult = await supabase.from('imagenes').insert({ publicacion_id: saved.data.id, identificador_publico: cloud.public_id, url_segura: cloud.secure_url, tipo_recurso: cloud.resource_type, formato: cloud.format, ancho: cloud.width, alto: cloud.height, bytes: cloud.bytes, texto_alternativo: String(d.alt || d.titulo || '').trim(), posicion, subido_por: user.id })
+                if (imageResult.error) throw imageResult.error
+              }
             }
           }
           error = null
         } catch (caught) { error = caught }
         const next = await cargarPublicos()
         frame.current?.contentWindow?.postMessage({ tipo: 'SKYBLOCK_DATOS_PUBLICOS', datos: next }, location.origin)
-        e.source?.postMessage({ tipo: 'SKYBLOCK_ADMIN_POST_RESULTADO', ok: !error, mensaje: error ? `No se pudo guardar el post: ${error instanceof Error ? error.message : 'error desconocido'}` : 'Post e imagen guardados correctamente.' }, { targetOrigin: e.origin })
+        e.source?.postMessage({ tipo: 'SKYBLOCK_ADMIN_POST_RESULTADO', ok: !error, mensaje: error ? `No se pudo guardar el post: ${error instanceof Error ? error.message : 'error desconocido'}` : 'Post guardado correctamente.' }, { targetOrigin: e.origin })
         setTimeout(() => void enviar(), 0)
         return
       }

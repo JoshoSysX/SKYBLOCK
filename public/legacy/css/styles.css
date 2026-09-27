@@ -6225,3 +6225,44 @@ body.catalog-page,
   .studio-post>footer .post-action { min-width:0; flex:1 1 0; }
   .admin-profile-layout { grid-template-columns:1fr; }
 }
+
+/* Cabecera pública compacta: nombre y contador, sin bloque de contacto. */
+.posts-profile { overflow:hidden; }
+.posts-profile-cover { height:clamp(170px,22vw,240px); }
+.posts-profile-mark { margin:-54px 0 0 32px; }
+.posts-profile-content { min-height:0!important; height:auto!important; display:flex!important; align-items:flex-start!important; justify-content:space-between!important; gap:24px!important; padding:15px 32px 26px!important; border:0!important; }
+.posts-profile-identity { min-width:0; }
+.posts-profile h2 { margin:0!important; font-size:clamp(25px,3vw,32px)!important; line-height:1!important; }
+.posts-profile-count { display:block!important; flex:0 0 auto!important; width:auto!important; min-height:0!important; margin:0!important; padding:0 0 0 20px!important; border:0!important; border-left:1px solid #deded9!important; }
+.posts-profile-count span { display:flex!important; flex-direction:column!important; gap:4px!important; font:600 8px var(--display)!important; letter-spacing:.1em!important; text-transform:uppercase!important; color:#727779!important; }
+.posts-profile-count b { display:block!important; color:#171819!important; font:600 30px/.9 var(--display)!important; }
+.posts-profile-contact { display:none!important; }
+@media(max-width:700px){.posts-profile-mark{margin-left:19px}.posts-profile-content{padding:14px 19px 22px!important;gap:14px!important}.posts-profile-count{padding-left:14px!important}.posts-profile h2{font-size:24px!important}.posts-profile-count b{font-size:26px!important}}
+
+/* Feed público: varias fotos se navegan deslizando. */
+.post-carousel { position:relative; margin:0 14px; overflow:hidden; border-radius:8px; background:#ecece7; }
+.post-carousel-track { display:flex; overflow-x:auto; scrollbar-width:none; scroll-snap-type:x mandatory; scroll-behavior:smooth; }
+.post-carousel-track::-webkit-scrollbar { display:none; }
+.post-carousel-track img { width:100%; min-width:100%; max-height:680px; margin:0!important; border-radius:0!important; object-fit:cover; scroll-snap-align:start; }
+.post-carousel-arrow { position:absolute; top:50%; z-index:1; width:34px; height:34px; border:1px solid #ffffff88; border-radius:50%; background:#111b; color:#fff; transform:translateY(-50%); cursor:pointer; }
+.post-carousel-arrow.previous { left:12px; }.post-carousel-arrow.next { right:12px; }
+.post-carousel-count { position:absolute; right:12px; top:12px; padding:5px 8px; border-radius:999px; background:#111b; color:#fff; font:600 8px var(--display); letter-spacing:.08em; }
+
+/* Admin de Posts: feed, menús de tres puntos y formularios modales. */
+.admin-post-manager { margin:0; padding:28px; border:1px solid #d6d6d1; background:#f9f9f6; }
+.admin-post-manager>.admin-card-head { margin-bottom:18px; }
+.admin-post-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.admin-feed-post { position:relative; overflow:hidden; border:1px solid #deded9; border-radius:12px; background:#fff; }
+.admin-feed-post header { position:relative; display:flex; align-items:center; gap:10px; padding:14px; }
+.admin-feed-avatar { display:grid; width:36px; height:36px; place-items:center; border-radius:50%; background:#c9d1d6; font:600 9px var(--display); }
+.admin-feed-post header>div:nth-child(2) { display:flex; flex-direction:column; gap:3px; }.admin-feed-post header b { font:600 10px var(--display); }.admin-feed-post header span { color:#818486; font-size:8px; }
+.admin-post-more { margin-left:auto; border:0; background:transparent; font:600 16px/1 var(--display); cursor:pointer; }
+.admin-post-menu { position:absolute; z-index:3; top:48px; right:12px; display:none; min-width:112px; padding:5px; border:1px solid #d5d5d0; background:#fff; box-shadow:0 8px 24px #1112; }
+.admin-post-menu.open { display:grid; }.admin-post-menu button { padding:9px 10px; border:0; background:transparent; text-align:left; font:600 9px var(--display); cursor:pointer; }.admin-post-menu button:last-child { color:#a23831; }.admin-post-menu button:hover { background:#f0f0eb; }
+.admin-feed-copy { padding:0 14px 13px; }.admin-feed-copy h3 { margin:0 0 6px; font:600 20px/.95 var(--display); text-transform:uppercase; }.admin-feed-copy p { margin:0; color:#65686a; font-size:10px; line-height:1.55; }
+.admin-feed-media { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; position:relative; margin:0 10px 10px; overflow:hidden; border-radius:7px; }.admin-feed-media img { width:100%; height:145px; object-fit:cover; }.admin-feed-media b { position:absolute; inset:0; display:grid; place-items:center; background:#1119; color:#fff; font:600 22px var(--display); }
+#postModal .admin-post-modal-card,#editorialProfileModal .admin-profile-modal-card { width:min(1180px,calc(100% - 32px)); max-height:calc(100svh - 32px); padding:26px; overflow:auto; background:#f4f4f0; }
+#postModal .admin-post-layout { grid-template-columns:minmax(0,1.1fr) minmax(320px,.72fr); }.admin-post-modal-card .admin-card { margin:0; }
+#postModal .post-preview-image { display:grid; grid-template-columns:repeat(2,1fr); gap:4px; padding:10px; min-height:250px; aspect-ratio:auto; }.post-preview-image img { width:100%; height:160px; object-fit:cover; }
+.admin-profile-modal-card .admin-profile-layout { grid-template-columns:minmax(0,1fr) minmax(320px,.72fr); }.admin-profile-modal-card .admin-card { margin:0; }
+@media(max-width:800px){.admin-post-list{grid-template-columns:1fr}.admin-feed-media img{height:130px}#postModal .admin-post-modal-card,#editorialProfileModal .admin-profile-modal-card{width:100%;max-height:100svh;padding:58px 16px 18px}#postModal .admin-post-layout,.admin-profile-modal-card .admin-profile-layout{grid-template-columns:1fr}.admin-post-preview{margin-top:18px}.admin-profile-preview-wrap{margin-top:18px}.post-carousel-arrow{display:none}}

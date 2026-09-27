@@ -18,9 +18,8 @@
       <button data-admin-view="colecciones"><i>03</i>Colecciones <span>3</span></button>
       <button data-admin-view="verificacion"><i>04</i>Verificación <span id="adminCodeCount">0</span></button>
       <button data-admin-view="posts"><i>05</i>Posts <span id="adminPostCount">2</span></button>
-      <button data-admin-view="perfil"><i>06</i>Perfil del feed</button>
-      <button data-admin-view="correos"><i>07</i>Correos</button>
-      <button data-admin-view="mensajes"><i>08</i>Mensajes <span>6</span></button>
+      <button data-admin-view="correos"><i>06</i>Correos</button>
+      <button data-admin-view="mensajes"><i>07</i>Mensajes <span>6</span></button>
     </nav>
     <div class="admin-sidebar-foot"><a href="inicio.html">← Ver tienda</a><button id="logoutDemo">Cerrar sesión</button></div>
   </aside>
@@ -58,32 +57,8 @@
     </section>
 
     <section class="admin-view" data-view="posts">
-      <div class="admin-title"><div><span>Diario del estudio</span><h1>Posts.</h1><p>Publica fotografías, procesos y novedades en el feed de SKYBLOCK STUDIO.</p></div><a class="admin-secondary admin-link-button" href="posts.html">Ver página pública →</a></div>
-      <div class="admin-post-layout">
-        <form class="admin-card admin-post-form" id="adminPostForm"><input id="postEditId" type="hidden">
-          <div class="admin-card-head"><div><span>Nueva publicación</span><h2>Crear post</h2></div></div>
-          <div class="admin-post-fields"><label>Título<input id="postTitle" required maxlength="80" placeholder="Ej. Detrás de la nueva colección"></label><label>Descripción<textarea id="postDescription" required maxlength="600" rows="6" placeholder="Cuenta la historia detrás de esta fotografía..."></textarea></label><label>Descripción de la imagen <small>Para accesibilidad</small><input id="postAlt" required maxlength="140" placeholder="Describe brevemente lo que aparece"></label><label class="admin-upload" for="postImage"><span id="postUploadText">Seleccionar fotografía</span><small>JPG, PNG o WEBP · Máximo 150 MB</small><input id="postImage" type="file" accept="image/jpeg,image/png,image/webp"></label><div class="admin-post-actions"><button class="admin-secondary" id="cancelPostEdit" type="button" hidden>Cancelar edición</button><button class="admin-primary" id="savePostButton" type="submit">Publicar post</button></div><p class="admin-post-status" id="postStatus"></p></div>
-        </form>
-        <section class="admin-post-preview"><span>Vista previa</span><article class="studio-post"><header><div class="post-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>AHORA</span></div><i>•••</i></header><div class="post-copy"><h2 id="previewPostTitle">Título de la publicación</h2><p id="previewPostDescription">La descripción del post aparecerá aquí mientras escribes.</p></div><div class="post-preview-image" id="postImagePreview"><span>Vista previa de la fotografía</span></div></article></section>
-      </div>
-      <section class="admin-card admin-post-manager"><div class="admin-card-head"><div><span>Publicaciones</span><h2>Administrar posts</h2></div></div><div class="admin-post-list" id="adminPostList"></div></section>
-    </section>
-
-    <section class="admin-view" data-view="perfil">
-      <div class="admin-title"><div><span>Identidad editorial</span><h1>Perfil del feed.</h1><p>Esta información aparece en la cabecera de Posts y en cada publicación pública.</p></div><a class="admin-secondary admin-link-button" href="posts.html">Ver Posts →</a></div>
-      <div class="admin-profile-layout">
-      <form class="admin-card admin-post-form" id="editorialProfileForm">
-        <div class="admin-card-head"><div><span>Perfil editorial</span><h2>SKYBLOCK STUDIO</h2></div></div>
-        <div class="admin-post-fields admin-profile-fields">
-          <div class="admin-form-row"><label>Nombre público<input id="editorialProfileName" required maxlength="80" value="SKYBLOCK STUDIO"></label><label>Ubicación<input id="editorialProfileLocation" maxlength="100" placeholder="Ej. Tarapoto, Perú"></label></div>
-          <label>Descripción<textarea id="editorialProfileBio" maxlength="280" rows="4" placeholder="Escribe la descripción cuando esté lista."></textarea></label>
-          <label>Intereses o enfoque<input id="editorialProfileInterests" maxlength="160" placeholder="Ej. Cultura, ropa urbana y procesos creativos"></label>
-          <div class="admin-form-row"><label class="admin-upload" for="editorialProfileAvatar"><span id="editorialProfileAvatarText">Cambiar foto de perfil</span><small>JPG, PNG o WEBP · Máximo 150 MB</small><input id="editorialProfileAvatar" type="file" accept="image/jpeg,image/png,image/webp"></label><label class="admin-upload" for="editorialProfileCover"><span id="editorialProfileCoverText">Cambiar portada</span><small>JPG, PNG o WEBP · Máximo 150 MB</small><input id="editorialProfileCover" type="file" accept="image/jpeg,image/png,image/webp"></label></div>
-          <div class="admin-post-actions"><button class="admin-primary" id="saveEditorialProfile" type="submit">Guardar perfil</button></div><p class="admin-post-status" id="editorialProfileStatus"></p>
-        </div>
-      </form>
-      <section class="admin-profile-preview-wrap"><span>Vista previa pública</span><article class="admin-profile-preview"><div class="admin-profile-preview-cover" id="adminProfilePreviewCover"></div><div class="admin-profile-preview-avatar" id="adminProfilePreviewAvatar">SB</div><div class="admin-profile-preview-content"><h2 id="adminProfilePreviewName">SKYBLOCK STUDIO</h2><p id="adminProfilePreviewBio"></p><small id="adminProfilePreviewMeta"></small></div></article></section>
-      </div>
+      <div class="admin-title"><div><span>Diario del estudio</span><h1>Posts.</h1><p>Gestiona el perfil editorial y todas las publicaciones desde un solo lugar.</p></div><div class="admin-title-actions"><button class="admin-secondary" id="openEditorialProfile" type="button">Editar perfil</button><button class="admin-primary" id="newPost" type="button">+ Crear post</button></div></div>
+      <section class="admin-post-manager"><div class="admin-card-head"><div><span>Feed público</span><h2>Publicaciones</h2></div><a class="admin-secondary admin-link-button" href="posts.html">Ver página pública →</a></div><div class="admin-post-list" id="adminPostList"></div></section>
     </section>
 
     <section class="admin-view" data-view="correos">
@@ -132,6 +107,18 @@
     </section>
   </main>
 
+  <div class="admin-modal" id="postModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="postModalTitle">
+    <div class="admin-modal-card admin-post-modal-card"><button class="admin-modal-close" id="closePostModal" type="button" aria-label="Cerrar post">×</button><div class="admin-post-layout">
+      <form class="admin-card admin-post-form" id="adminPostForm"><input id="postEditId" type="hidden"><div class="admin-card-head"><div><span>Nueva publicación</span><h2 id="postModalTitle">Crear post</h2></div></div><div class="admin-post-fields"><label>Título<input id="postTitle" required maxlength="80" placeholder="Ej. Detrás de la nueva colección"></label><label>Descripción<textarea id="postDescription" maxlength="600" rows="5" placeholder="Cuenta la historia detrás de las fotografías..."></textarea></label><label>Descripción de las imágenes <small>Para accesibilidad</small><input id="postAlt" maxlength="140" placeholder="Describe brevemente lo que aparece"></label><label class="admin-upload" for="postImage"><span id="postUploadText">Seleccionar fotografías</span><small>JPG, PNG o WEBP · Hasta 10 fotos · Máximo 150 MB cada una</small><input id="postImage" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><div class="admin-post-actions"><button class="admin-secondary" id="cancelPostEdit" type="button">Cancelar</button><button class="admin-primary" id="savePostButton" type="submit">Publicar post</button></div><p class="admin-post-status" id="postStatus"></p></div></form>
+      <section class="admin-post-preview"><span>Vista previa</span><article class="studio-post"><header><div class="post-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>AHORA</span></div><i>•••</i></header><div class="post-copy"><h2 id="previewPostTitle">Título de la publicación</h2><p id="previewPostDescription"></p></div><div class="post-preview-image" id="postImagePreview"><span>Vista previa de las fotografías</span></div></article></section>
+    </div></div>
+  </div>
+  <div class="admin-modal" id="editorialProfileModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="editorialProfileTitle">
+    <div class="admin-modal-card admin-profile-modal-card"><button class="admin-modal-close" id="closeEditorialProfile" type="button" aria-label="Cerrar perfil">×</button><div class="admin-profile-layout">
+      <form class="admin-card admin-post-form" id="editorialProfileForm"><div class="admin-card-head"><div><span>Perfil editorial</span><h2 id="editorialProfileTitle">Editar perfil</h2></div></div><div class="admin-post-fields admin-profile-fields"><label>Nombre público<input id="editorialProfileName" required maxlength="80" value="SKYBLOCK STUDIO"></label><label>Descripción<textarea id="editorialProfileBio" maxlength="280" rows="4" placeholder="Escribe la descripción cuando esté lista."></textarea></label><div class="admin-form-row"><label class="admin-upload" for="editorialProfileAvatar"><span id="editorialProfileAvatarText">Cambiar foto de perfil</span><small>JPG, PNG o WEBP</small><input id="editorialProfileAvatar" type="file" accept="image/jpeg,image/png,image/webp"></label><label class="admin-upload" for="editorialProfileCover"><span id="editorialProfileCoverText">Cambiar portada</span><small>JPG, PNG o WEBP</small><input id="editorialProfileCover" type="file" accept="image/jpeg,image/png,image/webp"></label></div><div class="admin-post-actions"><button class="admin-secondary" id="cancelEditorialProfile" type="button">Cancelar</button><button class="admin-primary" id="saveEditorialProfile" type="submit">Guardar perfil</button></div><p class="admin-post-status" id="editorialProfileStatus"></p></div></form>
+      <section class="admin-profile-preview-wrap"><span>Vista previa del feed</span><article class="admin-profile-preview"><div class="admin-profile-preview-cover" id="adminProfilePreviewCover"></div><div class="admin-profile-preview-avatar" id="adminProfilePreviewAvatar">SB</div><div class="admin-profile-preview-content"><h2 id="adminProfilePreviewName">SKYBLOCK STUDIO</h2><p id="adminProfilePreviewBio"></p></div></article></section>
+    </div></div>
+  </div>
   <div class="admin-modal admin-product-modal" id="productModal" aria-hidden="true">
     <form class="admin-modal-card admin-product-editor" id="adminProductForm">
       <button type="button" class="admin-modal-close" id="closeProductModal" aria-label="Cerrar">×</button>
@@ -173,6 +160,6 @@
   <div class="admin-modal" id="verificationModal" aria-hidden="true"><form class="admin-modal-card admin-verification-editor" id="verificationForm"><button class="admin-modal-close" id="closeVerificationModal" type="button" aria-label="Cerrar código">×</button><span>Registro de autenticidad</span><h2 id="verificationModalTitle">Nuevo código</h2><input id="verificationId" type="hidden"><label>Código de autenticidad<input id="verificationCode" required maxlength="32" placeholder="SKB-XXXX-XXXX" autocomplete="off"></label><div class="admin-form-row"><label>Colección<select id="verificationCollection" required></select></label><label>Diseño / producto<select id="verificationProduct" required></select></label></div><label>Número de serie<input id="verificationSeries" required maxlength="20" placeholder="Se completa según el diseño"></label><label>Propietario<input id="verificationOwner" maxlength="100" placeholder="Sin registrar"></label><label>Estado<select id="verificationStatus"><option value="active">Activo</option><option value="blocked">Bloqueado</option></select></label><small class="admin-verification-note">El código quedará asociado a la colección y al diseño seleccionados. La cantidad máxima depende del límite configurado en el producto.</small><div class="admin-product-editor-actions"><button class="admin-secondary" id="cancelVerificationEdit" type="button">Cancelar</button><button class="admin-primary" type="submit">Guardar código</button></div><p id="verificationFormStatus"></p></form></div>
   <div class="admin-confirm" id="adminConfirm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="adminConfirmTitle" aria-describedby="adminConfirmMessage"><section class="admin-confirm-card"><div class="admin-confirm-mark" aria-hidden="true">!</div><span>Confirmar acción</span><h2 id="adminConfirmTitle">¿Estás seguro?</h2><p id="adminConfirmMessage"></p><div class="admin-confirm-actions"><button class="admin-secondary" id="adminConfirmCancel" type="button">Cancelar</button><button class="admin-confirm-danger" id="adminConfirmAccept" type="button">Eliminar</button></div></section></div>
   <div class="toast" id="adminToast" role="status"></div>
-  <script src="js/admin.js?v=size-order-20260924"></script><script src="js/admin-empty-state.js"></script>
+  <script src="js/admin.js?v=posts-carousel-admin-20260926"></script><script src="js/admin-empty-state.js"></script>
 </body>
 </html>

@@ -701,7 +701,8 @@ document.getElementById('logoutDemo').addEventListener('click', () => {
 const postForm = document.getElementById('adminPostForm');
 const postImageInput = document.getElementById('postImage');
 const postPreview = document.getElementById('postImagePreview');
-let postImageData = '';
+const postModal = document.getElementById('postModal');
+let postImageData = [];
 let adminPosts = [];
 
 function storedPosts() {
@@ -711,9 +712,13 @@ function storedPosts() {
 function renderAdminPosts() {
   const posts = storedPosts();
   document.getElementById('adminPostCount').textContent = posts.length;
-  document.getElementById('adminPostList').innerHTML = posts.map((post) => `<article><img src="${post.image}" alt="${cleanText(post.alt)}"><div><b>${cleanText(post.title)}</b><span>${cleanText(post.date)}</span><p>${cleanText(post.description)}</p></div><div><button type="button" data-edit-post="${post.id}">Editar</button><button type="button" data-delete-post="${post.id}">Eliminar</button></div></article>`).join('') || '<p class="admin-empty-products">No hay posts publicados.</p>';
+  document.getElementById('adminPostList').innerHTML = posts.map((post) => `<article class="admin-feed-post"><header><div class="admin-feed-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>${cleanText(post.date)}</span></div><button class="admin-post-more" type="button" data-post-menu="${post.id}" aria-label="Opciones de ${cleanText(post.title)}">•••</button><div class="admin-post-menu" id="post-menu-${post.id}"><button type="button" data-edit-post="${post.id}">Editar</button><button type="button" data-delete-post="${post.id}">Eliminar</button></div></header><div class="admin-feed-copy"><h3>${cleanText(post.title)}</h3>${post.description ? `<p>${cleanText(post.description)}</p>` : ''}</div>${post.images.length ? `<div class="admin-feed-media">${post.images.slice(0,3).map((item) => `<img src="${item.url}" alt="${cleanText(item.alt || post.title)}">`).join('')}${post.images.length > 3 ? `<b>+${post.images.length - 3}</b>` : ''}</div>` : ''}</article>`).join('') || '<p class="admin-empty-products">Aún no hay posts. Crea la primera publicación.</p>';
 }
 renderAdminPosts();
+
+function setPostModal(open) { postModal.classList.toggle('open', open); postModal.setAttribute('aria-hidden', String(!open)); }
+document.getElementById('newPost').addEventListener('click', () => { resetPostEditor(); setPostModal(true); });
+document.getElementById('closePostModal').addEventListener('click', () => { resetPostEditor(); setPostModal(false); });
 
 document.getElementById('postTitle').addEventListener('input', (event) => {
   document.getElementById('previewPostTitle').textContent = event.target.value || 'Título de la publicación';
@@ -723,35 +728,28 @@ document.getElementById('postDescription').addEventListener('input', (event) => 
 });
 
 postImageInput.addEventListener('change', () => {
-  const file = postImageInput.files[0];
+  const files = [...postImageInput.files];
   const status = document.getElementById('postStatus');
-  if (!file) return;
-  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+  if (!files.length) return;
+  if (files.length > 10 || files.some((file) => file.size > MAX_IMAGE_SIZE_BYTES)) {
     postImageInput.value = '';
-    postImageData = '';
-    status.textContent = `La fotografía supera el límite de ${MAX_IMAGE_SIZE_MB} MB.`;
+    postImageData = [];
+    status.textContent = files.length > 10 ? 'Puedes seleccionar como máximo 10 fotografías.' : `Cada fotografía debe pesar como máximo ${MAX_IMAGE_SIZE_MB} MB.`;
     return;
   }
-  const reader = new FileReader();
-  reader.addEventListener('load', () => {
-    postImageData = reader.result;
-    postPreview.innerHTML = `<img src="${postImageData}" alt="Vista previa del post">`;
-    document.getElementById('postUploadText').textContent = file.name;
-    status.textContent = '';
-  });
-  reader.readAsDataURL(file);
+  Promise.all(files.map((file) => new Promise((resolve) => { const reader = new FileReader(); reader.addEventListener('load', () => resolve(reader.result)); reader.readAsDataURL(file); }))).then((images) => { postImageData = images; postPreview.innerHTML = images.map((image) => `<img src="${image}" alt="Vista previa del post">`).join(''); document.getElementById('postUploadText').textContent = `${files.length} fotografía${files.length === 1 ? '' : 's'} seleccionada${files.length === 1 ? '' : 's'}`; status.textContent = ''; });
 });
 
 function resetPostEditor(message = '') {
   postForm.reset();
   document.getElementById('postEditId').value = '';
-  postImageData = '';
+  postImageData = [];
   postPreview.innerHTML = '<span>Vista previa de la fotografía</span>';
-  document.getElementById('postUploadText').textContent = 'Seleccionar fotografía';
+  document.getElementById('postUploadText').textContent = 'Seleccionar fotografías';
   document.getElementById('previewPostTitle').textContent = 'Título de la publicación';
   document.getElementById('previewPostDescription').textContent = 'La descripción del post aparecerá aquí mientras escribes.';
   document.getElementById('savePostButton').textContent = 'Publicar post';
-  document.getElementById('cancelPostEdit').hidden = true;
+  document.getElementById('cancelPostEdit').textContent = 'Cancelar';
   document.getElementById('postStatus').innerHTML = message;
 }
 
@@ -760,22 +758,24 @@ function editPost(post) {
   document.getElementById('postTitle').value = post.title;
   document.getElementById('postDescription').value = post.description;
   document.getElementById('postAlt').value = post.alt;
-  postImageData = post.image;
-  postPreview.innerHTML = `<img src="${post.image}" alt="${cleanText(post.alt)}">`;
+  postImageData = post.images.map((image) => image.url);
+  postPreview.innerHTML = post.images.map((image) => `<img src="${image.url}" alt="${cleanText(image.alt || post.alt)}">`).join('');
   document.getElementById('previewPostTitle').textContent = post.title;
   document.getElementById('previewPostDescription').textContent = post.description;
-  document.getElementById('postUploadText').textContent = 'Cambiar fotografía (opcional)';
+  document.getElementById('postUploadText').textContent = 'Cambiar fotografías (opcional)';
   document.getElementById('savePostButton').textContent = 'Guardar cambios';
-  document.getElementById('cancelPostEdit').hidden = false;
+  document.getElementById('cancelPostEdit').textContent = 'Cancelar edición';
   document.getElementById('postStatus').textContent = 'Editando publicación.';
-  postForm.scrollIntoView({behavior:'smooth',block:'start'});
+  setPostModal(true);
 }
 
-document.getElementById('cancelPostEdit').addEventListener('click',() => resetPostEditor());
+document.getElementById('cancelPostEdit').addEventListener('click',() => { resetPostEditor(); setPostModal(false); });
 document.getElementById('adminPostList').addEventListener('click',async (event) => {
+  const menuButton = event.target.closest('[data-post-menu]');
   const editButton = event.target.closest('[data-edit-post]');
   const deleteButton = event.target.closest('[data-delete-post]');
   const posts = storedPosts();
+  if (menuButton) { document.querySelectorAll('.admin-post-menu.open').forEach((menu) => menu.classList.remove('open')); document.getElementById(`post-menu-${menuButton.dataset.postMenu}`).classList.toggle('open'); return; }
   if (editButton) editPost(posts.find((post) => post.id === editButton.dataset.editPost));
   if (deleteButton && await window.skyblockConfirm({title:'Eliminar publicación',message:'La publicación y su contenido dejarán de mostrarse. Esta acción no se puede deshacer.',confirmText:'Eliminar publicación'})) {
     document.getElementById('postStatus').textContent = 'Eliminando publicación...';
@@ -786,17 +786,17 @@ document.getElementById('adminPostList').addEventListener('click',async (event) 
 postForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const status = document.getElementById('postStatus');
-  if (!postImageData) { status.textContent = 'Selecciona una fotografía para publicar.'; return; }
+  if (!postImageData.length) { status.textContent = 'Selecciona al menos una fotografía para publicar.'; return; }
   const editId = document.getElementById('postEditId').value;
   const existingIndex = adminPosts.findIndex((post) => post.id === editId);
-  const archivo = postImageInput.files[0] || null;
-  if (existingIndex < 0 && !archivo) { status.textContent = 'Selecciona una fotografía para publicar.'; return; }
+  const archivos = [...postImageInput.files];
+  if (existingIndex < 0 && !archivos.length) { status.textContent = 'Selecciona al menos una fotografía para publicar.'; return; }
   const datos = {
     id: editId,
     titulo: document.getElementById('postTitle').value.trim(),
     descripcion: document.getElementById('postDescription').value.trim(),
     alt: document.getElementById('postAlt').value.trim(),
-    archivo
+    archivos
   };
   document.getElementById('savePostButton').disabled = true;
   status.textContent = existingIndex >= 0 ? 'Guardando cambios...' : 'Publicando...';
@@ -814,6 +814,7 @@ window.addEventListener('message',(event) => {
         description:post.descripcion || post.contenido || '',
         alt:imagen?.texto_alternativo || post.titulo,
         image:imagen?.url_segura || '',
+        images:[...(post.imagenes || [])].sort((a,b) => Number(a.posicion || 0) - Number(b.posicion || 0)).map((item) => ({ url:item.url_segura || '', alt:item.texto_alternativo || post.titulo })),
         date:new Intl.DateTimeFormat('es-PE',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(post.publicado_en || post.creado_en)).toUpperCase()
       };
     });
@@ -821,7 +822,7 @@ window.addEventListener('message',(event) => {
   }
   if (event.data?.tipo === 'SKYBLOCK_ADMIN_POST_RESULTADO') {
     document.getElementById('savePostButton').disabled = false;
-    if (event.data.ok) resetPostEditor(`${event.data.mensaje} <a href="posts.html">Ver en la página pública →</a>`);
+    if (event.data.ok) { resetPostEditor(); setPostModal(false); }
     else document.getElementById('postStatus').textContent = event.data.mensaje;
   }
 });
@@ -829,11 +830,14 @@ window.addEventListener('message',(event) => {
 // Perfil editorial del feed público de Posts.
 const editorialProfileForm = document.getElementById('editorialProfileForm');
 if (editorialProfileForm) {
+  const editorialProfileModal = document.getElementById('editorialProfileModal');
+  const setEditorialProfileModal = (open) => { editorialProfileModal.classList.toggle('open', open); editorialProfileModal.setAttribute('aria-hidden', String(!open)); };
+  document.getElementById('openEditorialProfile').addEventListener('click', () => setEditorialProfileModal(true));
+  document.getElementById('closeEditorialProfile').addEventListener('click', () => setEditorialProfileModal(false));
+  document.getElementById('cancelEditorialProfile').addEventListener('click', () => setEditorialProfileModal(false));
   const profileFields = {
     nombre: document.getElementById('editorialProfileName'),
     biografia: document.getElementById('editorialProfileBio'),
-    ubicacion: document.getElementById('editorialProfileLocation'),
-    intereses: document.getElementById('editorialProfileInterests'),
     avatar: document.getElementById('editorialProfileAvatar'),
     portada: document.getElementById('editorialProfileCover'),
     avatarText: document.getElementById('editorialProfileAvatarText'),
@@ -842,7 +846,6 @@ if (editorialProfileForm) {
     save: document.getElementById('saveEditorialProfile'),
     previewName: document.getElementById('adminProfilePreviewName'),
     previewBio: document.getElementById('adminProfilePreviewBio'),
-    previewMeta: document.getElementById('adminProfilePreviewMeta'),
     previewAvatar: document.getElementById('adminProfilePreviewAvatar'),
     previewCover: document.getElementById('adminProfilePreviewCover')
   };
@@ -850,7 +853,6 @@ if (editorialProfileForm) {
   const refreshProfilePreview = () => {
     profileFields.previewName.textContent = profileFields.nombre.value || 'SKYBLOCK STUDIO';
     profileFields.previewBio.textContent = profileFields.biografia.value;
-    profileFields.previewMeta.textContent = [profileFields.ubicacion.value, profileFields.intereses.value].filter(Boolean).join(' · ');
   };
   const previewProfileImage = (input, preview, isCover) => {
     const file = input.files && input.files[0];
@@ -877,13 +879,13 @@ if (editorialProfileForm) {
   };
   profileFields.avatar.addEventListener('change', () => { updateProfileFileName(profileFields.avatar, profileFields.avatarText, 'Cambiar foto de perfil'); previewProfileImage(profileFields.avatar, profileFields.previewAvatar, false); });
   profileFields.portada.addEventListener('change', () => { updateProfileFileName(profileFields.portada, profileFields.portadaText, 'Cambiar portada'); previewProfileImage(profileFields.portada, profileFields.previewCover, true); });
-  [profileFields.nombre,profileFields.biografia,profileFields.ubicacion,profileFields.intereses].forEach((input) => input.addEventListener('input', refreshProfilePreview));
+  [profileFields.nombre,profileFields.biografia].forEach((input) => input.addEventListener('input', refreshProfilePreview));
   editorialProfileForm.addEventListener('submit', (event) => {
     event.preventDefault();
     profileFields.save.disabled = true;
     profileFields.status.textContent = 'Guardando perfil editorial...';
     parent.postMessage({ tipo:'SKYBLOCK_ADMIN_GUARDAR_PERFIL', datos:{
-      nombre:profileFields.nombre.value.trim(), biografia:profileFields.biografia.value.trim(), ubicacion:profileFields.ubicacion.value.trim(), intereses:profileFields.intereses.value.trim(),
+      nombre:profileFields.nombre.value.trim(), biografia:profileFields.biografia.value.trim(), ubicacion:'', intereses:'',
       avatarArchivo:profileFields.avatar.files[0] || null, portadaArchivo:profileFields.portada.files[0] || null
     } },location.origin);
   });
@@ -893,8 +895,6 @@ if (editorialProfileForm) {
       const profile = event.data.perfil || {};
       profileFields.nombre.value = profile.nombre || 'SKYBLOCK STUDIO';
       profileFields.biografia.value = profile.biografia || '';
-      profileFields.ubicacion.value = profile.ubicacion || '';
-      profileFields.intereses.value = profile.intereses || '';
       refreshProfilePreview();
       if (profile.avatar_url) { profileFields.previewAvatar.style.backgroundImage = `url("${profile.avatar_url}")`; profileFields.previewAvatar.textContent = ''; profileFields.previewAvatar.classList.add('has-image'); }
       if (profile.portada_url) { profileFields.previewCover.style.backgroundImage = `linear-gradient(90deg,rgba(7,8,9,.3),rgba(7,8,9,.08)),url("${profile.portada_url}")`; profileFields.previewCover.classList.add('has-image'); }
@@ -910,6 +910,7 @@ if (editorialProfileForm) {
         const profile = event.data.perfil || {};
         profileFields.avatarText.textContent = profile.avatar_url ? 'Foto actual · cambiar' : 'Cambiar foto de perfil';
         profileFields.portadaText.textContent = profile.portada_url ? 'Portada actual · cambiar' : 'Cambiar portada';
+        setEditorialProfileModal(false);
       }
     }
   });
