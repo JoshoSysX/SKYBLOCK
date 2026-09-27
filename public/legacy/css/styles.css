@@ -6243,7 +6243,7 @@ body.catalog-page,
 .posts-profile-content { display:grid!important; grid-template-columns:1fr!important; justify-content:initial!important; gap:0!important; }
 .posts-profile-content>h2 { grid-row:1; }
 .posts-profile-content>.posts-profile-count { grid-row:2; width:max-content!important; margin:12px 0 10px!important; padding:0!important; border:0!important; }
-.posts-profile-content>#postsProfileBio { grid-row:3; max-width:620px; margin:0!important; }
+.posts-profile-content>#postsProfileBio { grid-row:3; max-width:620px; margin:0!important; white-space:pre-line; }
 .posts-profile-content>#postsProfileBio:empty { display:none; }
 
 /* En el administrador las publicaciones usan la misma lectura limpia del feed. */
@@ -6277,7 +6277,7 @@ body.catalog-page,
 .admin-feed-profile-cover { height:150px; background:linear-gradient(118deg,#1a1d20,#080909 68%); background-size:cover; background-position:center; }
 .admin-feed-profile-avatar { position:relative; z-index:1; display:grid; width:74px; height:74px; margin:-37px 0 0 18px; place-items:center; border:3px solid #fff; border-radius:50%; background:#c9d1d6; background-size:cover; background-position:center; font:600 10px var(--display); }
 .admin-feed-profile-avatar.has-image { color:transparent; }
-.admin-feed-profile-content { display:grid; grid-template-columns:1fr; gap:0; min-height:78px; padding:10px 18px 18px; }.admin-feed-profile-content h3 { margin:0; font:600 22px var(--display); }.admin-feed-profile-content span { width:max-content; margin:10px 0 8px; padding:0; border:0; color:#777; font:600 8px var(--display); letter-spacing:.08em; text-transform:uppercase; }.admin-feed-profile-content b { display:block; color:#171819; font:600 24px/.9 var(--display); }.admin-feed-profile-content p:empty { display:none; }.admin-feed-profile-content p { margin:0; color:#666; font-size:10px; line-height:1.5; }
+.admin-feed-profile-content { display:grid; grid-template-columns:1fr; gap:0; min-height:78px; padding:10px 18px 18px; }.admin-feed-profile-content h3 { margin:0; font:600 22px var(--display); }.admin-feed-profile-content span { width:max-content; margin:10px 0 8px; padding:0; border:0; color:#777; font:600 8px var(--display); letter-spacing:.08em; text-transform:uppercase; }.admin-feed-profile-content b { display:block; color:#171819; font:600 24px/.9 var(--display); }.admin-feed-profile-content p:empty { display:none; }.admin-feed-profile-content p { margin:0; color:#666; font-size:10px; line-height:1.5; white-space:pre-line; }
 .admin-post-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
 .admin-feed-post { position:relative; overflow:hidden; border:1px solid #deded9; border-radius:12px; background:#fff; }
 .admin-feed-post header { position:relative; display:flex; align-items:center; gap:10px; padding:14px; }
@@ -6314,3 +6314,6 @@ body.catalog-page,
 .admin-post-manager .admin-feed-post .admin-feed-media.is-single { grid-template-columns:1fr!important; }
 .admin-post-manager .admin-feed-post .admin-feed-media.is-single img { height:auto!important; max-height:560px!important; min-height:260px!important; }
 @media(max-width:700px){.admin-post-manager .admin-post-list{grid-template-columns:1fr!important}.admin-post-manager .admin-feed-post .admin-feed-media img{height:145px!important}}
+
+/* El texto editorial conserva los saltos de línea escritos en el formulario. */
+.admin-profile-preview-content p { white-space:pre-line; }
