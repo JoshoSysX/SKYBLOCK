@@ -28,8 +28,6 @@ Deno.serve(async (request) => {
     return new Response(JSON.stringify({
       ok:true,
       imagenesSubidas:usage?.resources ?? usage?.objects?.usage ?? null,
-      creditosUsados:usage?.credits?.used ?? null,
-      creditosLimite:usage?.credits?.limit ?? null,
       almacenamientoUsado:usage?.storage?.usage ?? null,
       almacenamientoLimite:usage?.storage?.limit ?? null,
       anchoBandaUsado:usage?.bandwidth?.usage ?? null,

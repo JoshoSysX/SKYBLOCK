@@ -704,7 +704,7 @@ function renderSystemStatus(sistema = {}) {
   setSystemText('systemSupabaseStatus', healthy ? 'Operativo' : 'Requiere revisión');
   setSystemText('systemSupabaseNote', healthy ? 'La base de datos respondió correctamente.' : (sistema.error || 'No se pudo comprobar la conexión.'));
   setSystemText('systemCloudinaryStatus', cloudinary.disponible ? 'Operativo' : 'Sin lectura de cuota');
-  setSystemText('systemCloudinaryNote', cloudinary.disponible ? 'Uso consultado de forma privada.' : (cloudinary.error || 'Las imágenes registradas siguen visibles abajo.'));
+  setSystemText('systemCloudinaryNote', cloudinary.disponible ? (cloudinary.almacenamientoLimite === null || cloudinary.almacenamientoLimite === undefined ? 'Cloudinary reporta el uso real, pero este plan no informa un límite de espacio.' : 'Uso consultado de forma privada.') : (cloudinary.error || 'Las imágenes registradas siguen visibles abajo.'));
   setSystemText('systemUpdatedAt', sistema.actualizadoEn ? new Intl.DateTimeFormat('es-PE', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' }).format(new Date(sistema.actualizadoEn)) : '—');
   setSystemText('systemImageCount', String(sistema.imagenes || 0).padStart(2, '0'));
   setSystemText('systemImageStorage', `${formatBytes(sistema.bytesImagenes)} en archivos registrados`);
@@ -720,8 +720,8 @@ function renderSystemStatus(sistema = {}) {
   ].map(([label,value]) => `<div><dt>${label}</dt><dd>${String(value || 0).padStart(2,'0')}</dd></div>`).join('');
   const usage = document.getElementById('systemCloudinaryUsage');
   if (cloudinary.disponible) {
-    const metric = (label, used, limit, isSize = false) => `<div><span>${label}</span><b>${used === null || used === undefined ? 'No disponible' : `${isSize ? formatBytes(used) : Number(used).toLocaleString('es-PE')}${limit ? ` / ${isSize ? formatBytes(limit) : Number(limit).toLocaleString('es-PE')}` : ''}`}</b></div>`;
-    usage.innerHTML = `${metric('Imágenes subidas',cloudinary.imagenesSubidas)}${metric('Espacio usado',cloudinary.almacenamientoUsado,cloudinary.almacenamientoLimite,true)}${metric('Límite de espacio',cloudinary.almacenamientoLimite,null,true)}${metric('Ancho de banda',cloudinary.anchoBandaUsado,cloudinary.anchoBandaLimite,true)}${metric('Créditos',cloudinary.creditosUsados,cloudinary.creditosLimite)}`;
+    const metric = (label, used, limit, isSize = false, empty = 'No disponible') => `<div><span>${label}</span><b>${used === null || used === undefined ? empty : `${isSize ? formatBytes(used) : Number(used).toLocaleString('es-PE')}${limit ? ` / ${isSize ? formatBytes(limit) : Number(limit).toLocaleString('es-PE')}` : ''}`}</b></div>`;
+    usage.innerHTML = `${metric('Imágenes subidas',cloudinary.imagenesSubidas)}${metric('Espacio usado',cloudinary.almacenamientoUsado,cloudinary.almacenamientoLimite,true)}${metric('Límite de espacio',cloudinary.almacenamientoLimite,null,true,'No informado por Cloudinary')}${metric('Ancho de banda',cloudinary.anchoBandaUsado,cloudinary.anchoBandaLimite,true)}`;
   } else usage.innerHTML = '<p>La cuota exacta se habilitará cuando esté desplegada la consulta privada de Cloudinary. No se exponen claves en la web.</p>';
 }
 document.getElementById('refreshSystemStatus').addEventListener('click', () => {
