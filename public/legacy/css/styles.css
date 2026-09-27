@@ -6239,6 +6239,28 @@ body.catalog-page,
 .posts-profile-contact { display:none!important; }
 @media(max-width:700px){.posts-profile-mark{margin-left:19px}.posts-profile-content{padding:14px 19px 22px!important;gap:14px!important}.posts-profile-count{padding-left:14px!important}.posts-profile h2{font-size:24px!important}.posts-profile-count b{font-size:26px!important}}
 
+/* Orden del perfil: nombre, publicaciones y descripción. */
+.posts-profile-content { display:grid!important; grid-template-columns:1fr!important; justify-content:initial!important; gap:0!important; }
+.posts-profile-content>h2 { grid-row:1; }
+.posts-profile-content>.posts-profile-count { grid-row:2; width:max-content!important; margin:12px 0 10px!important; padding:0!important; border:0!important; }
+.posts-profile-content>#postsProfileBio { grid-row:3; max-width:620px; margin:0!important; }
+.posts-profile-content>#postsProfileBio:empty { display:none; }
+
+/* En el administrador las publicaciones usan la misma lectura limpia del feed. */
+.admin-feed-profile-content > h3 { grid-row:1; }
+.admin-feed-profile-content > span { grid-row:2; }
+.admin-feed-profile-content > p { grid-row:3; }
+.admin-post-list { grid-template-columns:minmax(0,760px)!important; justify-content:center; gap:16px!important; }
+.admin-post-list .admin-feed-post { display:block!important; min-height:0!important; padding:0!important; border:1px solid #deded9!important; border-radius:12px!important; background:#fff!important; }
+.admin-post-list .admin-feed-post > header { display:flex!important; grid-template-columns:none!important; min-height:0!important; padding:14px!important; border:0!important; }
+.admin-post-list .admin-feed-post > header > div:last-child { display:block!important; }
+.admin-post-list .admin-feed-post > header > div:nth-child(2) { display:flex!important; }
+.admin-post-list .admin-feed-post > header .admin-post-menu { display:none!important; }
+.admin-post-list .admin-feed-post > header .admin-post-menu.open { display:grid!important; }
+.admin-post-list .admin-feed-post .admin-feed-copy { display:block!important; padding:0 14px 13px!important; }
+.admin-post-list .admin-feed-post .admin-feed-media { display:grid!important; margin:0 10px 10px!important; }
+@media (max-width:700px) { .admin-post-list { grid-template-columns:1fr!important; } }
+
 /* Feed público: varias fotos se navegan deslizando. */
 .post-carousel { position:relative; margin:0 14px; overflow:hidden; border-radius:8px; background:#ecece7; }
 .post-carousel-track { display:flex; overflow-x:auto; scrollbar-width:none; scroll-snap-type:x mandatory; scroll-behavior:smooth; }
@@ -6255,7 +6277,7 @@ body.catalog-page,
 .admin-feed-profile-cover { height:150px; background:linear-gradient(118deg,#1a1d20,#080909 68%); background-size:cover; background-position:center; }
 .admin-feed-profile-avatar { position:relative; z-index:1; display:grid; width:74px; height:74px; margin:-37px 0 0 18px; place-items:center; border:3px solid #fff; border-radius:50%; background:#c9d1d6; background-size:cover; background-position:center; font:600 10px var(--display); }
 .admin-feed-profile-avatar.has-image { color:transparent; }
-.admin-feed-profile-content { display:flex; align-items:flex-end; gap:22px; min-height:78px; padding:10px 18px 18px; }.admin-feed-profile-content h3 { margin:0; font:600 22px var(--display); }.admin-feed-profile-content p:empty { display:none; }.admin-feed-profile-content p { margin:4px 0 0; color:#666; font-size:10px; }.admin-feed-profile-content span { margin-left:auto; padding-left:16px; border-left:1px solid #ddd; color:#777; font:600 8px var(--display); letter-spacing:.08em; text-transform:uppercase; }.admin-feed-profile-content b { display:block; color:#171819; font:600 24px/.9 var(--display); }
+.admin-feed-profile-content { display:grid; grid-template-columns:1fr; gap:0; min-height:78px; padding:10px 18px 18px; }.admin-feed-profile-content h3 { margin:0; font:600 22px var(--display); }.admin-feed-profile-content span { width:max-content; margin:10px 0 8px; padding:0; border:0; color:#777; font:600 8px var(--display); letter-spacing:.08em; text-transform:uppercase; }.admin-feed-profile-content b { display:block; color:#171819; font:600 24px/.9 var(--display); }.admin-feed-profile-content p:empty { display:none; }.admin-feed-profile-content p { margin:0; color:#666; font-size:10px; line-height:1.5; }
 .admin-post-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
 .admin-feed-post { position:relative; overflow:hidden; border:1px solid #deded9; border-radius:12px; background:#fff; }
 .admin-feed-post header { position:relative; display:flex; align-items:center; gap:10px; padding:14px; }
