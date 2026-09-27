@@ -427,6 +427,7 @@ export default function App() {
         if (!error) {
           const next = await cargarPublicos()
           frame.current?.contentWindow?.postMessage({ tipo: 'SKYBLOCK_DATOS_PUBLICOS', datos: next }, location.origin)
+          e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_PERFIL', perfil }, { targetOrigin:e.origin })
         }
         e.source?.postMessage({ tipo: 'SKYBLOCK_ADMIN_PERFIL_RESULTADO', ok: !error, perfil, mensaje: error ? `No se pudo guardar el perfil: ${error instanceof Error ? error.message : 'error desconocido'}` : 'Perfil editorial guardado correctamente.' }, { targetOrigin: e.origin })
         return
@@ -459,17 +460,26 @@ export default function App() {
           }
           error = null
         } catch (caught) { error = caught }
-        const next = await cargarPublicos()
-        frame.current?.contentWindow?.postMessage({ tipo: 'SKYBLOCK_DATOS_PUBLICOS', datos: next }, location.origin)
+        if (!error) {
+          const [next, postsAdmin] = await Promise.all([
+            cargarPublicos(),
+            supabase.from('publicaciones').select('*,imagenes(*)').order('creado_en', { ascending: false }),
+          ])
+          frame.current?.contentWindow?.postMessage({ tipo: 'SKYBLOCK_DATOS_PUBLICOS', datos: next }, location.origin)
+          e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_POSTS', publicaciones:postsAdmin.data ?? [], error:Boolean(postsAdmin.error) }, { targetOrigin:e.origin })
+        }
         e.source?.postMessage({ tipo: 'SKYBLOCK_ADMIN_POST_RESULTADO', ok: !error, mensaje: error ? `No se pudo guardar el post: ${error instanceof Error ? error.message : 'error desconocido'}` : 'Post guardado correctamente.' }, { targetOrigin: e.origin })
-        setTimeout(() => void enviar(), 0)
         return
       }
       if (e.data?.tipo === 'SKYBLOCK_ADMIN_ELIMINAR_MENSAJE') {
         const { esAdmin } = await obtenerAdmin()
         const { error } = esAdmin ? await supabase.from('mensajes_contacto').delete().eq('id', String(e.data.id || '')) : { error: new Error('Acceso no autorizado') }
         e.source?.postMessage({ tipo: 'SKYBLOCK_ADMIN_ELIMINAR_MENSAJE_RESULTADO', ok: !error, mensaje: error ? 'No se pudo eliminar el mensaje.' : 'Mensaje eliminado.' }, { targetOrigin: e.origin })
-        if (!error) void enviar(); return
+        if (!error) {
+          const { data: mensajes } = await supabase.from('mensajes_contacto').select('*').order('creado_en', { ascending: false })
+          e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_MENSAJES', mensajes:mensajes ?? [], error:false }, { targetOrigin:e.origin })
+        }
+        return
       }
       if (e.data?.tipo === 'SKYBLOCK_CONTACTO') {
         const d = e.data.datos || {}
