@@ -826,6 +826,70 @@ window.addEventListener('message',(event) => {
   }
 });
 
+// Perfil editorial del feed público de Posts.
+const editorialProfileForm = document.getElementById('editorialProfileForm');
+if (editorialProfileForm) {
+  const profileFields = {
+    nombre: document.getElementById('editorialProfileName'),
+    biografia: document.getElementById('editorialProfileBio'),
+    ubicacion: document.getElementById('editorialProfileLocation'),
+    intereses: document.getElementById('editorialProfileInterests'),
+    avatar: document.getElementById('editorialProfileAvatar'),
+    portada: document.getElementById('editorialProfileCover'),
+    avatarText: document.getElementById('editorialProfileAvatarText'),
+    portadaText: document.getElementById('editorialProfileCoverText'),
+    status: document.getElementById('editorialProfileStatus'),
+    save: document.getElementById('saveEditorialProfile')
+  };
+  const profileMaxBytes = MAX_IMAGE_SIZE_BYTES;
+  const updateProfileFileName = (input, label, fallback) => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    if (file.size > profileMaxBytes) {
+      input.value = '';
+      label.textContent = fallback;
+      profileFields.status.textContent = `La imagen supera el límite de ${MAX_IMAGE_SIZE_MB} MB.`;
+      return;
+    }
+    label.textContent = file.name;
+    profileFields.status.textContent = '';
+  };
+  profileFields.avatar.addEventListener('change', () => updateProfileFileName(profileFields.avatar, profileFields.avatarText, 'Cambiar foto de perfil'));
+  profileFields.portada.addEventListener('change', () => updateProfileFileName(profileFields.portada, profileFields.portadaText, 'Cambiar portada'));
+  editorialProfileForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    profileFields.save.disabled = true;
+    profileFields.status.textContent = 'Guardando perfil editorial...';
+    parent.postMessage({ tipo:'SKYBLOCK_ADMIN_GUARDAR_PERFIL', datos:{
+      nombre:profileFields.nombre.value.trim(), biografia:profileFields.biografia.value.trim(), ubicacion:profileFields.ubicacion.value.trim(), intereses:profileFields.intereses.value.trim(),
+      avatarArchivo:profileFields.avatar.files[0] || null, portadaArchivo:profileFields.portada.files[0] || null
+    } },location.origin);
+  });
+  window.addEventListener('message', (event) => {
+    if (event.origin !== location.origin) return;
+    if (event.data?.tipo === 'SKYBLOCK_ADMIN_PERFIL') {
+      const profile = event.data.perfil || {};
+      profileFields.nombre.value = profile.nombre || 'SKYBLOCK STUDIO';
+      profileFields.biografia.value = profile.biografia || '';
+      profileFields.ubicacion.value = profile.ubicacion || '';
+      profileFields.intereses.value = profile.intereses || '';
+      profileFields.avatarText.textContent = profile.avatar_url ? 'Foto actual · cambiar' : 'Cambiar foto de perfil';
+      profileFields.portadaText.textContent = profile.portada_url ? 'Portada actual · cambiar' : 'Cambiar portada';
+    }
+    if (event.data?.tipo === 'SKYBLOCK_ADMIN_PERFIL_RESULTADO') {
+      profileFields.save.disabled = false;
+      profileFields.status.textContent = event.data.mensaje;
+      if (event.data.ok) {
+        profileFields.avatar.value = '';
+        profileFields.portada.value = '';
+        const profile = event.data.perfil || {};
+        profileFields.avatarText.textContent = profile.avatar_url ? 'Foto actual · cambiar' : 'Cambiar foto de perfil';
+        profileFields.portadaText.textContent = profile.portada_url ? 'Portada actual · cambiar' : 'Cambiar portada';
+      }
+    }
+  });
+}
+
 // Resend: configuración y plantillas. La API key vive únicamente en el servidor.
 const emailSettingsKey = 'skyblockStudioEmailSettings';
 const emailTemplatesKey = 'skyblockStudioEmailTemplates';

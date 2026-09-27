@@ -2,14 +2,23 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from './lib/supabase'
 import profileImage from '../assets/image/PERFIL.jpg'
 
-type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; error?: string }
+type PerfilEditorial = { nombre: string; biografia: string; ubicacion: string; intereses: string; avatar_url?: string | null; portada_url?: string | null }
+type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; error?: string }
 type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
 const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
-const LEGACY_BUILD = 'product-size-picker-20260924'
+const LEGACY_BUILD = 'posts-profile-20260926'
+const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
+  nombre: BRAND_UPPER,
+  biografia: 'Estudio creativo independiente. Construye. Crea. Domina.',
+  ubicacion: 'Tarapoto, Perú',
+  intereses: 'Cultura, ropa urbana y procesos creativos',
+  avatar_url: profileImage,
+  portada_url: null,
+}
 const ORDEN_TALLAS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Única']
 const ordenarTallas = <T extends { talla?: string }>(tallas: T[] = []) => [...tallas].sort((a, b) => {
   const posicionA = ORDEN_TALLAS.indexOf(String(a.talla || ''))
@@ -70,7 +79,7 @@ const actualizarSeo = (pagina:string) => {
 
 export default function App() {
   const frame = useRef<HTMLIFrameElement>(null)
-  const [datos, setDatos] = useState<Datos>({ productos: [], colecciones: [], publicaciones: [] })
+  const [datos, setDatos] = useState<Datos>({ productos: [], colecciones: [], publicaciones: [], perfil: PERFIL_EDITORIAL_INICIAL })
 
   useEffect(() => {
     const parametros = new URLSearchParams(location.search)
@@ -93,14 +102,15 @@ export default function App() {
   }, [])
 
   const cargarPublicos = useCallback(async () => {
-    const [p, c, posts] = await Promise.all([
+    const [p, c, posts, perfil] = await Promise.all([
       supabase.from('productos').select('*,tipo:tipos_producto(*),coleccion:colecciones!inner(*),tallas:tallas_producto(*),imagenes(*)').in('estado', ['publicado', 'archivado']).eq('coleccion.estado', 'publicado').order('creado_en', { ascending: false }),
       supabase.from('colecciones').select('*,imagenes(*)').eq('estado', 'publicado').order('publicado_en', { ascending: false }),
       supabase.from('publicaciones').select('*,imagenes(*)').eq('estado', 'publicado').lte('publicado_en', new Date().toISOString()).order('publicado_en', { ascending: false }),
+      supabase.from('perfil_editorial').select('*').eq('id', true).maybeSingle(),
     ])
     const next = p.error || c.error || posts.error
-      ? { productos: [], colecciones: [], publicaciones: [], error: 'No se pudieron cargar los datos.' }
-      : { productos: (p.data ?? []).map((producto: any) => ({ ...producto, tallas: ordenarTallas(producto.tallas || []) })), colecciones: c.data ?? [], publicaciones: posts.data ?? [] }
+      ? { productos: [], colecciones: [], publicaciones: [], perfil: PERFIL_EDITORIAL_INICIAL, error: 'No se pudieron cargar los datos.' }
+      : { productos: (p.data ?? []).map((producto: any) => ({ ...producto, tallas: ordenarTallas(producto.tallas || []) })), colecciones: c.data ?? [], publicaciones: posts.data ?? [], perfil: perfil.data ? { ...PERFIL_EDITORIAL_INICIAL, ...perfil.data } : PERFIL_EDITORIAL_INICIAL }
     setDatos(next)
     return next
   }, [])
@@ -165,14 +175,6 @@ export default function App() {
           ventana.location.href = `${destino.pathname}?${destino.searchParams.toString()}${destino.hash}`
         })
       }
-      const aplicarFotoPerfil = () => documento?.querySelectorAll<HTMLElement>('.post-avatar, .posts-profile-mark').forEach((avatar) => {
-        avatar.textContent = ''
-        avatar.style.backgroundImage = `url("${profileImage}")`
-        avatar.style.backgroundSize = 'cover'
-        avatar.style.backgroundPosition = 'center'
-      })
-      aplicarFotoPerfil()
-      window.setTimeout(aplicarFotoPerfil, 0)
       const footer = documento?.querySelector<HTMLElement>('.site-footer')
       const socialColumn = [...(footer?.querySelectorAll<HTMLElement>('.footer-col') ?? [])].find(
         (column) => column.querySelector('h4')?.textContent?.trim() === 'Síguenos',
@@ -202,13 +204,15 @@ export default function App() {
       if (ruta.endsWith('/admin.html') && !user) { ventana!.location.href = 'login.html'; return }
       if (ruta.endsWith('/admin.html') && !esAdmin) { ventana!.location.href = esRolAdmin ? 'login.html' : 'inicio.html'; return }
       if (ruta.endsWith('/admin.html')) {
-        const [{ data: mensajes, error }, { data: publicaciones, error: errorPosts }, adminData] = await Promise.all([
+        const [{ data: mensajes, error }, { data: publicaciones, error: errorPosts }, { data: perfil }, adminData] = await Promise.all([
           supabase.from('mensajes_contacto').select('*').order('creado_en', { ascending: false }),
           supabase.from('publicaciones').select('*,imagenes(*)').order('creado_en', { ascending: false }),
+          supabase.from('perfil_editorial').select('*').eq('id', true).maybeSingle(),
           cargarAdmin(),
         ])
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_MENSAJES', mensajes: mensajes ?? [], error: Boolean(error) }, location.origin)
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_POSTS', publicaciones: publicaciones ?? [], error: Boolean(errorPosts) }, location.origin)
+        ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_PERFIL', perfil: perfil ? { ...PERFIL_EDITORIAL_INICIAL, ...perfil } : PERFIL_EDITORIAL_INICIAL }, location.origin)
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_DATOS', ...adminData }, location.origin)
       }
     } catch { /* iframe del mismo origen */ }
@@ -301,7 +305,7 @@ export default function App() {
         e.source?.postMessage({ tipo:'SKYBLOCK_VERIFICAR_RESULTADO', id:e.data.id, registro: error || !row ? null : { series:row.numero_serie, collection:row.coleccion, design:row.diseno, limitedUnits:row.unidades_limitadas, owner:row.propietario_nombre || 'Sin registrar', status:['bloqueado','anulado'].includes(row.estado) ? 'blocked' : 'active' } }, { targetOrigin:e.origin })
         return
       }
-      if (String(e.data?.tipo || '').startsWith('SKYBLOCK_ADMIN_') && !['SKYBLOCK_ADMIN_GUARDAR_POST','SKYBLOCK_ADMIN_ELIMINAR_POST','SKYBLOCK_ADMIN_ELIMINAR_MENSAJE'].includes(e.data.tipo)) {
+      if (String(e.data?.tipo || '').startsWith('SKYBLOCK_ADMIN_') && !['SKYBLOCK_ADMIN_GUARDAR_POST','SKYBLOCK_ADMIN_ELIMINAR_POST','SKYBLOCK_ADMIN_ELIMINAR_MENSAJE','SKYBLOCK_ADMIN_GUARDAR_PERFIL'].includes(e.data.tipo)) {
         const { user, esAdmin } = await obtenerAdmin(); let error: any = null
         try {
           if (!user || !esAdmin) throw new Error('Acceso no autorizado')
@@ -373,6 +377,40 @@ export default function App() {
         const eliminando=eliminandoColeccion||eliminandoProducto
         e.source?.postMessage({tipo:'SKYBLOCK_ADMIN_ACCION_RESULTADO',ok:!error,mensaje:error?`${eliminando?'No se pudo eliminar':'No se pudo guardar'}: ${error.message||'error desconocido'}`:eliminandoColeccion?'Colección eliminada de Supabase.':eliminandoProducto?'Producto e imágenes eliminados.':'Cambios guardados en Supabase.'},{targetOrigin:e.origin})
         if(!error){const next=await cargarPublicos();setDatos(next)}
+        return
+      }
+      if (e.data?.tipo === 'SKYBLOCK_ADMIN_GUARDAR_PERFIL') {
+        const { user, esAdmin } = await obtenerAdmin()
+        let error: unknown = new Error('Acceso no autorizado')
+        let perfil: PerfilEditorial = PERFIL_EDITORIAL_INICIAL
+        try {
+          if (!user || !esAdmin) throw error
+          const d = e.data.datos || {}
+          const { data: actual, error: errorActual } = await supabase.from('perfil_editorial').select('avatar_url,portada_url').eq('id', true).maybeSingle()
+          if (errorActual && errorActual.code !== 'PGRST116') throw errorActual
+          const avatar = d.avatarArchivo instanceof File ? await subirCloudinary(d.avatarArchivo) : null
+          const portada = d.portadaArchivo instanceof File ? await subirCloudinary(d.portadaArchivo) : null
+          const payload = {
+            id: true,
+            nombre: String(d.nombre || '').trim() || BRAND_UPPER,
+            biografia: String(d.biografia || '').trim() || PERFIL_EDITORIAL_INICIAL.biografia,
+            ubicacion: String(d.ubicacion || '').trim() || PERFIL_EDITORIAL_INICIAL.ubicacion,
+            intereses: String(d.intereses || '').trim() || PERFIL_EDITORIAL_INICIAL.intereses,
+            avatar_url: avatar?.secure_url || actual?.avatar_url || null,
+            portada_url: portada?.secure_url || actual?.portada_url || null,
+            actualizado_en: new Date().toISOString(),
+            actualizado_por: user.id,
+          }
+          const guardado = await supabase.from('perfil_editorial').upsert(payload, { onConflict: 'id' }).select().single()
+          if (guardado.error) throw guardado.error
+          perfil = { ...PERFIL_EDITORIAL_INICIAL, ...guardado.data }
+          error = null
+        } catch (caught) { error = caught }
+        if (!error) {
+          const next = await cargarPublicos()
+          frame.current?.contentWindow?.postMessage({ tipo: 'SKYBLOCK_DATOS_PUBLICOS', datos: next }, location.origin)
+        }
+        e.source?.postMessage({ tipo: 'SKYBLOCK_ADMIN_PERFIL_RESULTADO', ok: !error, perfil, mensaje: error ? `No se pudo guardar el perfil: ${error instanceof Error ? error.message : 'error desconocido'}` : 'Perfil editorial guardado correctamente.' }, { targetOrigin: e.origin })
         return
       }
       if (e.data?.tipo === 'SKYBLOCK_ADMIN_GUARDAR_POST' || e.data?.tipo === 'SKYBLOCK_ADMIN_ELIMINAR_POST') {

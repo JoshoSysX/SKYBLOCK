@@ -18,8 +18,9 @@
       <button data-admin-view="colecciones"><i>03</i>Colecciones <span>3</span></button>
       <button data-admin-view="verificacion"><i>04</i>Verificación <span id="adminCodeCount">0</span></button>
       <button data-admin-view="posts"><i>05</i>Posts <span id="adminPostCount">2</span></button>
-      <button data-admin-view="correos"><i>06</i>Correos</button>
-      <button data-admin-view="mensajes"><i>07</i>Mensajes <span>6</span></button>
+      <button data-admin-view="perfil"><i>06</i>Perfil del feed</button>
+      <button data-admin-view="correos"><i>07</i>Correos</button>
+      <button data-admin-view="mensajes"><i>08</i>Mensajes <span>6</span></button>
     </nav>
     <div class="admin-sidebar-foot"><a href="inicio.html">← Ver tienda</a><button id="logoutDemo">Cerrar sesión</button></div>
   </aside>
@@ -66,6 +67,20 @@
         <section class="admin-post-preview"><span>Vista previa</span><article class="studio-post"><header><div class="post-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>AHORA</span></div><i>•••</i></header><div class="post-copy"><h2 id="previewPostTitle">Título de la publicación</h2><p id="previewPostDescription">La descripción del post aparecerá aquí mientras escribes.</p></div><div class="post-preview-image" id="postImagePreview"><span>Vista previa de la fotografía</span></div></article></section>
       </div>
       <section class="admin-card admin-post-manager"><div class="admin-card-head"><div><span>Publicaciones</span><h2>Administrar posts</h2></div></div><div class="admin-post-list" id="adminPostList"></div></section>
+    </section>
+
+    <section class="admin-view" data-view="perfil">
+      <div class="admin-title"><div><span>Identidad editorial</span><h1>Perfil del feed.</h1><p>Esta información aparece en la cabecera de Posts y en cada publicación pública.</p></div><a class="admin-secondary admin-link-button" href="posts.html">Ver Posts →</a></div>
+      <form class="admin-card admin-post-form" id="editorialProfileForm">
+        <div class="admin-card-head"><div><span>Perfil editorial</span><h2>SKYBLOCK STUDIO</h2></div></div>
+        <div class="admin-post-fields admin-profile-fields">
+          <div class="admin-form-row"><label>Nombre público<input id="editorialProfileName" required maxlength="80" value="SKYBLOCK STUDIO"></label><label>Ubicación<input id="editorialProfileLocation" required maxlength="100" value="Tarapoto, Perú"></label></div>
+          <label>Descripción<textarea id="editorialProfileBio" required maxlength="280" rows="4">Estudio creativo independiente. Construye. Crea. Domina.</textarea></label>
+          <label>Intereses o enfoque<input id="editorialProfileInterests" required maxlength="160" value="Cultura, ropa urbana y procesos creativos"></label>
+          <div class="admin-form-row"><label class="admin-upload" for="editorialProfileAvatar"><span id="editorialProfileAvatarText">Cambiar foto de perfil</span><small>JPG, PNG o WEBP · Máximo 150 MB</small><input id="editorialProfileAvatar" type="file" accept="image/jpeg,image/png,image/webp"></label><label class="admin-upload" for="editorialProfileCover"><span id="editorialProfileCoverText">Cambiar portada</span><small>JPG, PNG o WEBP · Máximo 150 MB</small><input id="editorialProfileCover" type="file" accept="image/jpeg,image/png,image/webp"></label></div>
+          <div class="admin-post-actions"><button class="admin-primary" id="saveEditorialProfile" type="submit">Guardar perfil</button></div><p class="admin-post-status" id="editorialProfileStatus"></p>
+        </div>
+      </form>
     </section>
 
     <section class="admin-view" data-view="correos">
