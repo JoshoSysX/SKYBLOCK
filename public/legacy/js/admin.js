@@ -721,7 +721,7 @@ function renderAdminPosts() {
   const posts = storedPosts();
   document.getElementById('adminPostCount').textContent = posts.length;
   renderAdminFeedProfile();
-  document.getElementById('adminPostList').innerHTML = posts.map((post) => `<article class="admin-feed-post"><header><div class="admin-feed-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>${cleanText(post.date)}</span></div><button class="admin-post-more" type="button" data-post-menu="${post.id}" aria-label="Opciones de ${cleanText(post.title)}">•••</button><div class="admin-post-menu" id="post-menu-${post.id}"><button type="button" data-edit-post="${post.id}">Editar</button><button type="button" data-delete-post="${post.id}">Eliminar</button></div></header><div class="admin-feed-copy"><h3>${cleanText(post.title)}</h3>${post.description ? `<p>${cleanText(post.description)}</p>` : ''}</div>${post.images.length ? `<div class="admin-feed-media">${post.images.slice(0,3).map((item) => `<img src="${item.url}" alt="${cleanText(item.alt || post.title)}">`).join('')}${post.images.length > 3 ? `<b>+${post.images.length - 3}</b>` : ''}</div>` : ''}</article>`).join('') || '<p class="admin-empty-products">Aún no hay posts. Crea la primera publicación.</p>';
+  document.getElementById('adminPostList').innerHTML = posts.map((post) => `<article class="admin-feed-post"><header><div class="admin-feed-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>${cleanText(post.date)}</span></div><button class="admin-post-more" type="button" data-post-menu="${post.id}" aria-label="Opciones de ${cleanText(post.title)}" aria-expanded="false">•••</button><div class="admin-post-menu" id="post-menu-${post.id}" hidden><button type="button" data-edit-post="${post.id}">Editar</button><button type="button" data-delete-post="${post.id}">Eliminar</button></div></header><div class="admin-feed-copy"><h3>${cleanText(post.title)}</h3>${post.description ? `<p>${cleanText(post.description)}</p>` : ''}</div>${post.images.length ? `<div class="admin-feed-media ${post.images.length === 1 ? 'is-single' : ''}">${post.images.slice(0,3).map((item) => `<img src="${item.url}" alt="${cleanText(item.alt || post.title)}">`).join('')}${post.images.length > 3 ? `<b>+${post.images.length - 3}</b>` : ''}</div>` : ''}</article>`).join('') || '<p class="admin-empty-products">Aún no hay posts. Crea la primera publicación.</p>';
 }
 renderAdminPosts();
 
@@ -784,12 +784,17 @@ document.getElementById('adminPostList').addEventListener('click',async (event) 
   const editButton = event.target.closest('[data-edit-post]');
   const deleteButton = event.target.closest('[data-delete-post]');
   const posts = storedPosts();
-  if (menuButton) { document.querySelectorAll('.admin-post-menu.open').forEach((menu) => menu.classList.remove('open')); document.getElementById(`post-menu-${menuButton.dataset.postMenu}`).classList.toggle('open'); return; }
+  if (menuButton) { const targetMenu = document.getElementById(`post-menu-${menuButton.dataset.postMenu}`); const opening = targetMenu?.hidden; document.querySelectorAll('.admin-post-menu').forEach((menu) => { menu.classList.remove('open'); menu.hidden = true; }); if (targetMenu && opening) { targetMenu.hidden = false; targetMenu.classList.add('open'); menuButton.setAttribute('aria-expanded','true'); } document.querySelectorAll('[data-post-menu]').forEach((button) => { if (button !== menuButton) button.setAttribute('aria-expanded','false'); }); if (!opening) menuButton.setAttribute('aria-expanded','false'); return; }
   if (editButton) editPost(posts.find((post) => post.id === editButton.dataset.editPost));
   if (deleteButton && await window.skyblockConfirm({title:'Eliminar publicación',message:'La publicación y su contenido dejarán de mostrarse. Esta acción no se puede deshacer.',confirmText:'Eliminar publicación'})) {
     document.getElementById('postStatus').textContent = 'Eliminando publicación...';
     parent.postMessage({tipo:'SKYBLOCK_ADMIN_ELIMINAR_POST',id:deleteButton.dataset.deletePost},location.origin);
   }
+});
+document.addEventListener('click',(event) => {
+  if (event.target.closest('.admin-feed-post')) return;
+  document.querySelectorAll('.admin-post-menu').forEach((menu) => { menu.classList.remove('open'); menu.hidden = true; });
+  document.querySelectorAll('[data-post-menu]').forEach((button) => button.setAttribute('aria-expanded','false'));
 });
 
 postForm.addEventListener('submit', (event) => {
