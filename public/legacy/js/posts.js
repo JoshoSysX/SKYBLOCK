@@ -1,7 +1,7 @@
 const nav=document.getElementById('nav'),menuButton=document.getElementById('menuBtn'),mobileNav=document.getElementById('mobileNav');
 const postsFeed=document.getElementById('postsFeed'),postCount=document.getElementById('postCount');
 const profileName=document.getElementById('postsProfileName'),profileBio=document.getElementById('postsProfileBio'),profileAvatar=document.getElementById('postsProfileAvatar'),profileCover=document.getElementById('postsProfileCover');
-const defaultProfile={nombre:'SKYBLOCK STUDIO',biografia:'',ubicacion:'',intereses:''};
+const defaultProfile={nombre:'SKYBLOCK STUDIO',biografia:''};
 
 addEventListener('scroll',()=>nav.classList.toggle('fixed',scrollY>40));
 menuButton.addEventListener('click',()=>{const open=mobileNav.classList.toggle('open');document.body.classList.toggle('lock',open);menuButton.setAttribute('aria-expanded',String(open))});

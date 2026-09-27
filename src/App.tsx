@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from './lib/supabase'
 import profileImage from '../assets/image/PERFIL.jpg'
 
-type PerfilEditorial = { nombre: string; biografia: string; ubicacion: string; intereses: string; avatar_url?: string | null; portada_url?: string | null }
+type PerfilEditorial = { nombre: string; biografia: string; avatar_url?: string | null; portada_url?: string | null }
 type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; error?: string }
 type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
@@ -14,8 +14,6 @@ const LEGACY_BUILD = 'profile-share-fix-20260926'
 const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   nombre: BRAND_UPPER,
   biografia: '',
-  ubicacion: '',
-  intereses: '',
   avatar_url: profileImage,
   portada_url: null,
 }
@@ -394,8 +392,6 @@ export default function App() {
             id: true,
             nombre: String(d.nombre || '').trim() || BRAND_UPPER,
             biografia: String(d.biografia || '').trim() || PERFIL_EDITORIAL_INICIAL.biografia,
-            ubicacion: String(d.ubicacion || '').trim() || PERFIL_EDITORIAL_INICIAL.ubicacion,
-            intereses: String(d.intereses || '').trim() || PERFIL_EDITORIAL_INICIAL.intereses,
             avatar_url: avatar?.secure_url || actual?.avatar_url || null,
             portada_url: portada?.secure_url || actual?.portada_url || null,
             actualizado_en: new Date().toISOString(),

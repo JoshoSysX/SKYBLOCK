@@ -903,7 +903,7 @@ if (editorialProfileForm) {
     profileFields.save.disabled = true;
     profileFields.status.textContent = 'Guardando perfil editorial...';
     parent.postMessage({ tipo:'SKYBLOCK_ADMIN_GUARDAR_PERFIL', datos:{
-      nombre:profileFields.nombre.value.trim(), biografia:profileFields.biografia.value.trim(), ubicacion:'', intereses:'',
+      nombre:profileFields.nombre.value.trim(), biografia:profileFields.biografia.value.trim(),
       avatarArchivo:profileFields.avatar.files[0] || null, portadaArchivo:profileFields.portada.files[0] || null
     } },location.origin);
   });
