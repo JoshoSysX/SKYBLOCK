@@ -6317,3 +6317,7 @@ body.catalog-page,
 
 /* El texto editorial conserva los saltos de línea escritos en el formulario. */
 .admin-profile-preview-content p { white-space:pre-line; }
+
+/* La portada abre el perfil desde el borde superior, detrás de la navegación. */
+.posts-main { padding-top:0!important; }
+.posts-layout { padding-top:0!important; }
