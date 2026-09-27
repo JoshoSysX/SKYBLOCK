@@ -692,6 +692,42 @@ inboxList.addEventListener('click', (event) => {
 });
 renderInboxMessages();
 
+const formatBytes = (bytes = 0) => {
+  const value = Number(bytes || 0);
+  if (!value) return '0 B';
+  const units = ['B','KB','MB','GB','TB'];
+  const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+  return `${(value / (1024 ** index)).toFixed(index ? 1 : 0)} ${units[index]}`;
+};
+const setSystemText = (id, value) => { const element = document.getElementById(id); if (element) element.textContent = value; };
+function renderSystemStatus(sistema = {}) {
+  const detail = sistema.detalle || {};
+  const cloudinary = sistema.cloudinary || {};
+  const healthy = Boolean(sistema.supabase);
+  setSystemText('systemSupabaseStatus', healthy ? 'Operativo' : 'Requiere revisión');
+  setSystemText('systemSupabaseNote', healthy ? 'La base de datos respondió correctamente.' : (sistema.error || 'No se pudo comprobar la conexión.'));
+  setSystemText('systemCloudinaryStatus', cloudinary.disponible ? 'Operativo' : 'Sin lectura de cuota');
+  setSystemText('systemCloudinaryNote', cloudinary.disponible ? 'Uso consultado de forma privada.' : 'Las imágenes registradas siguen visibles abajo.');
+  setSystemText('systemUpdatedAt', sistema.actualizadoEn ? new Intl.DateTimeFormat('es-PE', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' }).format(new Date(sistema.actualizadoEn)) : '—');
+  setSystemText('systemImageCount', String(sistema.imagenes || 0).padStart(2, '0'));
+  setSystemText('systemImageStorage', `${formatBytes(sistema.bytesImagenes)} en archivos registrados`);
+  setSystemText('systemDatabaseRecords', String(sistema.registros || 0).padStart(2, '0'));
+  setSystemText('systemLikeCount', String(sistema.likes || 0).padStart(2, '0'));
+  setSystemText('systemNewMessages', String(sistema.mensajesNuevos || 0).padStart(2, '0'));
+  document.getElementById('systemDatabaseList').innerHTML = [
+    ['Productos',detail.productos], ['Colecciones',detail.colecciones], ['Publicaciones',detail.publicaciones], ['Códigos de autenticidad',detail.codigos], ['Mensajes recibidos',detail.mensajes],
+  ].map(([label,value]) => `<div><dt>${label}</dt><dd>${String(value || 0).padStart(2,'0')}</dd></div>`).join('');
+  const usage = document.getElementById('systemCloudinaryUsage');
+  if (cloudinary.disponible) {
+    const metric = (label, used, limit, unit = '') => `<div><span>${label}</span><b>${used === null || used === undefined ? 'No disponible' : `${unit}${Number(used).toLocaleString('es-PE')}${limit ? ` / ${unit}${Number(limit).toLocaleString('es-PE')}` : ''}`}</b></div>`;
+    usage.innerHTML = `${metric('Créditos',cloudinary.creditosUsados,cloudinary.creditosLimite)}${metric('Almacenamiento',cloudinary.almacenamientoUsado,cloudinary.almacenamientoLimite)}${metric('Ancho de banda',cloudinary.anchoBandaUsado,cloudinary.anchoBandaLimite)}`;
+  } else usage.innerHTML = '<p>La cuota exacta se habilitará cuando esté desplegada la consulta privada de Cloudinary. No se exponen claves en la web.</p>';
+}
+document.getElementById('refreshSystemStatus').addEventListener('click', () => {
+  setSystemText('systemUpdatedAt','Actualizando…');
+  parent.postMessage({ tipo:'SKYBLOCK_ADMIN_SOLICITAR_SISTEMA' }, location.origin);
+});
+
 window.addEventListener('message',(event) => {
   if (event.origin !== location.origin) return;
   if (event.data?.tipo === 'SKYBLOCK_ADMIN_DATOS') {
@@ -724,6 +760,7 @@ window.addEventListener('message',(event) => {
     inboxMessages = event.data.mensajes || [];
     renderInboxMessages();
   }
+  if (event.data?.tipo === 'SKYBLOCK_ADMIN_SISTEMA') renderSystemStatus(event.data.sistema || {});
 });
 parent.postMessage({tipo:'SKYBLOCK_SOLICITAR_DATOS'},location.origin);
 

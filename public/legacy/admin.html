@@ -20,6 +20,7 @@
       <button data-admin-view="posts"><i>05</i>Perfil <span id="adminPostCount">2</span></button>
       <button data-admin-view="correos"><i>06</i>Correos</button>
       <button data-admin-view="mensajes"><i>07</i>Mensajes <span id="adminMessageCount">0</span></button>
+      <button data-admin-view="sistema"><i>08</i>Estado del sistema</button>
     </nav>
     <div class="admin-sidebar-foot"><a href="inicio.html">← Ver tienda</a><button id="logoutDemo">Cerrar sesión</button></div>
   </aside>
@@ -105,6 +106,25 @@
       <div class="admin-title"><div><span>Bandeja de entrada</span><h1>Mensajes.</h1><p>Consultas recibidas desde el formulario de contacto.</p></div></div>
       <div class="admin-inbox"><div class="admin-message-list" id="adminMessageList"></div><article class="admin-message" id="adminMessageDetail"></article></div>
     </section>
+
+    <section class="admin-view" data-view="sistema">
+      <div class="admin-title"><div><span>Diagnóstico privado</span><h1>Estado del sistema.</h1><p>Información operativa de la tienda, Supabase y los recursos de imagen.</p></div><button class="admin-secondary" id="refreshSystemStatus" type="button">Actualizar ahora</button></div>
+      <div class="system-health-grid">
+        <article class="system-health-card"><span>Supabase</span><strong id="systemSupabaseStatus">Comprobando</strong><p id="systemSupabaseNote">Verificando la conexión a los datos.</p></article>
+        <article class="system-health-card"><span>Cloudinary</span><strong id="systemCloudinaryStatus">Comprobando</strong><p id="systemCloudinaryNote">Verificando los recursos de imagen.</p></article>
+        <article class="system-health-card"><span>Última lectura</span><strong id="systemUpdatedAt">—</strong><p>Se actualiza al abrir el panel o al pulsar el botón.</p></article>
+      </div>
+      <div class="system-metric-grid">
+        <article><span>Imágenes registradas</span><strong id="systemImageCount">00</strong><small id="systemImageStorage">0 B en archivos registrados</small></article>
+        <article><span>Base de datos</span><strong id="systemDatabaseRecords">00</strong><small>Registros operativos principales</small></article>
+        <article><span>Interacciones</span><strong id="systemLikeCount">00</strong><small>Likes almacenados por dispositivo</small></article>
+        <article><span>Mensajes pendientes</span><strong id="systemNewMessages">00</strong><small>Consultas nuevas por revisar</small></article>
+      </div>
+      <div class="system-detail-grid">
+        <section class="admin-card"><div class="admin-card-head"><div><span>Datos de la tienda</span><h2>Contenido guardado</h2></div></div><dl class="system-list" id="systemDatabaseList"></dl></section>
+        <section class="admin-card"><div class="admin-card-head"><div><span>Uso de Cloudinary</span><h2>Almacenamiento</h2></div></div><div class="system-cloudinary" id="systemCloudinaryUsage"><p>La cuota exacta se consulta de forma segura, sin revelar claves.</p></div></section>
+      </div>
+    </section>
   </main>
 
   <div class="admin-modal" id="postModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="postModalTitle">
@@ -160,6 +180,6 @@
   <div class="admin-modal" id="verificationModal" aria-hidden="true"><form class="admin-modal-card admin-verification-editor" id="verificationForm"><button class="admin-modal-close" id="closeVerificationModal" type="button" aria-label="Cerrar código">×</button><span>Registro de autenticidad</span><h2 id="verificationModalTitle">Nuevo código</h2><input id="verificationId" type="hidden"><label>Código de autenticidad<input id="verificationCode" required maxlength="32" placeholder="SKB-XXXX-XXXX" autocomplete="off"></label><div class="admin-form-row"><label>Colección<select id="verificationCollection" required></select></label><label>Diseño / producto<select id="verificationProduct" required></select></label></div><label>Número de serie<input id="verificationSeries" required maxlength="20" placeholder="Se completa según el diseño"></label><label>Propietario<input id="verificationOwner" maxlength="100" placeholder="Sin registrar"></label><label>Estado<select id="verificationStatus"><option value="active">Activo</option><option value="blocked">Bloqueado</option></select></label><small class="admin-verification-note">El código quedará asociado a la colección y al diseño seleccionados. La cantidad máxima depende del límite configurado en el producto.</small><div class="admin-product-editor-actions"><button class="admin-secondary" id="cancelVerificationEdit" type="button">Cancelar</button><button class="admin-primary" type="submit">Guardar código</button></div><p id="verificationFormStatus"></p></form></div>
   <div class="admin-confirm" id="adminConfirm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="adminConfirmTitle" aria-describedby="adminConfirmMessage"><section class="admin-confirm-card"><div class="admin-confirm-mark" aria-hidden="true">!</div><span>Confirmar acción</span><h2 id="adminConfirmTitle">¿Estás seguro?</h2><p id="adminConfirmMessage"></p><div class="admin-confirm-actions"><button class="admin-secondary" id="adminConfirmCancel" type="button">Cancelar</button><button class="admin-confirm-danger" id="adminConfirmAccept" type="button">Eliminar</button></div></section></div>
   <div class="toast" id="adminToast" role="status"></div>
-  <script src="js/admin.js?v=admin-messages-live-20260927"></script>
+  <script src="js/admin.js?v=system-status-20260927"></script>
 </body>
 </html>

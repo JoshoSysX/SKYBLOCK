@@ -6,6 +6,7 @@ type PerfilEditorial = { nombre: string; biografia: string; avatar_url?: string 
 type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; reacciones?: unknown[]; error?: string }
 type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
+type EstadoSistema = { error?: string; actualizadoEn: string; supabase: boolean; imagenes: number; bytesImagenes: number; registros: number; likes: number; mensajesNuevos: number; detalle: Record<string, number>; cloudinary: { disponible: boolean; creditosUsados?: number | null; creditosLimite?: number | null; almacenamientoUsado?: number | null; almacenamientoLimite?: number | null; anchoBandaUsado?: number | null; anchoBandaLimite?: number | null } }
 const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
@@ -212,16 +213,18 @@ export default function App() {
       if (ruta.endsWith('/admin.html') && !user) { ventana!.location.href = 'login.html'; return }
       if (ruta.endsWith('/admin.html') && !esAdmin) { ventana!.location.href = esRolAdmin ? 'login.html' : 'inicio.html'; return }
       if (ruta.endsWith('/admin.html')) {
-        const [{ data: mensajes, error }, { data: publicaciones, error: errorPosts }, { data: perfil }, adminData] = await Promise.all([
+        const [{ data: mensajes, error }, { data: publicaciones, error: errorPosts }, { data: perfil }, adminData, sistema] = await Promise.all([
           supabase.from('mensajes_contacto').select('*').order('creado_en', { ascending: false }),
           supabase.from('publicaciones').select('*,imagenes(*)').order('creado_en', { ascending: false }),
           supabase.from('perfil_editorial').select('*').eq('id', true).maybeSingle(),
           cargarAdmin(),
+          cargarEstadoSistema(),
         ])
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_MENSAJES', mensajes: mensajes ?? [], error: Boolean(error) }, location.origin)
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_POSTS', publicaciones: publicaciones ?? [], error: Boolean(errorPosts) }, location.origin)
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_PERFIL', perfil: perfil ? { ...PERFIL_EDITORIAL_INICIAL, ...perfil } : PERFIL_EDITORIAL_INICIAL }, location.origin)
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_DATOS', ...adminData }, location.origin)
+        ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_SISTEMA', sistema }, location.origin)
       }
     } catch { /* iframe del mismo origen */ }
   }, [datos])
@@ -303,6 +306,26 @@ export default function App() {
     return { productos: ps, colecciones: cs, tipos: (tipos.data ?? []).map((t:any)=>t.nombre), codigos: codes, error: error?.message || '' }
   }
 
+  const cargarEstadoSistema = async (): Promise<EstadoSistema> => {
+    const contar = async (tabla: string, filtro?: (consulta: any) => any) => {
+      let consulta = supabase.from(tabla).select('id', { count:'exact', head:true })
+      if (filtro) consulta = filtro(consulta)
+      const { count, error } = await consulta
+      if (error) throw error
+      return count || 0
+    }
+    try {
+      const [productos, colecciones, publicaciones, imagenes, codigos, mensajes, mensajesNuevos, likes, archivos, usoCloudinary] = await Promise.all([
+        contar('productos'), contar('colecciones'), contar('publicaciones'), contar('imagenes'), contar('codigos_autenticidad'), contar('mensajes_contacto'), contar('mensajes_contacto', (consulta) => consulta.eq('estado','nuevo')), contar('me_gusta_publicaciones'), supabase.from('imagenes').select('bytes'), supabase.functions.invoke('cloudinary-usage'),
+      ])
+      const cloudinary = usoCloudinary.error || !usoCloudinary.data?.ok ? { disponible:false } : { disponible:true, creditosUsados:usoCloudinary.data.creditosUsados, creditosLimite:usoCloudinary.data.creditosLimite, almacenamientoUsado:usoCloudinary.data.almacenamientoUsado, almacenamientoLimite:usoCloudinary.data.almacenamientoLimite, anchoBandaUsado:usoCloudinary.data.anchoBandaUsado, anchoBandaLimite:usoCloudinary.data.anchoBandaLimite }
+      const bytesImagenes = (archivos.data || []).reduce((total, archivo: any) => total + Number(archivo.bytes || 0), 0)
+      return { actualizadoEn:new Date().toISOString(), supabase:true, imagenes, bytesImagenes, registros:productos + colecciones + publicaciones + imagenes + codigos + mensajes + likes, likes, mensajesNuevos, detalle:{ productos, colecciones, publicaciones, codigos, mensajes }, cloudinary }
+    } catch (error) {
+      return { actualizadoEn:new Date().toISOString(), supabase:false, imagenes:0, bytesImagenes:0, registros:0, likes:0, mensajesNuevos:0, detalle:{}, cloudinary:{ disponible:false }, error:error instanceof Error ? error.message : 'No se pudo leer el estado del sistema.' }
+    }
+  }
+
   useEffect(() => {
     const recibir = async (e: MessageEvent) => {
       if (e.origin !== location.origin) return
@@ -317,6 +340,12 @@ export default function App() {
         const { data, error } = await supabase.rpc('alternar_me_gusta_publicacion', { p_publicacion:postId, p_dispositivo:dispositivoId })
         const reaccion = Array.isArray(data) ? data[0] : data
         e.source?.postMessage({ tipo:'SKYBLOCK_POST_LIKE_RESULT', postId, ok:!error && Boolean(reaccion), total:Number(reaccion?.total || 0), marcado:Boolean(reaccion?.marcado), mensaje:error?.message || '' }, { targetOrigin:e.origin })
+        return
+      }
+      if (e.data?.tipo === 'SKYBLOCK_ADMIN_SOLICITAR_SISTEMA') {
+        const { esAdmin } = await obtenerAdmin()
+        const sistema = esAdmin ? await cargarEstadoSistema() : { actualizadoEn:new Date().toISOString(), supabase:false, imagenes:0, bytesImagenes:0, registros:0, likes:0, mensajesNuevos:0, detalle:{}, cloudinary:{ disponible:false }, error:'Acceso no autorizado' }
+        e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_SISTEMA', sistema }, { targetOrigin:e.origin })
         return
       }
       if (e.data?.tipo === 'SKYBLOCK_VERIFICAR_CODIGO') {
@@ -396,7 +425,7 @@ export default function App() {
         const eliminandoProducto=e.data.tipo==='SKYBLOCK_ADMIN_ELIMINAR_PRODUCTO'
         const eliminando=eliminandoColeccion||eliminandoProducto
         e.source?.postMessage({tipo:'SKYBLOCK_ADMIN_ACCION_RESULTADO',ok:!error,mensaje:error?`${eliminando?'No se pudo eliminar':'No se pudo guardar'}: ${error.message||'error desconocido'}`:eliminandoColeccion?'Colección eliminada de Supabase.':eliminandoProducto?'Producto e imágenes eliminados.':'Cambios guardados en Supabase.'},{targetOrigin:e.origin})
-        if(!error){const next=await cargarPublicos();setDatos(next)}
+        if(!error){const [next,sistema]=await Promise.all([cargarPublicos(),cargarEstadoSistema()]);setDatos(next);e.source?.postMessage({tipo:'SKYBLOCK_ADMIN_SISTEMA',sistema},{targetOrigin:e.origin})}
         return
       }
       if (e.data?.tipo === 'SKYBLOCK_ADMIN_GUARDAR_PERFIL') {
@@ -428,6 +457,7 @@ export default function App() {
           const next = await cargarPublicos()
           frame.current?.contentWindow?.postMessage({ tipo: 'SKYBLOCK_DATOS_PUBLICOS', datos: next }, location.origin)
           e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_PERFIL', perfil }, { targetOrigin:e.origin })
+          e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_SISTEMA', sistema:await cargarEstadoSistema() }, { targetOrigin:e.origin })
         }
         e.source?.postMessage({ tipo: 'SKYBLOCK_ADMIN_PERFIL_RESULTADO', ok: !error, perfil, mensaje: error ? `No se pudo guardar el perfil: ${error instanceof Error ? error.message : 'error desconocido'}` : 'Perfil editorial guardado correctamente.' }, { targetOrigin: e.origin })
         return
@@ -467,6 +497,7 @@ export default function App() {
           ])
           frame.current?.contentWindow?.postMessage({ tipo: 'SKYBLOCK_DATOS_PUBLICOS', datos: next }, location.origin)
           e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_POSTS', publicaciones:postsAdmin.data ?? [], error:Boolean(postsAdmin.error) }, { targetOrigin:e.origin })
+          e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_SISTEMA', sistema:await cargarEstadoSistema() }, { targetOrigin:e.origin })
         }
         e.source?.postMessage({ tipo: 'SKYBLOCK_ADMIN_POST_RESULTADO', ok: !error, mensaje: error ? `No se pudo guardar el post: ${error instanceof Error ? error.message : 'error desconocido'}` : 'Post guardado correctamente.' }, { targetOrigin: e.origin })
         return
@@ -478,6 +509,7 @@ export default function App() {
         if (!error) {
           const { data: mensajes } = await supabase.from('mensajes_contacto').select('*').order('creado_en', { ascending: false })
           e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_MENSAJES', mensajes:mensajes ?? [], error:false }, { targetOrigin:e.origin })
+          e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_SISTEMA', sistema:await cargarEstadoSistema() }, { targetOrigin:e.origin })
         }
         return
       }
