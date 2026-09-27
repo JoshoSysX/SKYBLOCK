@@ -3,14 +3,15 @@ import { supabase } from './lib/supabase'
 import profileImage from '../assets/image/PERFIL.jpg'
 
 type PerfilEditorial = { nombre: string; biografia: string; avatar_url?: string | null; portada_url?: string | null }
-type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; error?: string }
+type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; reacciones?: unknown[]; error?: string }
 type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
 const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
-const LEGACY_BUILD = 'profile-share-fix-20260926'
+const LEGACY_BUILD = 'post-likes-20260926'
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   nombre: BRAND_UPPER,
   biografia: '',
@@ -138,7 +139,7 @@ export default function App() {
     return { verificado:false, modo:'registro', factorId:registro.data.id, qr:registro.data.totp.qr_code, secreto:registro.data.totp.secret }
   }
 
-  const enviar = useCallback(async () => {
+  const enviar = useCallback(async (dispositivoId = '') => {
     const ventana = frame.current?.contentWindow
     if (!ventana) return
     const rutaIframe = ventana.location.pathname
@@ -157,7 +158,16 @@ export default function App() {
         return
       }
     }
-    ventana?.postMessage({ tipo: 'SKYBLOCK_DATOS_PUBLICOS', datos }, location.origin)
+    let datosParaPagina = datos
+    if (paginaIframe === 'posts' && UUID_PATTERN.test(dispositivoId)) {
+      const publicaciones = datos.publicaciones as Array<{ id?: string }>
+      const ids = publicaciones.map((post) => String(post.id || '')).filter((id) => UUID_PATTERN.test(id))
+      if (ids.length) {
+        const { data: reacciones } = await supabase.rpc('resumen_me_gusta_publicaciones', { p_publicaciones: ids, p_dispositivo: dispositivoId })
+        datosParaPagina = { ...datos, reacciones: reacciones || [] }
+      }
+    }
+    ventana?.postMessage({ tipo: 'SKYBLOCK_DATOS_PUBLICOS', datos: datosParaPagina }, location.origin)
     try {
       const documento = frame.current?.contentDocument
       if (documento?.documentElement.dataset.skyblockNavigationBridge !== 'ready') {
@@ -296,7 +306,19 @@ export default function App() {
   useEffect(() => {
     const recibir = async (e: MessageEvent) => {
       if (e.origin !== location.origin) return
-      if (e.data?.tipo === 'SKYBLOCK_SOLICITAR_DATOS') { void enviar(); return }
+      if (e.data?.tipo === 'SKYBLOCK_SOLICITAR_DATOS') { void enviar(String(e.data.dispositivoId || '')); return }
+      if (e.data?.tipo === 'SKYBLOCK_TOGGLE_POST_LIKE') {
+        const postId = String(e.data.postId || '')
+        const dispositivoId = String(e.data.dispositivoId || '')
+        if (!UUID_PATTERN.test(postId) || !UUID_PATTERN.test(dispositivoId)) {
+          e.source?.postMessage({ tipo:'SKYBLOCK_POST_LIKE_RESULT', postId, ok:false, mensaje:'No se pudo identificar este dispositivo.' }, { targetOrigin:e.origin })
+          return
+        }
+        const { data, error } = await supabase.rpc('alternar_me_gusta_publicacion', { p_publicacion:postId, p_dispositivo:dispositivoId })
+        const reaccion = Array.isArray(data) ? data[0] : data
+        e.source?.postMessage({ tipo:'SKYBLOCK_POST_LIKE_RESULT', postId, ok:!error && Boolean(reaccion), total:Number(reaccion?.total || 0), marcado:Boolean(reaccion?.marcado), mensaje:error?.message || '' }, { targetOrigin:e.origin })
+        return
+      }
       if (e.data?.tipo === 'SKYBLOCK_VERIFICAR_CODIGO') {
         const { data, error } = await supabase.rpc('verificar_codigo_autenticidad', { codigo_hash: String(e.data.hash || '') })
         const row = Array.isArray(data) ? data[0] : data
@@ -500,5 +522,5 @@ export default function App() {
     addEventListener('message', recibir); void enviar(); return () => removeEventListener('message', recibir)
   }, [cargarPublicos, enviar])
 
-  return <iframe ref={frame} className="legacy-frontend" src={urlLegacy(rutaInicial, location.search)} title={BRAND} allow="web-share" onLoad={enviar} />
+  return <iframe ref={frame} className="legacy-frontend" src={urlLegacy(rutaInicial, location.search)} title={BRAND} allow="web-share" onLoad={() => void enviar()} />
 }

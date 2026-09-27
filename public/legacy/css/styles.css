@@ -6102,6 +6102,8 @@ body.catalog-page,
 .studio-post>footer .post-action em { font-style:normal; }
 .studio-post>footer .post-action.liked { color:#a84039; }
 .studio-post>footer .post-action:hover { background:#f0f0eb; }
+.studio-post>footer .post-like-count { min-width:1ch; color:currentColor; font:600 11px/1 var(--body); }
+.studio-post>footer .post-action:disabled { cursor:wait; opacity:.64; }
 @media(max-width:700px) { .posts-profile-cover{height:106px}.posts-profile-mark{margin-left:20px}.posts-profile-content{padding:17px 20px 20px}.posts-layout{gap:20px}.studio-post>footer .post-action{justify-content:center}.studio-post>footer .post-action em{display:inline} }
 
 .catalog-card,
