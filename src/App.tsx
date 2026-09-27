@@ -10,12 +10,12 @@ const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
-const LEGACY_BUILD = 'posts-profile-layout-20260926'
+const LEGACY_BUILD = 'posts-profile-clean-20260926'
 const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   nombre: BRAND_UPPER,
-  biografia: 'Estudio creativo independiente. Construye. Crea. Domina.',
-  ubicacion: 'Tarapoto, Perú',
-  intereses: 'Cultura, ropa urbana y procesos creativos',
+  biografia: '',
+  ubicacion: '',
+  intereses: '',
   avatar_url: profileImage,
   portada_url: null,
 }

@@ -1,9 +1,9 @@
 create table if not exists public.perfil_editorial (
   id boolean primary key default true check (id),
   nombre text not null default 'SKYBLOCK STUDIO' check (char_length(nombre) <= 80),
-  biografia text not null default 'Estudio creativo independiente. Construye. Crea. Domina.' check (char_length(biografia) <= 280),
-  ubicacion text not null default 'Tarapoto, Perú' check (char_length(ubicacion) <= 100),
-  intereses text not null default 'Cultura, ropa urbana y procesos creativos' check (char_length(intereses) <= 160),
+  biografia text not null default '' check (char_length(biografia) <= 280),
+  ubicacion text not null default '' check (char_length(ubicacion) <= 100),
+  intereses text not null default '' check (char_length(intereses) <= 160),
   avatar_url text,
   portada_url text,
   actualizado_en timestamptz not null default now(),

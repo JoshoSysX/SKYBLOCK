@@ -849,8 +849,8 @@ if (editorialProfileForm) {
   const profileMaxBytes = MAX_IMAGE_SIZE_BYTES;
   const refreshProfilePreview = () => {
     profileFields.previewName.textContent = profileFields.nombre.value || 'SKYBLOCK STUDIO';
-    profileFields.previewBio.textContent = profileFields.biografia.value || 'Estudio creativo independiente. Construye. Crea. Domina.';
-    profileFields.previewMeta.textContent = `${profileFields.ubicacion.value || 'Tarapoto, Perú'} · ${profileFields.intereses.value || 'Cultura, ropa urbana y procesos creativos'}`;
+    profileFields.previewBio.textContent = profileFields.biografia.value;
+    profileFields.previewMeta.textContent = [profileFields.ubicacion.value, profileFields.intereses.value].filter(Boolean).join(' · ');
   };
   const previewProfileImage = (input, preview, isCover) => {
     const file = input.files && input.files[0];

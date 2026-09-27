@@ -1,7 +1,7 @@
 const nav=document.getElementById('nav'),menuButton=document.getElementById('menuBtn'),mobileNav=document.getElementById('mobileNav');
 const postsFeed=document.getElementById('postsFeed'),postCount=document.getElementById('postCount');
 const profileName=document.getElementById('postsProfileName'),profileBio=document.getElementById('postsProfileBio'),profileLocation=document.getElementById('postsProfileLocation'),profileInterests=document.getElementById('postsProfileInterests'),profileAvatar=document.getElementById('postsProfileAvatar'),profileCover=document.getElementById('postsProfileCover');
-const defaultProfile={nombre:'SKYBLOCK STUDIO',biografia:'Estudio creativo independiente. Construye. Crea. Domina.',ubicacion:'Tarapoto, Perú',intereses:'Cultura, ropa urbana y procesos creativos'};
+const defaultProfile={nombre:'SKYBLOCK STUDIO',biografia:'',ubicacion:'',intereses:''};
 
 addEventListener('scroll',()=>nav.classList.toggle('fixed',scrollY>40));
 menuButton.addEventListener('click',()=>{const open=mobileNav.classList.toggle('open');document.body.classList.toggle('lock',open);menuButton.setAttribute('aria-expanded',String(open))});
