@@ -839,9 +839,30 @@ if (editorialProfileForm) {
     avatarText: document.getElementById('editorialProfileAvatarText'),
     portadaText: document.getElementById('editorialProfileCoverText'),
     status: document.getElementById('editorialProfileStatus'),
-    save: document.getElementById('saveEditorialProfile')
+    save: document.getElementById('saveEditorialProfile'),
+    previewName: document.getElementById('adminProfilePreviewName'),
+    previewBio: document.getElementById('adminProfilePreviewBio'),
+    previewMeta: document.getElementById('adminProfilePreviewMeta'),
+    previewAvatar: document.getElementById('adminProfilePreviewAvatar'),
+    previewCover: document.getElementById('adminProfilePreviewCover')
   };
   const profileMaxBytes = MAX_IMAGE_SIZE_BYTES;
+  const refreshProfilePreview = () => {
+    profileFields.previewName.textContent = profileFields.nombre.value || 'SKYBLOCK STUDIO';
+    profileFields.previewBio.textContent = profileFields.biografia.value || 'Estudio creativo independiente. Construye. Crea. Domina.';
+    profileFields.previewMeta.textContent = `${profileFields.ubicacion.value || 'Tarapoto, Perú'} · ${profileFields.intereses.value || 'Cultura, ropa urbana y procesos creativos'}`;
+  };
+  const previewProfileImage = (input, preview, isCover) => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.addEventListener('load', () => {
+      preview.style.backgroundImage = isCover ? `linear-gradient(90deg,rgba(7,8,9,.3),rgba(7,8,9,.08)),url("${reader.result}")` : `url("${reader.result}")`;
+      preview.classList.add('has-image');
+      if (!isCover) preview.textContent = '';
+    });
+    reader.readAsDataURL(file);
+  };
   const updateProfileFileName = (input, label, fallback) => {
     const file = input.files && input.files[0];
     if (!file) return;
@@ -854,8 +875,9 @@ if (editorialProfileForm) {
     label.textContent = file.name;
     profileFields.status.textContent = '';
   };
-  profileFields.avatar.addEventListener('change', () => updateProfileFileName(profileFields.avatar, profileFields.avatarText, 'Cambiar foto de perfil'));
-  profileFields.portada.addEventListener('change', () => updateProfileFileName(profileFields.portada, profileFields.portadaText, 'Cambiar portada'));
+  profileFields.avatar.addEventListener('change', () => { updateProfileFileName(profileFields.avatar, profileFields.avatarText, 'Cambiar foto de perfil'); previewProfileImage(profileFields.avatar, profileFields.previewAvatar, false); });
+  profileFields.portada.addEventListener('change', () => { updateProfileFileName(profileFields.portada, profileFields.portadaText, 'Cambiar portada'); previewProfileImage(profileFields.portada, profileFields.previewCover, true); });
+  [profileFields.nombre,profileFields.biografia,profileFields.ubicacion,profileFields.intereses].forEach((input) => input.addEventListener('input', refreshProfilePreview));
   editorialProfileForm.addEventListener('submit', (event) => {
     event.preventDefault();
     profileFields.save.disabled = true;
@@ -873,6 +895,9 @@ if (editorialProfileForm) {
       profileFields.biografia.value = profile.biografia || '';
       profileFields.ubicacion.value = profile.ubicacion || '';
       profileFields.intereses.value = profile.intereses || '';
+      refreshProfilePreview();
+      if (profile.avatar_url) { profileFields.previewAvatar.style.backgroundImage = `url("${profile.avatar_url}")`; profileFields.previewAvatar.textContent = ''; profileFields.previewAvatar.classList.add('has-image'); }
+      if (profile.portada_url) { profileFields.previewCover.style.backgroundImage = `linear-gradient(90deg,rgba(7,8,9,.3),rgba(7,8,9,.08)),url("${profile.portada_url}")`; profileFields.previewCover.classList.add('has-image'); }
       profileFields.avatarText.textContent = profile.avatar_url ? 'Foto actual · cambiar' : 'Cambiar foto de perfil';
       profileFields.portadaText.textContent = profile.portada_url ? 'Portada actual · cambiar' : 'Cambiar portada';
     }
