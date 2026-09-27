@@ -697,6 +697,12 @@ const formatBytes = (bytes = 0) => {
   return `${(value / (1024 ** 3)).toFixed(2)} GB`;
 };
 const setSystemText = (id, value) => { const element = document.getElementById(id); if (element) element.textContent = value; };
+const setSystemMeter = (id, percentage, unknown = false) => {
+  const meter = document.getElementById(id);
+  if (!meter) return;
+  meter.style.setProperty('--meter-value', String(Math.max(unknown ? 18 : 0, Math.min(100, Number(percentage) || 0))));
+  meter.classList.toggle('system-progress-unknown', unknown);
+};
 function renderSystemStatus(sistema = {}) {
   const detail = sistema.detalle || {};
   const cloudinary = sistema.cloudinary || {};
@@ -711,18 +717,25 @@ function renderSystemStatus(sistema = {}) {
   setSystemText('systemDatabaseRecords', String(sistema.registros || 0).padStart(2, '0'));
   const database = sistema.almacenamientoBaseDatos || {};
   const usedDatabase = Number(database.usado || 0), limitDatabase = Number(database.limite || 0), availableDatabase = Math.max(limitDatabase - usedDatabase, 0);
+  const databasePercentage = limitDatabase ? Math.min(100, (usedDatabase / limitDatabase) * 100) : 0;
   setSystemText('systemDatabaseAvailable', limitDatabase ? formatBytes(availableDatabase) : '—');
-  setSystemText('systemDatabaseUsage', limitDatabase ? `${formatBytes(usedDatabase)} usados de ${formatBytes(limitDatabase)} (${Math.min(100, (usedDatabase / limitDatabase) * 100).toFixed(1)}%)` : 'No se pudo leer el límite del plan');
+  setSystemText('systemDatabaseUsage', limitDatabase ? `${formatBytes(usedDatabase)} usados de ${formatBytes(limitDatabase)}` : 'No se pudo leer el límite del plan');
+  setSystemText('systemDatabasePercent', limitDatabase ? `${databasePercentage.toFixed(1)}% usado` : '—');
+  setSystemMeter('systemDatabaseProgress', databasePercentage);
+  const cloudinaryUsed = Number(cloudinary.almacenamientoUsado || 0);
+  const cloudinaryLimit = Number(cloudinary.almacenamientoLimite || 0);
+  const cloudinaryHasLimit = cloudinary.disponible && cloudinaryLimit > 0;
+  const cloudinaryPercentage = cloudinaryHasLimit ? Math.min(100, (cloudinaryUsed / cloudinaryLimit) * 100) : 0;
+  setSystemText('systemCloudinaryUsed', cloudinary.disponible ? formatBytes(cloudinaryUsed) : '—');
+  setSystemText('systemCloudinaryLimit', cloudinary.disponible ? (cloudinaryHasLimit ? `${formatBytes(cloudinaryUsed)} usados de ${formatBytes(cloudinaryLimit)}` : 'Límite no informado por Cloudinary') : 'No se pudo leer Cloudinary');
+  setSystemText('systemCloudinaryPercent', cloudinaryHasLimit ? `${cloudinaryPercentage.toFixed(1)}% usado` : 'Uso real');
+  setSystemText('systemCloudinaryImageCount', String(cloudinary.imagenesSubidas ?? sistema.imagenes ?? 0).padStart(2, '0'));
+  setSystemMeter('systemCloudinaryProgress', cloudinaryPercentage, !cloudinaryHasLimit);
   setSystemText('systemLikeCount', String(sistema.likes || 0).padStart(2, '0'));
   setSystemText('systemNewMessages', String(sistema.mensajesNuevos || 0).padStart(2, '0'));
   document.getElementById('systemDatabaseList').innerHTML = [
     ['Productos',detail.productos], ['Colecciones',detail.colecciones], ['Publicaciones',detail.publicaciones], ['Códigos de autenticidad',detail.codigos], ['Mensajes recibidos',detail.mensajes],
   ].map(([label,value]) => `<div><dt>${label}</dt><dd>${String(value || 0).padStart(2,'0')}</dd></div>`).join('');
-  const usage = document.getElementById('systemCloudinaryUsage');
-  if (cloudinary.disponible) {
-    const metric = (label, used, limit, isSize = false, empty = 'No disponible') => `<div><span>${label}</span><b>${used === null || used === undefined ? empty : `${isSize ? formatBytes(used) : Number(used).toLocaleString('es-PE')}${limit ? ` / ${isSize ? formatBytes(limit) : Number(limit).toLocaleString('es-PE')}` : ''}`}</b></div>`;
-    usage.innerHTML = `${metric('Imágenes subidas',cloudinary.imagenesSubidas)}${metric('Espacio usado',cloudinary.almacenamientoUsado,cloudinary.almacenamientoLimite,true)}${metric('Límite de espacio',cloudinary.almacenamientoLimite,null,true,'No informado por Cloudinary')}${metric('Ancho de banda',cloudinary.anchoBandaUsado,cloudinary.anchoBandaLimite,true)}`;
-  } else usage.innerHTML = '<p>La cuota exacta se habilitará cuando esté desplegada la consulta privada de Cloudinary. No se exponen claves en la web.</p>';
 }
 document.getElementById('refreshSystemStatus').addEventListener('click', () => {
   setSystemText('systemUpdatedAt','Actualizando…');

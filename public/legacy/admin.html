@@ -114,16 +114,30 @@
         <article class="system-health-card"><span>Cloudinary</span><strong id="systemCloudinaryStatus">Comprobando</strong><p id="systemCloudinaryNote">Verificando los recursos de imagen.</p></article>
         <article class="system-health-card"><span>Última lectura</span><strong id="systemUpdatedAt">—</strong><p>Se actualiza al abrir el panel o al pulsar el botón.</p></article>
       </div>
-      <div class="system-metric-grid">
-        <article><span>Imágenes registradas</span><strong id="systemImageCount">00</strong><small id="systemImageStorage">0 B en archivos registrados</small></article>
-        <article><span>Base de datos</span><strong id="systemDatabaseRecords">00</strong><small>Registros operativos principales</small></article>
-        <article><span>Espacio disponible</span><strong id="systemDatabaseAvailable">—</strong><small id="systemDatabaseUsage">Calculando uso de PostgreSQL</small></article>
+      <section class="system-capacity-grid" aria-label="Capacidad y recursos">
+        <article class="system-capacity-card system-capacity-database">
+          <div class="system-capacity-head"><span>Supabase</span><b id="systemDatabasePercent">—</b></div>
+          <h2>Base de datos</h2><strong id="systemDatabaseAvailable">—</strong><p>Espacio disponible</p>
+          <div class="system-progress" id="systemDatabaseProgress" style="--meter-value:0"><i></i></div>
+          <small id="systemDatabaseUsage">Calculando uso de PostgreSQL</small>
+        </article>
+        <article class="system-capacity-card system-capacity-cloudinary">
+          <div class="system-capacity-head"><span>Cloudinary</span><b id="systemCloudinaryPercent">En uso</b></div>
+          <h2>Imágenes y espacio</h2><strong id="systemCloudinaryUsed">—</strong><p>Espacio utilizado</p>
+          <div class="system-progress system-progress-unknown" id="systemCloudinaryProgress" style="--meter-value:0"><i></i></div>
+          <small id="systemCloudinaryLimit">Leyendo límite de Cloudinary</small>
+          <div class="system-image-total"><b id="systemCloudinaryImageCount">00</b><span>imágenes subidas</span></div>
+        </article>
+      </section>
+      <div class="system-metric-grid system-quick-grid">
+        <article><span>Registros operativos</span><strong id="systemDatabaseRecords">00</strong><small>Productos, colecciones, publicaciones y más</small></article>
+        <article><span>Imágenes registradas</span><strong id="systemImageCount">00</strong><small id="systemImageStorage">0.00 GB en archivos registrados</small></article>
         <article><span>Interacciones</span><strong id="systemLikeCount">00</strong><small>Likes almacenados por dispositivo</small></article>
         <article><span>Mensajes pendientes</span><strong id="systemNewMessages">00</strong><small>Consultas nuevas por revisar</small></article>
       </div>
       <div class="system-detail-grid">
         <section class="admin-card"><div class="admin-card-head"><div><span>Datos de la tienda</span><h2>Contenido guardado</h2></div></div><dl class="system-list" id="systemDatabaseList"></dl></section>
-        <section class="admin-card"><div class="admin-card-head"><div><span>Uso de Cloudinary</span><h2>Almacenamiento</h2></div></div><div class="system-cloudinary" id="systemCloudinaryUsage"><p>La cuota exacta se consulta de forma segura, sin revelar claves.</p></div></section>
+        <section class="admin-card system-reading-guide"><div class="admin-card-head"><div><span>Cómo leerlo</span><h2>Estado de recursos</h2></div></div><div><b>Base de datos</b><p>El medidor compara el uso real con el límite de tu plan.</p></div><div><b>Cloudinary</b><p>Si Cloudinary no comunica un límite, mostramos el uso real sin estimaciones.</p></div></section>
       </div>
     </section>
   </main>
