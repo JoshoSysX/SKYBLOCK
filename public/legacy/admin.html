@@ -19,7 +19,7 @@
       <button data-admin-view="verificacion"><i>04</i>Verificación <span id="adminCodeCount">0</span></button>
       <button data-admin-view="posts"><i>05</i>Perfil <span id="adminPostCount">2</span></button>
       <button data-admin-view="correos"><i>06</i>Correos</button>
-      <button data-admin-view="mensajes"><i>07</i>Mensajes <span>6</span></button>
+      <button data-admin-view="mensajes"><i>07</i>Mensajes <span id="adminMessageCount">0</span></button>
     </nav>
     <div class="admin-sidebar-foot"><a href="inicio.html">← Ver tienda</a><button id="logoutDemo">Cerrar sesión</button></div>
   </aside>
@@ -103,7 +103,7 @@
 
     <section class="admin-view" data-view="mensajes">
       <div class="admin-title"><div><span>Bandeja de entrada</span><h1>Mensajes.</h1><p>Consultas recibidas desde el formulario de contacto.</p></div></div>
-      <div class="admin-inbox"><div class="admin-message-list"><button class="active"><b>AR</b><span><strong>Andrea Ruiz</strong><small>Consulta sobre colaboración</small></span><time>14:35</time></button><button><b>CM</b><span><strong>Carlos Mendoza</strong><small>Propuesta audiovisual</small></span><time>Ayer</time></button><button><b>LV</b><span><strong>Lucía Vargas</strong><small>Información sobre la marca</small></span><time>Ayer</time></button></div><article class="admin-message"><span>Contacto / Colaboraciones</span><h2>Consulta sobre colaboración</h2><div><b>Andrea Ruiz</b><small>andrea@example.com · Hoy, 14:35</small></div><p>Hola, tengo una propuesta creativa para una futura colección de SKYBLOCK STUDIO. Me gustaría compartirles el concepto y algunas referencias visuales para evaluar una colaboración.</p><button class="admin-primary">Responder</button></article></div>
+      <div class="admin-inbox"><div class="admin-message-list" id="adminMessageList"></div><article class="admin-message" id="adminMessageDetail"></article></div>
     </section>
   </main>
 
@@ -160,6 +160,6 @@
   <div class="admin-modal" id="verificationModal" aria-hidden="true"><form class="admin-modal-card admin-verification-editor" id="verificationForm"><button class="admin-modal-close" id="closeVerificationModal" type="button" aria-label="Cerrar código">×</button><span>Registro de autenticidad</span><h2 id="verificationModalTitle">Nuevo código</h2><input id="verificationId" type="hidden"><label>Código de autenticidad<input id="verificationCode" required maxlength="32" placeholder="SKB-XXXX-XXXX" autocomplete="off"></label><div class="admin-form-row"><label>Colección<select id="verificationCollection" required></select></label><label>Diseño / producto<select id="verificationProduct" required></select></label></div><label>Número de serie<input id="verificationSeries" required maxlength="20" placeholder="Se completa según el diseño"></label><label>Propietario<input id="verificationOwner" maxlength="100" placeholder="Sin registrar"></label><label>Estado<select id="verificationStatus"><option value="active">Activo</option><option value="blocked">Bloqueado</option></select></label><small class="admin-verification-note">El código quedará asociado a la colección y al diseño seleccionados. La cantidad máxima depende del límite configurado en el producto.</small><div class="admin-product-editor-actions"><button class="admin-secondary" id="cancelVerificationEdit" type="button">Cancelar</button><button class="admin-primary" type="submit">Guardar código</button></div><p id="verificationFormStatus"></p></form></div>
   <div class="admin-confirm" id="adminConfirm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="adminConfirmTitle" aria-describedby="adminConfirmMessage"><section class="admin-confirm-card"><div class="admin-confirm-mark" aria-hidden="true">!</div><span>Confirmar acción</span><h2 id="adminConfirmTitle">¿Estás seguro?</h2><p id="adminConfirmMessage"></p><div class="admin-confirm-actions"><button class="admin-secondary" id="adminConfirmCancel" type="button">Cancelar</button><button class="admin-confirm-danger" id="adminConfirmAccept" type="button">Eliminar</button></div></section></div>
   <div class="toast" id="adminToast" role="status"></div>
-  <script src="js/admin.js?v=posts-admin-menu-20260926"></script>
+  <script src="js/admin.js?v=admin-messages-live-20260927"></script>
 </body>
 </html>

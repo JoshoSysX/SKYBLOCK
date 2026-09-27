@@ -663,6 +663,35 @@ document.getElementById('verificationForm').addEventListener('submit',async (eve
 });
 renderVerificationCodes();
 
+let inboxMessages = [];
+let selectedInboxMessageId = '';
+const inboxList = document.getElementById('adminMessageList');
+const inboxDetail = document.getElementById('adminMessageDetail');
+const initials = (name = '') => String(name).trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'SK';
+const messageDate = (value) => value ? new Intl.DateTimeFormat('es-PE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }).format(new Date(value)) : '';
+
+function renderInboxMessages() {
+  const counter = document.getElementById('adminMessageCount');
+  if (counter) counter.textContent = String(inboxMessages.length);
+  if (!inboxMessages.length) {
+    inboxList.innerHTML = '<p class="admin-empty-products">No hay mensajes recibidos.</p>';
+    inboxDetail.innerHTML = '<span>Bandeja de entrada</span><h2>Sin mensajes</h2><p>Las consultas enviadas desde el formulario de contacto aparecerán aquí.</p>';
+    return;
+  }
+  if (!inboxMessages.some((message) => message.id === selectedInboxMessageId)) selectedInboxMessageId = inboxMessages[0].id;
+  const selected = inboxMessages.find((message) => message.id === selectedInboxMessageId) || inboxMessages[0];
+  inboxList.innerHTML = inboxMessages.map((message) => `<button type="button" class="${message.id === selected.id ? 'active' : ''}" data-inbox-message="${cleanText(message.id)}"><b>${cleanText(initials(message.nombre))}</b><span><strong>${cleanText(message.nombre || 'Sin nombre')}</strong><small>${cleanText(message.asunto || 'Consulta')}</small></span><time>${cleanText(messageDate(message.creado_en))}</time></button>`).join('');
+  inboxDetail.innerHTML = `<span>Contacto / ${cleanText(selected.estado || 'Nuevo')}</span><h2>${cleanText(selected.asunto || 'Consulta')}</h2><div><b>${cleanText(selected.nombre || 'Sin nombre')}</b><small>${cleanText(selected.correo || '')} · ${cleanText(messageDate(selected.creado_en))}</small></div><p>${cleanText(selected.mensaje || '')}</p>`;
+}
+
+inboxList.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-inbox-message]');
+  if (!button) return;
+  selectedInboxMessageId = button.dataset.inboxMessage;
+  renderInboxMessages();
+});
+renderInboxMessages();
+
 window.addEventListener('message',(event) => {
   if (event.origin !== location.origin) return;
   if (event.data?.tipo === 'SKYBLOCK_ADMIN_DATOS') {
@@ -690,6 +719,10 @@ window.addEventListener('message',(event) => {
       if (event.data.ok) closeVerificationEditor();
       else document.getElementById('verificationFormStatus').textContent = event.data.mensaje;
     }
+  }
+  if (event.data?.tipo === 'SKYBLOCK_ADMIN_MENSAJES') {
+    inboxMessages = event.data.mensajes || [];
+    renderInboxMessages();
   }
 });
 parent.postMessage({tipo:'SKYBLOCK_SOLICITAR_DATOS'},location.origin);
