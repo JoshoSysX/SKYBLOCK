@@ -6,7 +6,7 @@ type PerfilEditorial = { nombre: string; biografia: string; avatar_url?: string 
 type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; reacciones?: unknown[]; error?: string }
 type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
-type EstadoSistema = { error?: string; actualizadoEn: string; supabase: boolean; imagenes: number; bytesImagenes: number; registros: number; likes: number; mensajesNuevos: number; detalle: Record<string, number>; cloudinary: { disponible: boolean; creditosUsados?: number | null; creditosLimite?: number | null; almacenamientoUsado?: number | null; almacenamientoLimite?: number | null; anchoBandaUsado?: number | null; anchoBandaLimite?: number | null } }
+type EstadoSistema = { error?: string; actualizadoEn: string; supabase: boolean; imagenes: number; bytesImagenes: number; registros: number; likes: number; mensajesNuevos: number; detalle: Record<string, number>; cloudinary: { disponible: boolean; error?: string; creditosUsados?: number | null; creditosLimite?: number | null; almacenamientoUsado?: number | null; almacenamientoLimite?: number | null; anchoBandaUsado?: number | null; anchoBandaLimite?: number | null } }
 const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
@@ -315,10 +315,12 @@ export default function App() {
       return count || 0
     }
     try {
-      const [productos, colecciones, publicaciones, imagenes, codigos, mensajes, mensajesNuevos, likes, archivos, usoCloudinary] = await Promise.all([
-        contar('productos'), contar('colecciones'), contar('publicaciones'), contar('imagenes'), contar('codigos_autenticidad'), contar('mensajes_contacto'), contar('mensajes_contacto', (consulta) => consulta.eq('estado','nuevo')), contar('me_gusta_publicaciones'), supabase.from('imagenes').select('bytes'), supabase.functions.invoke('cloudinary-usage'),
+      const [productos, colecciones, publicaciones, imagenes, codigos, mensajes, mensajesNuevos, likesResult, archivos, usoCloudinary] = await Promise.all([
+        contar('productos'), contar('colecciones'), contar('publicaciones'), contar('imagenes'), contar('codigos_autenticidad'), contar('mensajes_contacto'), contar('mensajes_contacto', (consulta) => consulta.eq('estado','nuevo')), supabase.rpc('conteo_me_gusta_publicaciones'), supabase.from('imagenes').select('bytes'), supabase.functions.invoke('cloudinary-usage'),
       ])
-      const cloudinary = usoCloudinary.error || !usoCloudinary.data?.ok ? { disponible:false } : { disponible:true, creditosUsados:usoCloudinary.data.creditosUsados, creditosLimite:usoCloudinary.data.creditosLimite, almacenamientoUsado:usoCloudinary.data.almacenamientoUsado, almacenamientoLimite:usoCloudinary.data.almacenamientoLimite, anchoBandaUsado:usoCloudinary.data.anchoBandaUsado, anchoBandaLimite:usoCloudinary.data.anchoBandaLimite }
+      if (likesResult.error) throw likesResult.error
+      const likes = Number(likesResult.data || 0)
+      const cloudinary = usoCloudinary.error || !usoCloudinary.data?.ok ? { disponible:false, error:usoCloudinary.data?.error || usoCloudinary.error?.message || 'No se pudo leer la cuota de Cloudinary.' } : { disponible:true, creditosUsados:usoCloudinary.data.creditosUsados, creditosLimite:usoCloudinary.data.creditosLimite, almacenamientoUsado:usoCloudinary.data.almacenamientoUsado, almacenamientoLimite:usoCloudinary.data.almacenamientoLimite, anchoBandaUsado:usoCloudinary.data.anchoBandaUsado, anchoBandaLimite:usoCloudinary.data.anchoBandaLimite }
       const bytesImagenes = (archivos.data || []).reduce((total, archivo: any) => total + Number(archivo.bytes || 0), 0)
       return { actualizadoEn:new Date().toISOString(), supabase:true, imagenes, bytesImagenes, registros:productos + colecciones + publicaciones + imagenes + codigos + mensajes + likes, likes, mensajesNuevos, detalle:{ productos, colecciones, publicaciones, codigos, mensajes }, cloudinary }
     } catch (error) {

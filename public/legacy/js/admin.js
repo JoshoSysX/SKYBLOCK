@@ -707,7 +707,7 @@ function renderSystemStatus(sistema = {}) {
   setSystemText('systemSupabaseStatus', healthy ? 'Operativo' : 'Requiere revisión');
   setSystemText('systemSupabaseNote', healthy ? 'La base de datos respondió correctamente.' : (sistema.error || 'No se pudo comprobar la conexión.'));
   setSystemText('systemCloudinaryStatus', cloudinary.disponible ? 'Operativo' : 'Sin lectura de cuota');
-  setSystemText('systemCloudinaryNote', cloudinary.disponible ? 'Uso consultado de forma privada.' : 'Las imágenes registradas siguen visibles abajo.');
+  setSystemText('systemCloudinaryNote', cloudinary.disponible ? 'Uso consultado de forma privada.' : (cloudinary.error || 'Las imágenes registradas siguen visibles abajo.'));
   setSystemText('systemUpdatedAt', sistema.actualizadoEn ? new Intl.DateTimeFormat('es-PE', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' }).format(new Date(sistema.actualizadoEn)) : '—');
   setSystemText('systemImageCount', String(sistema.imagenes || 0).padStart(2, '0'));
   setSystemText('systemImageStorage', `${formatBytes(sistema.bytesImagenes)} en archivos registrados`);
