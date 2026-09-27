@@ -6,7 +6,7 @@ type PerfilEditorial = { nombre: string; biografia: string; avatar_url?: string 
 type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; reacciones?: unknown[]; error?: string }
 type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
-type EstadoSistema = { error?: string; actualizadoEn: string; supabase: boolean; imagenes: number; bytesImagenes: number; registros: number; likes: number; mensajesNuevos: number; detalle: Record<string, number>; cloudinary: { disponible: boolean; error?: string; creditosUsados?: number | null; creditosLimite?: number | null; almacenamientoUsado?: number | null; almacenamientoLimite?: number | null; anchoBandaUsado?: number | null; anchoBandaLimite?: number | null } }
+type EstadoSistema = { error?: string; actualizadoEn: string; supabase: boolean; almacenamientoBaseDatos: { usado: number; limite: number }; imagenes: number; bytesImagenes: number; registros: number; likes: number; mensajesNuevos: number; detalle: Record<string, number>; cloudinary: { disponible: boolean; error?: string; creditosUsados?: number | null; creditosLimite?: number | null; almacenamientoUsado?: number | null; almacenamientoLimite?: number | null; anchoBandaUsado?: number | null; anchoBandaLimite?: number | null } }
 const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
@@ -315,16 +315,18 @@ export default function App() {
       return count || 0
     }
     try {
-      const [productos, colecciones, publicaciones, imagenes, codigos, mensajes, mensajesNuevos, likesResult, archivos, usoCloudinary] = await Promise.all([
-        contar('productos'), contar('colecciones'), contar('publicaciones'), contar('imagenes'), contar('codigos_autenticidad'), contar('mensajes_contacto'), contar('mensajes_contacto', (consulta) => consulta.eq('estado','nuevo')), supabase.rpc('conteo_me_gusta_publicaciones'), supabase.from('imagenes').select('bytes'), supabase.functions.invoke('cloudinary-usage'),
+      const [productos, colecciones, publicaciones, imagenes, codigos, mensajes, mensajesNuevos, likesResult, almacenamientoResult, archivos, usoCloudinary] = await Promise.all([
+        contar('productos'), contar('colecciones'), contar('publicaciones'), contar('imagenes'), contar('codigos_autenticidad'), contar('mensajes_contacto'), contar('mensajes_contacto', (consulta) => consulta.eq('estado','nuevo')), supabase.rpc('conteo_me_gusta_publicaciones'), supabase.rpc('estado_almacenamiento_base_datos'), supabase.from('imagenes').select('bytes'), supabase.functions.invoke('cloudinary-usage'),
       ])
       if (likesResult.error) throw likesResult.error
+      if (almacenamientoResult.error) throw almacenamientoResult.error
       const likes = Number(likesResult.data || 0)
+      const almacenamiento = Array.isArray(almacenamientoResult.data) ? almacenamientoResult.data[0] : almacenamientoResult.data
       const cloudinary = usoCloudinary.error || !usoCloudinary.data?.ok ? { disponible:false, error:usoCloudinary.data?.error || usoCloudinary.error?.message || 'No se pudo leer la cuota de Cloudinary.' } : { disponible:true, creditosUsados:usoCloudinary.data.creditosUsados, creditosLimite:usoCloudinary.data.creditosLimite, almacenamientoUsado:usoCloudinary.data.almacenamientoUsado, almacenamientoLimite:usoCloudinary.data.almacenamientoLimite, anchoBandaUsado:usoCloudinary.data.anchoBandaUsado, anchoBandaLimite:usoCloudinary.data.anchoBandaLimite }
       const bytesImagenes = (archivos.data || []).reduce((total, archivo: any) => total + Number(archivo.bytes || 0), 0)
-      return { actualizadoEn:new Date().toISOString(), supabase:true, imagenes, bytesImagenes, registros:productos + colecciones + publicaciones + imagenes + codigos + mensajes + likes, likes, mensajesNuevos, detalle:{ productos, colecciones, publicaciones, codigos, mensajes }, cloudinary }
+      return { actualizadoEn:new Date().toISOString(), supabase:true, almacenamientoBaseDatos:{ usado:Number(almacenamiento?.usado_bytes || 0), limite:Number(almacenamiento?.limite_bytes || 0) }, imagenes, bytesImagenes, registros:productos + colecciones + publicaciones + imagenes + codigos + mensajes + likes, likes, mensajesNuevos, detalle:{ productos, colecciones, publicaciones, codigos, mensajes }, cloudinary }
     } catch (error) {
-      return { actualizadoEn:new Date().toISOString(), supabase:false, imagenes:0, bytesImagenes:0, registros:0, likes:0, mensajesNuevos:0, detalle:{}, cloudinary:{ disponible:false }, error:error instanceof Error ? error.message : 'No se pudo leer el estado del sistema.' }
+      return { actualizadoEn:new Date().toISOString(), supabase:false, almacenamientoBaseDatos:{ usado:0, limite:0 }, imagenes:0, bytesImagenes:0, registros:0, likes:0, mensajesNuevos:0, detalle:{}, cloudinary:{ disponible:false }, error:error instanceof Error ? error.message : 'No se pudo leer el estado del sistema.' }
     }
   }
 
@@ -346,7 +348,7 @@ export default function App() {
       }
       if (e.data?.tipo === 'SKYBLOCK_ADMIN_SOLICITAR_SISTEMA') {
         const { esAdmin } = await obtenerAdmin()
-        const sistema = esAdmin ? await cargarEstadoSistema() : { actualizadoEn:new Date().toISOString(), supabase:false, imagenes:0, bytesImagenes:0, registros:0, likes:0, mensajesNuevos:0, detalle:{}, cloudinary:{ disponible:false }, error:'Acceso no autorizado' }
+        const sistema = esAdmin ? await cargarEstadoSistema() : { actualizadoEn:new Date().toISOString(), supabase:false, almacenamientoBaseDatos:{ usado:0, limite:0 }, imagenes:0, bytesImagenes:0, registros:0, likes:0, mensajesNuevos:0, detalle:{}, cloudinary:{ disponible:false }, error:'Acceso no autorizado' }
         e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_SISTEMA', sistema }, { targetOrigin:e.origin })
         return
       }
