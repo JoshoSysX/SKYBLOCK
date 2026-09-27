@@ -704,6 +704,14 @@ const postPreview = document.getElementById('postImagePreview');
 const postModal = document.getElementById('postModal');
 let postImageData = [];
 let adminPosts = [];
+const adminFeedProfile = { nombre:'SKYBLOCK STUDIO', biografia:'', avatar_url:'', portada_url:'' };
+
+function renderAdminFeedProfile() {
+  const name=document.getElementById('adminPostsProfileName'),bio=document.getElementById('adminPostsProfileBio'),avatar=document.getElementById('adminPostsProfileAvatar'),cover=document.getElementById('adminPostsProfileCover'),count=document.getElementById('adminPostsProfileCount');
+  name.textContent=adminFeedProfile.nombre || 'SKYBLOCK STUDIO'; bio.textContent=adminFeedProfile.biografia || ''; count.textContent=String(adminPosts.length).padStart(2,'0');
+  avatar.style.backgroundImage=adminFeedProfile.avatar_url?`url("${adminFeedProfile.avatar_url}")`:''; avatar.textContent=adminFeedProfile.avatar_url?'':'SB'; avatar.classList.toggle('has-image',Boolean(adminFeedProfile.avatar_url));
+  cover.style.backgroundImage=adminFeedProfile.portada_url?`linear-gradient(90deg,rgba(7,8,9,.28),rgba(7,8,9,.06)),url("${adminFeedProfile.portada_url}")`:'';
+}
 
 function storedPosts() {
   return adminPosts;
@@ -712,6 +720,7 @@ function storedPosts() {
 function renderAdminPosts() {
   const posts = storedPosts();
   document.getElementById('adminPostCount').textContent = posts.length;
+  renderAdminFeedProfile();
   document.getElementById('adminPostList').innerHTML = posts.map((post) => `<article class="admin-feed-post"><header><div class="admin-feed-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>${cleanText(post.date)}</span></div><button class="admin-post-more" type="button" data-post-menu="${post.id}" aria-label="Opciones de ${cleanText(post.title)}">•••</button><div class="admin-post-menu" id="post-menu-${post.id}"><button type="button" data-edit-post="${post.id}">Editar</button><button type="button" data-delete-post="${post.id}">Eliminar</button></div></header><div class="admin-feed-copy"><h3>${cleanText(post.title)}</h3>${post.description ? `<p>${cleanText(post.description)}</p>` : ''}</div>${post.images.length ? `<div class="admin-feed-media">${post.images.slice(0,3).map((item) => `<img src="${item.url}" alt="${cleanText(item.alt || post.title)}">`).join('')}${post.images.length > 3 ? `<b>+${post.images.length - 3}</b>` : ''}</div>` : ''}</article>`).join('') || '<p class="admin-empty-products">Aún no hay posts. Crea la primera publicación.</p>';
 }
 renderAdminPosts();
@@ -820,6 +829,10 @@ window.addEventListener('message',(event) => {
     });
     renderAdminPosts();
   }
+  if (event.data?.tipo === 'SKYBLOCK_ADMIN_PERFIL') {
+    Object.assign(adminFeedProfile,event.data.perfil || {});
+    renderAdminFeedProfile();
+  }
   if (event.data?.tipo === 'SKYBLOCK_ADMIN_POST_RESULTADO') {
     document.getElementById('savePostButton').disabled = false;
     if (event.data.ok) { resetPostEditor(); setPostModal(false); }
@@ -910,6 +923,8 @@ if (editorialProfileForm) {
         const profile = event.data.perfil || {};
         profileFields.avatarText.textContent = profile.avatar_url ? 'Foto actual · cambiar' : 'Cambiar foto de perfil';
         profileFields.portadaText.textContent = profile.portada_url ? 'Portada actual · cambiar' : 'Cambiar portada';
+        Object.assign(adminFeedProfile, profile);
+        renderAdminFeedProfile();
         setEditorialProfileModal(false);
       }
     }

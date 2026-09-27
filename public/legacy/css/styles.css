@@ -6251,6 +6251,11 @@ body.catalog-page,
 /* Admin de Posts: feed, menús de tres puntos y formularios modales. */
 .admin-post-manager { margin:0; padding:28px; border:1px solid #d6d6d1; background:#f9f9f6; }
 .admin-post-manager>.admin-card-head { margin-bottom:18px; }
+.admin-feed-profile { position:relative; overflow:hidden; margin:0 0 22px; border:1px solid #deded9; border-radius:12px; background:#fff; }
+.admin-feed-profile-cover { height:150px; background:linear-gradient(118deg,#1a1d20,#080909 68%); background-size:cover; background-position:center; }
+.admin-feed-profile-avatar { position:relative; z-index:1; display:grid; width:74px; height:74px; margin:-37px 0 0 18px; place-items:center; border:3px solid #fff; border-radius:50%; background:#c9d1d6; background-size:cover; background-position:center; font:600 10px var(--display); }
+.admin-feed-profile-avatar.has-image { color:transparent; }
+.admin-feed-profile-content { display:flex; align-items:flex-end; gap:22px; min-height:78px; padding:10px 18px 18px; }.admin-feed-profile-content h3 { margin:0; font:600 22px var(--display); }.admin-feed-profile-content p:empty { display:none; }.admin-feed-profile-content p { margin:4px 0 0; color:#666; font-size:10px; }.admin-feed-profile-content span { margin-left:auto; padding-left:16px; border-left:1px solid #ddd; color:#777; font:600 8px var(--display); letter-spacing:.08em; text-transform:uppercase; }.admin-feed-profile-content b { display:block; color:#171819; font:600 24px/.9 var(--display); }
 .admin-post-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
 .admin-feed-post { position:relative; overflow:hidden; border:1px solid #deded9; border-radius:12px; background:#fff; }
 .admin-feed-post header { position:relative; display:flex; align-items:center; gap:10px; padding:14px; }
@@ -6266,3 +6271,4 @@ body.catalog-page,
 #postModal .post-preview-image { display:grid; grid-template-columns:repeat(2,1fr); gap:4px; padding:10px; min-height:250px; aspect-ratio:auto; }.post-preview-image img { width:100%; height:160px; object-fit:cover; }
 .admin-profile-modal-card .admin-profile-layout { grid-template-columns:minmax(0,1fr) minmax(320px,.72fr); }.admin-profile-modal-card .admin-card { margin:0; }
 @media(max-width:800px){.admin-post-list{grid-template-columns:1fr}.admin-feed-media img{height:130px}#postModal .admin-post-modal-card,#editorialProfileModal .admin-profile-modal-card{width:100%;max-height:100svh;padding:58px 16px 18px}#postModal .admin-post-layout,.admin-profile-modal-card .admin-profile-layout{grid-template-columns:1fr}.admin-post-preview{margin-top:18px}.admin-profile-preview-wrap{margin-top:18px}.post-carousel-arrow{display:none}}
+@media(max-width:600px){.admin-feed-profile-cover{height:120px}.admin-feed-profile-content{gap:12px}.admin-feed-profile-content h3{font-size:18px}.admin-feed-profile-content span{padding-left:12px}.admin-feed-profile-avatar{margin-left:14px}}
