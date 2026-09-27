@@ -14,7 +14,7 @@ function applyProfile(raw={}) {
   const profile={...defaultProfile,...raw};
   profileName.textContent=profile.nombre;
   profileBio.textContent=profile.biografia;
-  if(profile.avatar_url){profileAvatar.style.backgroundImage=`url("${String(profile.avatar_url).replace(/"/g,'%22')}")`;profileAvatar.classList.add('has-image')}else{profileAvatar.style.backgroundImage='';profileAvatar.classList.remove('has-image')}
+  if(profile.avatar_url){profileAvatar.style.backgroundImage=`url("${String(profile.avatar_url).replace(/"/g,'%22')}")`;profileAvatar.textContent='';profileAvatar.classList.add('has-image')}else{profileAvatar.style.backgroundImage='';profileAvatar.textContent='SB';profileAvatar.classList.remove('has-image')}
   if(profile.portada_url){profileCover.style.backgroundImage=`linear-gradient(90deg,rgba(8,9,10,.38),rgba(8,9,10,.08)),url("${String(profile.portada_url).replace(/"/g,'%22')}")`;profileCover.classList.add('has-image')}else{profileCover.style.backgroundImage='';profileCover.classList.remove('has-image')}
 }
 

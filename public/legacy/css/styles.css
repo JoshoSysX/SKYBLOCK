@@ -6321,3 +6321,12 @@ body.catalog-page,
 /* La portada abre el perfil desde el borde superior, detrás de la navegación. */
 .posts-main { padding-top:0!important; }
 .posts-layout { padding-top:0!important; }
+
+/* Accesos sociales del perfil y avatar sin texto superpuesto. */
+.posts-profile-mark.has-image { color:transparent!important; font-size:0!important; }
+.posts-profile-socials { position:absolute; right:34px; bottom:28px; display:flex; align-items:center; gap:10px; }
+.posts-profile-socials a { display:grid; width:38px; height:38px; place-items:center; border:1px solid #171819; border-radius:50%; color:#171819; transition:background .2s ease,color .2s ease; }
+.posts-profile-socials a:hover,.posts-profile-socials a:focus-visible { background:#171819; color:#fff; }
+.posts-profile-socials svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.8; }
+.posts-profile-socials .social-fill { fill:currentColor; stroke:none; }
+@media(max-width:700px){.posts-profile-socials{position:static;justify-content:flex-start;padding:0 19px 20px}.posts-profile-socials a{width:36px;height:36px}}
