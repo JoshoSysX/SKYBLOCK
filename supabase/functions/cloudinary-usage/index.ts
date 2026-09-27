@@ -25,7 +25,16 @@ Deno.serve(async (request) => {
     const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/usage`, { headers:{ Authorization:`Basic ${credentials}` } })
     const usage = await response.json()
     if (!response.ok) throw new Error(usage?.error?.message || 'No se pudo consultar Cloudinary')
-    return new Response(JSON.stringify({ ok:true, creditosUsados:usage?.credits?.used ?? null, creditosLimite:usage?.credits?.limit ?? null, almacenamientoUsado:usage?.storage?.usage ?? null, almacenamientoLimite:usage?.storage?.limit ?? null, anchoBandaUsado:usage?.bandwidth?.usage ?? null, anchoBandaLimite:usage?.bandwidth?.limit ?? null }), { headers:cors })
+    return new Response(JSON.stringify({
+      ok:true,
+      imagenesSubidas:usage?.resources ?? usage?.objects?.usage ?? null,
+      creditosUsados:usage?.credits?.used ?? null,
+      creditosLimite:usage?.credits?.limit ?? null,
+      almacenamientoUsado:usage?.storage?.usage ?? null,
+      almacenamientoLimite:usage?.storage?.limit ?? null,
+      anchoBandaUsado:usage?.bandwidth?.usage ?? null,
+      anchoBandaLimite:usage?.bandwidth?.limit ?? null,
+    }), { headers:cors })
   } catch (error) {
     return new Response(JSON.stringify({ ok:false, error:error instanceof Error ? error.message : 'Error interno' }), { status:500, headers:cors })
   }

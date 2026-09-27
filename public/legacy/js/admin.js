@@ -721,7 +721,7 @@ function renderSystemStatus(sistema = {}) {
   const usage = document.getElementById('systemCloudinaryUsage');
   if (cloudinary.disponible) {
     const metric = (label, used, limit, isSize = false) => `<div><span>${label}</span><b>${used === null || used === undefined ? 'No disponible' : `${isSize ? formatBytes(used) : Number(used).toLocaleString('es-PE')}${limit ? ` / ${isSize ? formatBytes(limit) : Number(limit).toLocaleString('es-PE')}` : ''}`}</b></div>`;
-    usage.innerHTML = `${metric('Créditos',cloudinary.creditosUsados,cloudinary.creditosLimite)}${metric('Almacenamiento',cloudinary.almacenamientoUsado,cloudinary.almacenamientoLimite,true)}${metric('Ancho de banda',cloudinary.anchoBandaUsado,cloudinary.anchoBandaLimite,true)}`;
+    usage.innerHTML = `${metric('Imágenes subidas',cloudinary.imagenesSubidas)}${metric('Espacio usado',cloudinary.almacenamientoUsado,cloudinary.almacenamientoLimite,true)}${metric('Límite de espacio',cloudinary.almacenamientoLimite,null,true)}${metric('Ancho de banda',cloudinary.anchoBandaUsado,cloudinary.anchoBandaLimite,true)}${metric('Créditos',cloudinary.creditosUsados,cloudinary.creditosLimite)}`;
   } else usage.innerHTML = '<p>La cuota exacta se habilitará cuando esté desplegada la consulta privada de Cloudinary. No se exponen claves en la web.</p>';
 }
 document.getElementById('refreshSystemStatus').addEventListener('click', () => {
