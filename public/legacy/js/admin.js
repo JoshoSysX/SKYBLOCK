@@ -710,7 +710,7 @@ function renderSystemStatus(sistema = {}) {
   setSystemText('systemSupabaseStatus', healthy ? 'Operativo' : 'Requiere revisión');
   setSystemText('systemSupabaseNote', healthy ? 'La base de datos respondió correctamente.' : (sistema.error || 'No se pudo comprobar la conexión.'));
   setSystemText('systemCloudinaryStatus', cloudinary.disponible ? 'Operativo' : 'Sin lectura de cuota');
-  setSystemText('systemCloudinaryNote', cloudinary.disponible ? (cloudinary.almacenamientoLimite === null || cloudinary.almacenamientoLimite === undefined ? 'Cloudinary reporta el uso real, pero este plan no informa un límite de espacio.' : 'Uso consultado de forma privada.') : (cloudinary.error || 'Las imágenes registradas siguen visibles abajo.'));
+  setSystemText('systemCloudinaryNote', cloudinary.disponible ? (cloudinary.planLimite ? 'El medidor combina almacenamiento, entregas y optimizaciones.' : 'Cloudinary reporta el uso real, pero este plan no informa un límite de espacio.') : (cloudinary.error || 'Las imágenes registradas siguen visibles abajo.'));
   setSystemText('systemUpdatedAt', sistema.actualizadoEn ? new Intl.DateTimeFormat('es-PE', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' }).format(new Date(sistema.actualizadoEn)) : '—');
   setSystemText('systemImageCount', String(sistema.imagenes || 0).padStart(2, '0'));
   setSystemText('systemImageStorage', `${formatBytes(sistema.bytesImagenes)} en archivos registrados`);
@@ -726,11 +726,14 @@ function renderSystemStatus(sistema = {}) {
   const cloudinaryLimit = Number(cloudinary.almacenamientoLimite || 0);
   const cloudinaryHasLimit = cloudinary.disponible && cloudinaryLimit > 0;
   const cloudinaryPercentage = cloudinaryHasLimit ? Math.min(100, (cloudinaryUsed / cloudinaryLimit) * 100) : 0;
+  const planUsed = Number(cloudinary.planUsado || 0);
+  const planLimit = Number(cloudinary.planLimite || 0);
+  const planPercentage = planLimit ? Math.min(100, (planUsed / planLimit) * 100) : 0;
   setSystemText('systemCloudinaryUsed', cloudinary.disponible ? formatBytes(cloudinaryUsed) : '—');
-  setSystemText('systemCloudinaryLimit', cloudinary.disponible ? (cloudinaryHasLimit ? `${formatBytes(cloudinaryUsed)} usados de ${formatBytes(cloudinaryLimit)}` : 'Límite no informado por Cloudinary') : 'No se pudo leer Cloudinary');
-  setSystemText('systemCloudinaryPercent', cloudinaryHasLimit ? `${cloudinaryPercentage.toFixed(1)}% usado` : 'Uso real');
+  setSystemText('systemCloudinaryLimit', cloudinary.disponible ? (planLimit ? `${planUsed.toFixed(2)} de ${planLimit.toLocaleString('es-PE')} créditos del plan` : (cloudinaryHasLimit ? `${formatBytes(cloudinaryUsed)} usados de ${formatBytes(cloudinaryLimit)}` : 'Uso total del plan no informado')) : 'No se pudo leer Cloudinary');
+  setSystemText('systemCloudinaryPercent', planLimit ? `${planPercentage.toFixed(2)}% del plan` : 'Uso real');
   setSystemText('systemCloudinaryImageCount', String(cloudinary.imagenesSubidas ?? sistema.imagenes ?? 0).padStart(2, '0'));
-  setSystemMeter('systemCloudinaryProgress', cloudinaryPercentage, !cloudinaryHasLimit);
+  setSystemMeter('systemCloudinaryProgress', planLimit ? planPercentage : cloudinaryPercentage, !planLimit && !cloudinaryHasLimit);
   setSystemText('systemLikeCount', String(sistema.likes || 0).padStart(2, '0'));
   setSystemText('systemNewMessages', String(sistema.mensajesNuevos || 0).padStart(2, '0'));
   document.getElementById('systemDatabaseList').innerHTML = [
