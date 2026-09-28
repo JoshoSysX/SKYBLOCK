@@ -6,13 +6,13 @@ type PerfilEditorial = { nombre: string; biografia: string; avatar_url?: string 
 type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; reacciones?: unknown[]; error?: string }
 type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
-type ModoProteccion = { id?: boolean; activo: boolean; titulo: string; descripcion: string; mostrar_cuenta_regresiva: boolean; finaliza_en?: string | null; fondo_url?: string | null; fondo_identificador_publico?: string | null }
+type ModoProteccion = { id?: boolean; activo: boolean; titulo: string; descripcion: string; mostrar_cuenta_regresiva: boolean; finaliza_en?: string | null; fondo_url?: string | null; fondo_identificador_publico?: string | null; color_acento?: string | null }
 type EstadoSistema = { error?: string; actualizadoEn: string; supabase: boolean; almacenamientoBaseDatos: { usado: number; limite: number }; imagenes: number; bytesImagenes: number; registros: number; likes: number; mensajesNuevos: number; detalle: Record<string, number>; cloudinary: { disponible: boolean; error?: string; imagenesSubidas?: number | null; planUsado?: number | null; planLimite?: number | null; almacenamientoUsado?: number | null; almacenamientoLimite?: number | null; anchoBandaUsado?: number | null; anchoBandaLimite?: number | null } }
 const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
-const LEGACY_BUILD = 'maintenance-visual-20260928'
+const LEGACY_BUILD = 'maintenance-previews-20260928'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   nombre: BRAND_UPPER,
@@ -20,7 +20,7 @@ const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   avatar_url: profileImage,
   portada_url: null,
 }
-const PROTECCION_INICIAL: ModoProteccion = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null, fondo_identificador_publico:null }
+const PROTECCION_INICIAL: ModoProteccion = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null, fondo_identificador_publico:null, color_acento:'#ffffff' }
 const tiempoRestante = (fecha?: string | null, ahora = Date.now()) => {
   const restante = fecha ? Math.max(0, new Date(fecha).getTime() - ahora) : 0
   const dias = Math.floor(restante / 86400000), horas = Math.floor((restante % 86400000) / 3600000), minutos = Math.floor((restante % 3600000) / 60000), segundos = Math.floor((restante % 60000) / 1000)
@@ -32,7 +32,7 @@ function PantallaProteccion({ configuracion }: { configuracion: ModoProteccion }
   const tiempo = tiempoRestante(configuracion.finaliza_en, ahora)
   const terminada = configuracion.finaliza_en && tiempo.restante <= 0
   const mostrarReloj = configuracion.mostrar_cuenta_regresiva && configuracion.finaliza_en && !terminada
-  const estilo = configuracion.fondo_url ? { '--proteccion-fondo': `url("${configuracion.fondo_url}")` } as CSSProperties : undefined
+  const estilo = { '--proteccion-fondo': configuracion.fondo_url ? `url("${configuracion.fondo_url}")` : undefined, '--proteccion-texto': configuracion.color_acento || '#ffffff' } as CSSProperties
   return <main className="proteccion-pantalla" style={estilo}>
     <div className="proteccion-fondo" aria-hidden="true" />
     <a className="proteccion-login" href="/login" aria-label="Inicio de sesión para administradores"><span aria-hidden="true">⌑</span> Inicio de sesión</a>
@@ -105,6 +105,7 @@ export default function App() {
   const frame = useRef<HTMLIFrameElement>(null)
   const [datos, setDatos] = useState<Datos>({ productos: [], colecciones: [], publicaciones: [], perfil: PERFIL_EDITORIAL_INICIAL })
   const [proteccion, setProteccion] = useState<ModoProteccion | null>(null)
+  const [ruta, setRuta] = useState(rutaInicial)
 
   const cargarProteccion = useCallback(async () => {
     const { data } = await supabase.from('modo_proteccion').select('*').eq('id', true).maybeSingle()
@@ -125,6 +126,7 @@ export default function App() {
     const restaurarRuta = () => {
       const pagina = location.pathname.split('/').filter(Boolean)[0] || 'inicio'
       if (!paginas.has(pagina) || !frame.current) return
+      setRuta(pagina)
       const destino = urlLegacy(pagina, location.search)
       const actual = `${frame.current.contentWindow?.location.pathname || ''}${frame.current.contentWindow?.location.search || ''}`
       if (actual !== destino) frame.current.src = destino
@@ -147,7 +149,7 @@ export default function App() {
     return next
   }, [])
 
-  useEffect(() => { document.body.className = 'legacy-shell'; actualizarSeo(rutaInicial); void cargarPublicos(); void cargarProteccion() }, [cargarPublicos, cargarProteccion])
+  useEffect(() => { document.body.className = 'legacy-shell'; actualizarSeo(ruta); void cargarPublicos(); void cargarProteccion() }, [cargarPublicos, cargarProteccion, ruta])
 
   const obtenerAdmin = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -181,6 +183,7 @@ export default function App() {
       ? rutaIframe.split('/').pop()?.replace(/\.html$/, '') || 'inicio'
       : rutaIframe.split('/').filter(Boolean)[0] || 'inicio'
     if (paginas.has(paginaIframe)) {
+      setRuta(paginaIframe)
       const rutaLimpia = urlPublica(paginaIframe, ventana.location.search)
       const rutaNavegador = `${location.pathname}${location.search}`
       if (rutaNavegador !== rutaLimpia) history.pushState(null, '', rutaLimpia)
@@ -407,7 +410,8 @@ export default function App() {
           }
           if (d.eliminarFondo) { fondoUrl = null; fondoId = null; if (anterior?.fondo_identificador_publico) await supabase.functions.invoke('cloudinary-delete', { body:{ assets:[{ publicId:anterior.fondo_identificador_publico, resourceType:'image' }] } }) }
           const fecha = String(d.finalizaEn || '').trim()
-          const payload = { id:true, activo:Boolean(d.activo), titulo:String(d.titulo || '').trim().slice(0,120) || 'Volvemos pronto', descripcion:String(d.descripcion || '').trim().slice(0,600), mostrar_cuenta_regresiva:Boolean(d.mostrarCuentaRegresiva), finaliza_en:fecha ? new Date(fecha).toISOString() : null, fondo_url:fondoUrl, fondo_identificador_publico:fondoId, actualizado_en:new Date().toISOString(), actualizado_por:user.id }
+          const colorAcento = /^#[0-9a-f]{6}$/i.test(String(d.colorAcento || '')) ? String(d.colorAcento) : '#ffffff'
+          const payload = { id:true, activo:Boolean(d.activo), titulo:String(d.titulo || '').trim().slice(0,120) || 'Volvemos pronto', descripcion:String(d.descripcion || '').trim().slice(0,600), mostrar_cuenta_regresiva:Boolean(d.mostrarCuentaRegresiva), finaliza_en:fecha ? new Date(fecha).toISOString() : null, color_acento:colorAcento, fondo_url:fondoUrl, fondo_identificador_publico:fondoId, actualizado_en:new Date().toISOString(), actualizado_por:user.id }
           if (payload.mostrar_cuenta_regresiva && !payload.finaliza_en) throw new Error('Elige una fecha y hora para la cuenta regresiva.')
           const guardado = await supabase.from('modo_proteccion').upsert(payload, { onConflict:'id' }).select().single()
           if (guardado.error) throw guardado.error
@@ -634,6 +638,6 @@ export default function App() {
   }, [cargarPublicos, enviar])
 
   if (proteccion === null) return <main className="proteccion-cargando" aria-label="Cargando" />
-  if (proteccion.activo && !['admin','login'].includes(rutaInicial)) return <PantallaProteccion configuracion={proteccion} />
-  return <iframe ref={frame} className="legacy-frontend" src={urlLegacy(rutaInicial, location.search)} title={BRAND} allow="web-share" onLoad={() => void enviar()} />
+  if (proteccion.activo && !['admin','login'].includes(ruta)) return <PantallaProteccion configuracion={proteccion} />
+  return <iframe ref={frame} className="legacy-frontend" src={urlLegacy(ruta, location.search)} title={BRAND} allow="web-share" onLoad={() => void enviar()} />
 }
