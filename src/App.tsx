@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { supabase } from './lib/supabase'
 import profileImage from '../assets/image/PERFIL.jpg'
 
@@ -6,6 +6,7 @@ type PerfilEditorial = { nombre: string; biografia: string; avatar_url?: string 
 type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; reacciones?: unknown[]; error?: string }
 type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
+type ModoProteccion = { id?: boolean; activo: boolean; titulo: string; descripcion: string; mostrar_cuenta_regresiva: boolean; finaliza_en?: string | null; fondo_url?: string | null; fondo_identificador_publico?: string | null }
 type EstadoSistema = { error?: string; actualizadoEn: string; supabase: boolean; almacenamientoBaseDatos: { usado: number; limite: number }; imagenes: number; bytesImagenes: number; registros: number; likes: number; mensajesNuevos: number; detalle: Record<string, number>; cloudinary: { disponible: boolean; error?: string; imagenesSubidas?: number | null; planUsado?: number | null; planLimite?: number | null; almacenamientoUsado?: number | null; almacenamientoLimite?: number | null; anchoBandaUsado?: number | null; anchoBandaLimite?: number | null } }
 const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
@@ -18,6 +19,26 @@ const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   biografia: '',
   avatar_url: profileImage,
   portada_url: null,
+}
+const PROTECCION_INICIAL: ModoProteccion = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null, fondo_identificador_publico:null }
+const tiempoRestante = (fecha?: string | null, ahora = Date.now()) => {
+  const restante = fecha ? Math.max(0, new Date(fecha).getTime() - ahora) : 0
+  const dias = Math.floor(restante / 86400000), horas = Math.floor((restante % 86400000) / 3600000), minutos = Math.floor((restante % 3600000) / 60000), segundos = Math.floor((restante % 60000) / 1000)
+  return { restante, dias, horas, minutos, segundos }
+}
+function PantallaProteccion({ configuracion }: { configuracion: ModoProteccion }) {
+  const [ahora, setAhora] = useState(Date.now())
+  useEffect(() => { const timer = window.setInterval(() => setAhora(Date.now()), 1000); return () => window.clearInterval(timer) }, [])
+  const tiempo = tiempoRestante(configuracion.finaliza_en, ahora)
+  const terminada = configuracion.finaliza_en && tiempo.restante <= 0
+  const mostrarReloj = configuracion.mostrar_cuenta_regresiva && configuracion.finaliza_en && !terminada
+  return <main className="proteccion-pantalla" style={configuracion.fondo_url ? { '--proteccion-fondo': `url("${configuracion.fondo_url}")` } as CSSProperties : undefined}>
+    <div className="proteccion-fondo" aria-hidden="true" />
+    <section className="proteccion-contenido"><span>SKYBLOCK STUDIO</span><h1>{configuracion.titulo || 'Volvemos pronto'}</h1>{configuracion.descripcion && <p>{configuracion.descripcion}</p>}
+      {mostrarReloj && <div className="proteccion-reloj" aria-label="Cuenta regresiva"><div><b>{String(tiempo.dias).padStart(2,'0')}</b><small>Días</small></div><div><b>{String(tiempo.horas).padStart(2,'0')}</b><small>Horas</small></div><div><b>{String(tiempo.minutos).padStart(2,'0')}</b><small>Minutos</small></div><div><b>{String(tiempo.segundos).padStart(2,'0')}</b><small>Segundos</small></div></div>}
+      {terminada && <small className="proteccion-finalizada">La cuenta regresiva terminó. El modo de protección sigue activo hasta que lo desactives.</small>}
+    </section>
+  </main>
 }
 const ORDEN_TALLAS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Única']
 const ordenarTallas = <T extends { talla?: string }>(tallas: T[] = []) => [...tallas].sort((a, b) => {
@@ -80,6 +101,14 @@ const actualizarSeo = (pagina:string) => {
 export default function App() {
   const frame = useRef<HTMLIFrameElement>(null)
   const [datos, setDatos] = useState<Datos>({ productos: [], colecciones: [], publicaciones: [], perfil: PERFIL_EDITORIAL_INICIAL })
+  const [proteccion, setProteccion] = useState<ModoProteccion | null>(null)
+
+  const cargarProteccion = useCallback(async () => {
+    const { data } = await supabase.from('modo_proteccion').select('*').eq('id', true).maybeSingle()
+    const siguiente = data ? { ...PROTECCION_INICIAL, ...data } : PROTECCION_INICIAL
+    setProteccion(siguiente)
+    return siguiente
+  }, [])
 
   useEffect(() => {
     const parametros = new URLSearchParams(location.search)
@@ -115,7 +144,7 @@ export default function App() {
     return next
   }, [])
 
-  useEffect(() => { document.body.className = 'legacy-shell'; actualizarSeo(rutaInicial); void cargarPublicos() }, [cargarPublicos])
+  useEffect(() => { document.body.className = 'legacy-shell'; actualizarSeo(rutaInicial); void cargarPublicos(); void cargarProteccion() }, [cargarPublicos, cargarProteccion])
 
   const obtenerAdmin = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -213,18 +242,20 @@ export default function App() {
       if (ruta.endsWith('/admin.html') && !user) { ventana!.location.href = 'login.html'; return }
       if (ruta.endsWith('/admin.html') && !esAdmin) { ventana!.location.href = esRolAdmin ? 'login.html' : 'inicio.html'; return }
       if (ruta.endsWith('/admin.html')) {
-        const [{ data: mensajes, error }, { data: publicaciones, error: errorPosts }, { data: perfil }, adminData, sistema] = await Promise.all([
+        const [{ data: mensajes, error }, { data: publicaciones, error: errorPosts }, { data: perfil }, adminData, sistema, configuracionProteccion] = await Promise.all([
           supabase.from('mensajes_contacto').select('*').order('creado_en', { ascending: false }),
           supabase.from('publicaciones').select('*,imagenes(*)').order('creado_en', { ascending: false }),
           supabase.from('perfil_editorial').select('*').eq('id', true).maybeSingle(),
           cargarAdmin(),
           cargarEstadoSistema(),
+          supabase.from('modo_proteccion').select('*').eq('id', true).maybeSingle(),
         ])
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_MENSAJES', mensajes: mensajes ?? [], error: Boolean(error) }, location.origin)
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_POSTS', publicaciones: publicaciones ?? [], error: Boolean(errorPosts) }, location.origin)
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_PERFIL', perfil: perfil ? { ...PERFIL_EDITORIAL_INICIAL, ...perfil } : PERFIL_EDITORIAL_INICIAL }, location.origin)
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_DATOS', ...adminData }, location.origin)
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_SISTEMA', sistema }, location.origin)
+        ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_PROTECCION', proteccion: configuracionProteccion.data ? { ...PROTECCION_INICIAL, ...configuracionProteccion.data } : PROTECCION_INICIAL }, location.origin)
       }
     } catch { /* iframe del mismo origen */ }
   }, [datos])
@@ -350,6 +381,37 @@ export default function App() {
         const { esAdmin } = await obtenerAdmin()
         const sistema = esAdmin ? await cargarEstadoSistema() : { actualizadoEn:new Date().toISOString(), supabase:false, almacenamientoBaseDatos:{ usado:0, limite:0 }, imagenes:0, bytesImagenes:0, registros:0, likes:0, mensajesNuevos:0, detalle:{}, cloudinary:{ disponible:false }, error:'Acceso no autorizado' }
         e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_SISTEMA', sistema }, { targetOrigin:e.origin })
+        return
+      }
+      if (e.data?.tipo === 'SKYBLOCK_ADMIN_SOLICITAR_PROTECCION') {
+        const { esAdmin } = await obtenerAdmin()
+        const { data, error } = esAdmin ? await supabase.from('modo_proteccion').select('*').eq('id', true).maybeSingle() : { data:null, error:new Error('Acceso no autorizado') }
+        e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_PROTECCION', proteccion:data ? { ...PROTECCION_INICIAL, ...data } : PROTECCION_INICIAL, error:error?.message || '' }, { targetOrigin:e.origin })
+        return
+      }
+      if (e.data?.tipo === 'SKYBLOCK_ADMIN_GUARDAR_PROTECCION') {
+        const { user, esAdmin } = await obtenerAdmin(); let error: any = null; let proteccion: ModoProteccion = PROTECCION_INICIAL
+        try {
+          if (!user || !esAdmin) throw new Error('Acceso no autorizado')
+          const d = e.data.datos || {}
+          const { data: anterior, error: errorAnterior } = await supabase.from('modo_proteccion').select('*').eq('id', true).maybeSingle()
+          if (errorAnterior) throw errorAnterior
+          let fondoUrl = anterior?.fondo_url || null, fondoId = anterior?.fondo_identificador_publico || null
+          if (d.fondoArchivo instanceof File) {
+            const fondo = await subirCloudinary(d.fondoArchivo)
+            fondoUrl = fondo.secure_url; fondoId = fondo.public_id
+            if (anterior?.fondo_identificador_publico) await supabase.functions.invoke('cloudinary-delete', { body:{ assets:[{ publicId:anterior.fondo_identificador_publico, resourceType:'image' }] } })
+          }
+          if (d.eliminarFondo) { fondoUrl = null; fondoId = null; if (anterior?.fondo_identificador_publico) await supabase.functions.invoke('cloudinary-delete', { body:{ assets:[{ publicId:anterior.fondo_identificador_publico, resourceType:'image' }] } }) }
+          const fecha = String(d.finalizaEn || '').trim()
+          const payload = { id:true, activo:Boolean(d.activo), titulo:String(d.titulo || '').trim().slice(0,120) || 'Volvemos pronto', descripcion:String(d.descripcion || '').trim().slice(0,600), mostrar_cuenta_regresiva:Boolean(d.mostrarCuentaRegresiva), finaliza_en:fecha ? new Date(fecha).toISOString() : null, fondo_url:fondoUrl, fondo_identificador_publico:fondoId, actualizado_en:new Date().toISOString(), actualizado_por:user.id }
+          if (payload.mostrar_cuenta_regresiva && !payload.finaliza_en) throw new Error('Elige una fecha y hora para la cuenta regresiva.')
+          const guardado = await supabase.from('modo_proteccion').upsert(payload, { onConflict:'id' }).select().single()
+          if (guardado.error) throw guardado.error
+          proteccion = { ...PROTECCION_INICIAL, ...guardado.data }; setProteccion(proteccion)
+        } catch (caught) { error = caught }
+        e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_PROTECCION_RESULTADO', ok:!error, proteccion, mensaje:error ? `No se pudo guardar: ${error instanceof Error ? error.message : 'error desconocido'}` : (proteccion.activo ? 'Modo de protección activado.' : 'Modo de protección desactivado.') }, { targetOrigin:e.origin })
+        if (!error) e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_PROTECCION', proteccion }, { targetOrigin:e.origin })
         return
       }
       if (e.data?.tipo === 'SKYBLOCK_VERIFICAR_CODIGO') {
@@ -568,5 +630,7 @@ export default function App() {
     addEventListener('message', recibir); void enviar(); return () => removeEventListener('message', recibir)
   }, [cargarPublicos, enviar])
 
+  if (proteccion === null) return <main className="proteccion-cargando">Comprobando disponibilidad…</main>
+  if (proteccion.activo && !['admin','login'].includes(rutaInicial)) return <PantallaProteccion configuracion={proteccion} />
   return <iframe ref={frame} className="legacy-frontend" src={urlLegacy(rutaInicial, location.search)} title={BRAND} allow="web-share" onLoad={() => void enviar()} />
 }

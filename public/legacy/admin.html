@@ -6,7 +6,7 @@
   <meta name="description" content="Panel administrativo de SKYBLOCK STUDIO.">
   <meta name="robots" content="noindex,nofollow">
   <title>Panel administrativo | SKYBLOCK STUDIO</title>
-  <link rel="stylesheet" href="css/styles.css?v=profile-share-fix-20260926">
+  <link rel="stylesheet" href="css/styles.css?v=protection-mode-20260928">
   <script>if(window.top===window.self)window.location.replace('/')</script>
 </head>
 <body class="admin-page">
@@ -21,6 +21,7 @@
       <button data-admin-view="correos"><i>06</i>Correos</button>
       <button data-admin-view="mensajes"><i>07</i>Mensajes <span id="adminMessageCount">0</span></button>
       <button data-admin-view="sistema"><i>08</i>Estado del sistema</button>
+      <button data-admin-view="proteccion"><i>09</i>Protección</button>
     </nav>
     <div class="admin-sidebar-foot"><a href="inicio.html">← Ver tienda</a><button id="logoutDemo">Cerrar sesión</button></div>
   </aside>
@@ -140,6 +141,25 @@
         <section class="admin-card system-reading-guide"><div class="admin-card-head"><div><span>Cómo leerlo</span><h2>Estado de recursos</h2></div></div><div><b>Base de datos</b><p>El medidor compara el uso real con el límite de tu plan.</p></div><div><b>Cloudinary</b><p>Si Cloudinary no comunica un límite, mostramos el uso real sin estimaciones.</p></div></section>
       </div>
     </section>
+
+    <section class="admin-view" data-view="proteccion">
+      <div class="admin-title"><div><span>Control de acceso</span><h1>Protección.</h1><p>Activa una pantalla temporal mientras trabajas. El panel administrativo sigue disponible para que puedas desactivarla.</p></div></div>
+      <div class="admin-protection-layout">
+        <form class="admin-card admin-protection-form" id="protectionForm">
+          <div class="admin-card-head"><div><span>Pantalla pública</span><h2>Modo de protección</h2></div><label class="admin-switch"><input id="protectionActive" type="checkbox"><span></span>Activar</label></div>
+          <div class="admin-post-fields">
+            <label>Título<input id="protectionTitle" maxlength="120" required placeholder="Ej. Estamos preparando algo nuevo"></label>
+            <label>Descripción<textarea id="protectionDescription" maxlength="600" rows="5" placeholder="Escribe el mensaje que verán las personas."></textarea></label>
+            <label class="admin-switch admin-switch-row"><input id="protectionCountdown" type="checkbox"><span></span>Mostrar cuenta regresiva</label>
+            <label id="protectionDateField">Finaliza el<input id="protectionEndsAt" type="datetime-local"></label>
+            <label class="admin-upload" for="protectionBackground"><span id="protectionBackgroundText">Elegir imagen de fondo</span><small>JPG, PNG o WEBP · Se ajusta y aplica desenfoque automáticamente</small><input id="protectionBackground" type="file" accept="image/jpeg,image/png,image/webp"></label>
+            <label class="admin-check" id="protectionRemoveBackgroundWrap"><input id="protectionRemoveBackground" type="checkbox">Quitar imagen de fondo actual</label>
+            <button class="admin-primary" type="submit">Guardar protección</button><p class="admin-post-status" id="protectionStatus" role="status"></p>
+          </div>
+        </form>
+        <section class="admin-protection-preview-wrap"><span>Vista previa</span><div class="admin-protection-preview" id="protectionPreview"><div class="admin-protection-preview-bg" id="protectionPreviewBg"></div><div class="admin-protection-preview-content"><small>SKYBLOCK STUDIO</small><h2 id="protectionPreviewTitle">Volvemos pronto</h2><p id="protectionPreviewDescription">Tu mensaje aparecerá aquí.</p><div class="admin-protection-preview-clock" id="protectionPreviewClock">00 : 00 : 00 : 00</div></div></div></section>
+      </div>
+    </section>
   </main>
 
   <div class="admin-modal" id="postModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="postModalTitle">
@@ -195,6 +215,6 @@
   <div class="admin-modal" id="verificationModal" aria-hidden="true"><form class="admin-modal-card admin-verification-editor" id="verificationForm"><button class="admin-modal-close" id="closeVerificationModal" type="button" aria-label="Cerrar código">×</button><span>Registro de autenticidad</span><h2 id="verificationModalTitle">Nuevo código</h2><input id="verificationId" type="hidden"><label>Código de autenticidad<input id="verificationCode" required maxlength="32" placeholder="SKB-XXXX-XXXX" autocomplete="off"></label><div class="admin-form-row"><label>Colección<select id="verificationCollection" required></select></label><label>Diseño / producto<select id="verificationProduct" required></select></label></div><label>Número de serie<input id="verificationSeries" required maxlength="20" placeholder="Se completa según el diseño"></label><label>Propietario<input id="verificationOwner" maxlength="100" placeholder="Sin registrar"></label><label>Estado<select id="verificationStatus"><option value="active">Activo</option><option value="blocked">Bloqueado</option></select></label><small class="admin-verification-note">El código quedará asociado a la colección y al diseño seleccionados. La cantidad máxima depende del límite configurado en el producto.</small><div class="admin-product-editor-actions"><button class="admin-secondary" id="cancelVerificationEdit" type="button">Cancelar</button><button class="admin-primary" type="submit">Guardar código</button></div><p id="verificationFormStatus"></p></form></div>
   <div class="admin-confirm" id="adminConfirm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="adminConfirmTitle" aria-describedby="adminConfirmMessage"><section class="admin-confirm-card"><div class="admin-confirm-mark" aria-hidden="true">!</div><span>Confirmar acción</span><h2 id="adminConfirmTitle">¿Estás seguro?</h2><p id="adminConfirmMessage"></p><div class="admin-confirm-actions"><button class="admin-secondary" id="adminConfirmCancel" type="button">Cancelar</button><button class="admin-confirm-danger" id="adminConfirmAccept" type="button">Eliminar</button></div></section></div>
   <div class="toast" id="adminToast" role="status"></div>
-  <script src="js/admin.js?v=system-status-20260927"></script>
+  <script src="js/admin.js?v=protection-mode-20260928"></script>
 </body>
 </html>
