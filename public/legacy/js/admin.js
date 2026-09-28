@@ -1112,6 +1112,7 @@ const protectionDescription = document.getElementById('protectionDescription');
 const protectionCountdown = document.getElementById('protectionCountdown');
 const protectionEndsAt = document.getElementById('protectionEndsAt');
 const protectionAccentColor = document.getElementById('protectionAccentColor');
+const protectionColorValue = document.getElementById('protectionColorValue');
 const protectionDateField = document.getElementById('protectionDateField');
 const protectionBackground = document.getElementById('protectionBackground');
 const protectionRemoveBackground = document.getElementById('protectionRemoveBackground');
@@ -1131,6 +1132,10 @@ function renderProtectionPreview() {
   protectionDateField.hidden = !protectionCountdown.checked;
   protectionPreviewClocks.forEach((preview) => { preview.classList.toggle('hidden', !protectionCountdown.checked); if (protectionCountdown.checked) preview.textContent = previewCountdown(); });
   protectionPreviews.forEach((preview) => preview.style.setProperty('--proteccion-texto', protectionAccentColor.value || '#ffffff'));
+  protectionColorValue.textContent = (protectionAccentColor.value || '#ffffff').toUpperCase();
+  protectionColorValue.style.background = protectionAccentColor.value || '#ffffff';
+  const hex = (protectionAccentColor.value || '#ffffff').slice(1); const luminancia = (parseInt(hex.slice(0,2),16)*299 + parseInt(hex.slice(2,4),16)*587 + parseInt(hex.slice(4,6),16)*114) / 1000;
+  protectionColorValue.style.color = luminancia > 160 ? '#111' : '#fff';
 }
 function populateProtection(data = {}) {
   protectionCurrent = { ...protectionCurrent, ...data };

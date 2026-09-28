@@ -35,7 +35,7 @@ function PantallaProteccion({ configuracion }: { configuracion: ModoProteccion }
   const estilo = { '--proteccion-fondo': configuracion.fondo_url ? `url("${configuracion.fondo_url}")` : undefined, '--proteccion-texto': configuracion.color_acento || '#ffffff' } as CSSProperties
   return <main className="proteccion-pantalla" style={estilo}>
     <div className="proteccion-fondo" aria-hidden="true" />
-    <a className="proteccion-login" href="/login" aria-label="Inicio de sesión para administradores"><span aria-hidden="true">⌑</span> Inicio de sesión</a>
+    <a className="proteccion-login" href="/login?proteccion=1" aria-label="Inicio de sesión para administradores"><span aria-hidden="true">⌑</span> Inicio de sesión</a>
     <section className="proteccion-contenido">
       {mostrarReloj && <div className="proteccion-reloj" aria-label="Cuenta regresiva"><div><b>{String(tiempo.dias).padStart(2,'0')}</b><small>Días</small></div><i>:</i><div><b>{String(tiempo.horas).padStart(2,'0')}</b><small>Horas</small></div><i>:</i><div><b>{String(tiempo.minutos).padStart(2,'0')}</b><small>Minutos</small></div><i>:</i><div><b>{String(tiempo.segundos).padStart(2,'0')}</b><small>Segundos</small></div></div>}
       <span>SKYBLOCK STUDIO</span><h1>{configuracion.titulo || 'Volvemos pronto'}</h1>{configuracion.descripcion && <p>{configuracion.descripcion}</p>}
