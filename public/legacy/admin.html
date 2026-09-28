@@ -152,12 +152,13 @@
             <label>Descripción<textarea id="protectionDescription" maxlength="600" rows="5" placeholder="Escribe el mensaje que verán las personas."></textarea></label>
             <label class="admin-switch admin-switch-row"><input id="protectionCountdown" type="checkbox"><span></span>Mostrar cuenta regresiva</label>
             <label id="protectionDateField">Finaliza el<input id="protectionEndsAt" type="datetime-local"></label>
+            <label>Color de acento<input id="protectionAccentColor" type="color" value="#1996ff" aria-label="Color de acento"></label>
             <label class="admin-upload" for="protectionBackground"><span id="protectionBackgroundText">Elegir imagen de fondo</span><small>JPG, PNG o WEBP · Se ajusta y aplica desenfoque automáticamente</small><input id="protectionBackground" type="file" accept="image/jpeg,image/png,image/webp"></label>
             <label class="admin-check" id="protectionRemoveBackgroundWrap"><input id="protectionRemoveBackground" type="checkbox">Quitar imagen de fondo actual</label>
             <button class="admin-primary" type="submit">Guardar protección</button><p class="admin-post-status" id="protectionStatus" role="status"></p>
           </div>
         </form>
-        <section class="admin-protection-preview-wrap"><span>Vista previa</span><div class="admin-protection-preview" id="protectionPreview"><div class="admin-protection-preview-bg" id="protectionPreviewBg"></div><div class="admin-protection-preview-content"><small>SKYBLOCK STUDIO</small><h2 id="protectionPreviewTitle">Volvemos pronto</h2><p id="protectionPreviewDescription">Tu mensaje aparecerá aquí.</p><div class="admin-protection-preview-clock" id="protectionPreviewClock">00 : 00 : 00 : 00</div></div></div></section>
+        <section class="admin-protection-preview-wrap"><span>Previsualización</span><div class="admin-protection-preview" id="protectionPreview"><div class="admin-protection-preview-bg" id="protectionPreviewBg"></div><div class="admin-protection-preview-content"><div class="admin-protection-preview-clock" id="protectionPreviewClock">00 : 00 : 00 : 00</div><small>SKYBLOCK STUDIO</small><h2 id="protectionPreviewTitle">Volvemos pronto</h2><p id="protectionPreviewDescription">Tu mensaje aparecerá aquí.</p></div></div></section>
       </div>
     </section>
   </main>
