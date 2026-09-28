@@ -630,7 +630,7 @@ export default function App() {
     addEventListener('message', recibir); void enviar(); return () => removeEventListener('message', recibir)
   }, [cargarPublicos, enviar])
 
-  if (proteccion === null) return <main className="proteccion-cargando">Comprobando disponibilidad…</main>
+  if (proteccion === null) return <main className="proteccion-cargando" aria-label="Cargando" />
   if (proteccion.activo && !['admin','login'].includes(rutaInicial)) return <PantallaProteccion configuracion={proteccion} />
   return <iframe ref={frame} className="legacy-frontend" src={urlLegacy(rutaInicial, location.search)} title={BRAND} allow="web-share" onLoad={() => void enviar()} />
 }
