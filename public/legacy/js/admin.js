@@ -1111,7 +1111,6 @@ const protectionTitle = document.getElementById('protectionTitle');
 const protectionDescription = document.getElementById('protectionDescription');
 const protectionCountdown = document.getElementById('protectionCountdown');
 const protectionEndsAt = document.getElementById('protectionEndsAt');
-const protectionAccentColor = document.getElementById('protectionAccentColor');
 const protectionDateField = document.getElementById('protectionDateField');
 const protectionBackground = document.getElementById('protectionBackground');
 const protectionRemoveBackground = document.getElementById('protectionRemoveBackground');
@@ -1121,7 +1120,7 @@ const protectionPreviewDescription = document.getElementById('protectionPreviewD
 const protectionPreviewClock = document.getElementById('protectionPreviewClock');
 const protectionStatus = document.getElementById('protectionStatus');
 const protectionPreview = document.getElementById('protectionPreview');
-let protectionCurrent = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null, color_acento:'#1996ff' };
+let protectionCurrent = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null };
 let protectionPreviewObjectUrl = '';
 const dateTimeLocal = (value) => { if (!value) return ''; const date = new Date(value); const offset = date.getTimezoneOffset() * 60000; return new Date(date.getTime() - offset).toISOString().slice(0,16); };
 const previewCountdown = () => { const end = new Date(protectionEndsAt.value || 0).getTime(), remaining = Math.max(0, end - Date.now()); const days=Math.floor(remaining/86400000),hours=Math.floor((remaining%86400000)/3600000),minutes=Math.floor((remaining%3600000)/60000),seconds=Math.floor((remaining%60000)/1000); return [days,hours,minutes,seconds].map((value)=>String(value).padStart(2,'0')).join(' : '); };
@@ -1131,7 +1130,6 @@ function renderProtectionPreview() {
   protectionDateField.hidden = !protectionCountdown.checked;
   protectionPreviewClock.classList.toggle('hidden', !protectionCountdown.checked);
   if (protectionCountdown.checked) protectionPreviewClock.textContent = previewCountdown();
-  protectionPreview.style.setProperty('--proteccion-acento', protectionAccentColor.value || '#1996ff');
 }
 function populateProtection(data = {}) {
   protectionCurrent = { ...protectionCurrent, ...data };
@@ -1140,17 +1138,16 @@ function populateProtection(data = {}) {
   protectionDescription.value = protectionCurrent.descripcion || '';
   protectionCountdown.checked = Boolean(protectionCurrent.mostrar_cuenta_regresiva);
   protectionEndsAt.value = dateTimeLocal(protectionCurrent.finaliza_en);
-  protectionAccentColor.value = /^#[0-9a-f]{6}$/i.test(protectionCurrent.color_acento || '') ? protectionCurrent.color_acento : '#1996ff';
   protectionRemoveBackground.checked = false;
   protectionPreviewBg.style.backgroundImage = protectionCurrent.fondo_url ? `url("${protectionCurrent.fondo_url}")` : '';
   document.getElementById('protectionBackgroundText').textContent = protectionCurrent.fondo_url ? 'Cambiar imagen de fondo' : 'Elegir imagen de fondo';
   renderProtectionPreview();
 }
-[protectionTitle,protectionDescription,protectionCountdown,protectionEndsAt,protectionAccentColor].forEach((field) => field.addEventListener('input',renderProtectionPreview));
+[protectionTitle,protectionDescription,protectionCountdown,protectionEndsAt].forEach((field) => field.addEventListener('input',renderProtectionPreview));
 protectionCountdown.addEventListener('change',renderProtectionPreview);
 protectionBackground.addEventListener('change',() => { const file = protectionBackground.files?.[0]; if (!file) return; if (protectionPreviewObjectUrl) URL.revokeObjectURL(protectionPreviewObjectUrl); protectionPreviewObjectUrl = URL.createObjectURL(file); protectionPreviewBg.style.backgroundImage = `url("${protectionPreviewObjectUrl}")`; document.getElementById('protectionBackgroundText').textContent = file.name; protectionRemoveBackground.checked = false; });
 protectionRemoveBackground.addEventListener('change',() => { if (protectionRemoveBackground.checked) { protectionBackground.value = ''; protectionPreviewBg.style.backgroundImage = ''; } else if (protectionCurrent.fondo_url) protectionPreviewBg.style.backgroundImage = `url("${protectionCurrent.fondo_url}")`; });
 window.setInterval(() => { if (protectionCountdown.checked) renderProtectionPreview(); }, 1000);
-protectionForm.addEventListener('submit',(event) => { event.preventDefault(); protectionStatus.textContent = 'Guardando…'; parent.postMessage({ tipo:'SKYBLOCK_ADMIN_GUARDAR_PROTECCION', datos:{ activo:protectionActive.checked, titulo:protectionTitle.value, descripcion:protectionDescription.value, mostrarCuentaRegresiva:protectionCountdown.checked, finalizaEn:protectionEndsAt.value, colorAcento:protectionAccentColor.value, fondoArchivo:protectionBackground.files?.[0] || null, eliminarFondo:protectionRemoveBackground.checked } },location.origin); });
+protectionForm.addEventListener('submit',(event) => { event.preventDefault(); protectionStatus.textContent = 'Guardando…'; parent.postMessage({ tipo:'SKYBLOCK_ADMIN_GUARDAR_PROTECCION', datos:{ activo:protectionActive.checked, titulo:protectionTitle.value, descripcion:protectionDescription.value, mostrarCuentaRegresiva:protectionCountdown.checked, finalizaEn:protectionEndsAt.value, fondoArchivo:protectionBackground.files?.[0] || null, eliminarFondo:protectionRemoveBackground.checked } },location.origin); });
 window.addEventListener('message',(event) => { if (event.origin !== location.origin) return; if (event.data?.tipo === 'SKYBLOCK_ADMIN_PROTECCION') populateProtection(event.data.proteccion || {}); if (event.data?.tipo === 'SKYBLOCK_ADMIN_PROTECCION_RESULTADO') { protectionStatus.textContent = event.data.mensaje || ''; if (event.data.ok) populateProtection(event.data.proteccion || {}); } });
 parent.postMessage({ tipo:'SKYBLOCK_ADMIN_SOLICITAR_PROTECCION' },location.origin);
