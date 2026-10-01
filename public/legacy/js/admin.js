@@ -1125,6 +1125,7 @@ const protectionPreviewBackgrounds = [...document.querySelectorAll('[data-protec
 const protectionPreviewTitles = [...document.querySelectorAll('[data-protection-preview-title]')];
 const protectionPreviewDescriptions = [...document.querySelectorAll('[data-protection-preview-description]')];
 const protectionPreviewClocks = [...document.querySelectorAll('[data-protection-preview-clock]')];
+const protectionPreviewPasswords = [...document.querySelectorAll('[data-protection-preview-password]')];
 let protectionCurrent = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null, color_acento:'#ffffff', requiere_contrasena:false };
 let protectionPreviewObjectUrl = '';
 const dateTimeLocal = (value) => { if (!value) return ''; const date = new Date(value); const offset = date.getTimezoneOffset() * 60000; return new Date(date.getTime() - offset).toISOString().slice(0,16); };
@@ -1134,6 +1135,7 @@ function renderProtectionPreview() {
   protectionPreviewDescriptions.forEach((preview) => { preview.textContent = protectionDescription.value.trim() || 'Tu mensaje aparecerá aquí.'; });
   protectionDateField.hidden = !protectionCountdown.checked;
   protectionPasswordField.hidden = !protectionPasswordEnabled.checked;
+  protectionPreviewPasswords.forEach((preview) => preview.hidden = !protectionPasswordEnabled.checked);
   protectionPreviewClocks.forEach((preview) => { preview.classList.toggle('hidden', !protectionCountdown.checked); if (protectionCountdown.checked) preview.textContent = previewCountdown(); });
   protectionPreviews.forEach((preview) => preview.style.setProperty('--proteccion-texto', protectionAccentColor.value || '#ffffff'));
   protectionColorValue.textContent = (protectionAccentColor.value || '#ffffff').toUpperCase();
