@@ -64,19 +64,19 @@ const ordenarTallas = <T extends { talla?: string }>(tallas: T[] = []) => [...ta
 })
 const paginas = new Set(['inicio','catalogo','colecciones','coleccion','producto','posts','nosotros','contacto','privacidad','terminos','verificar','login','registro','admin'])
 const rutaInicial = paginas.has(location.pathname.split('/').filter(Boolean)[0] || '') ? location.pathname.split('/').filter(Boolean)[0] : 'inicio'
-const urlLegacy = (pagina:string, search = '') => {
+const urlLegacy = (pagina:string, search = '', hash = '') => {
   const parametros = new URLSearchParams(search)
   parametros.delete('__embed')
   parametros.set('__embed', '1')
   parametros.set('_skb', LEGACY_BUILD)
-  return `/legacy/${pagina}.html?${parametros.toString()}`
+  return `/legacy/${pagina}.html?${parametros.toString()}${hash}`
 }
-const urlPublica = (pagina:string, search = '') => {
+const urlPublica = (pagina:string, search = '', hash = '') => {
   const parametros = new URLSearchParams(search)
   parametros.delete('__embed')
   parametros.delete('_skb')
   const query = parametros.toString()
-  return `/${pagina}${query ? `?${query}` : ''}`
+  return `/${pagina}${query ? `?${query}` : ''}${hash}`
 }
 const SEO:Record<string,{title:string;description:string;path:string;index?:boolean}> = {
   inicio:{title:`${BRAND} | Ropa urbana de edición limitada`,description:`${BRAND_UPPER}, marca de ropa urbana de ediciones limitadas creada en Tarapoto, Perú. Del bloque para el cielo.`,path:'/'},
@@ -150,8 +150,8 @@ export default function App() {
       const pagina = location.pathname.split('/').filter(Boolean)[0] || 'inicio'
       if (!paginas.has(pagina) || !frame.current) return
       setRuta(pagina)
-      const destino = urlLegacy(pagina, location.search)
-      const actual = `${frame.current.contentWindow?.location.pathname || ''}${frame.current.contentWindow?.location.search || ''}`
+      const destino = urlLegacy(pagina, location.search, pagina === 'admin' ? location.hash : '')
+      const actual = `${frame.current.contentWindow?.location.pathname || ''}${frame.current.contentWindow?.location.search || ''}${frame.current.contentWindow?.location.hash || ''}`
       if (actual !== destino) frame.current.src = destino
     }
     addEventListener('popstate', restaurarRuta)
@@ -220,13 +220,14 @@ export default function App() {
       : rutaIframe.split('/').filter(Boolean)[0] || 'inicio'
     if (paginas.has(paginaIframe)) {
       setRuta(paginaIframe)
-      const rutaLimpia = urlPublica(paginaIframe, ventana.location.search)
-      const rutaNavegador = `${location.pathname}${location.search}`
+      const hash = paginaIframe === 'admin' ? ventana.location.hash : ''
+      const rutaLimpia = urlPublica(paginaIframe, ventana.location.search, hash)
+      const rutaNavegador = `${location.pathname}${location.search}${location.hash}`
       if (rutaNavegador !== rutaLimpia) history.pushState(null, '', rutaLimpia)
       // Si Vercel abrió accidentalmente la aplicación dentro del iframe, se recupera
       // la página legacy correcta y se evita una aplicación anidada.
       if (!esRutaLegacy) {
-        ventana.location.replace(urlLegacy(paginaIframe, ventana.location.search))
+        ventana.location.replace(urlLegacy(paginaIframe, ventana.location.search, paginaIframe === 'admin' ? ventana.location.hash : ''))
         return
       }
     }
@@ -407,6 +408,12 @@ export default function App() {
     const recibir = async (e: MessageEvent) => {
       if (e.origin !== location.origin) return
       if (e.data?.tipo === 'SKYBLOCK_SOLICITAR_DATOS') { void enviar(String(e.data.dispositivoId || '')); return }
+      if (e.data?.tipo === 'SKYBLOCK_ADMIN_CAMBIAR_VISTA') {
+        const vista = String(e.data.vista || '')
+        const vistasValidas = new Set(['resumen','productos','colecciones','verificacion','posts','correos','mensajes','sistema','proteccion'])
+        if (vista && vistasValidas.has(vista)) history.replaceState(null, '', `/admin${location.search}${`#${vista}`}`)
+        return
+      }
       if (e.data?.tipo === 'SKYBLOCK_TOGGLE_POST_LIKE') {
         const postId = String(e.data.postId || '')
         const dispositivoId = String(e.data.dispositivoId || '')
@@ -694,5 +701,5 @@ export default function App() {
 
   if (proteccion === null || (proteccion.activo && adminConAcceso === null && !['admin','login'].includes(ruta))) return <main className="proteccion-cargando" aria-label="Cargando" />
   if (proteccion.activo && !adminConAcceso && !proteccionDesbloqueada && !['admin','login'].includes(ruta)) return <PantallaProteccion configuracion={proteccion} alDesbloquear={() => setProteccionDesbloqueada(true)} alVencer={desactivarProteccionVencida} />
-  return <iframe ref={frame} className="legacy-frontend" src={urlLegacy(ruta, location.search)} title={BRAND} allow="web-share" onLoad={() => void enviar()} />
+  return <iframe ref={frame} className="legacy-frontend" src={urlLegacy(ruta, location.search, ruta === 'admin' ? location.hash : '')} title={BRAND} allow="web-share" onLoad={() => void enviar()} />
 }

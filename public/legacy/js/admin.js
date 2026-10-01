@@ -29,11 +29,16 @@ function guardarEnSupabase(tipo, datos) {
 
 document.getElementById('adminDate').textContent = new Intl.DateTimeFormat('es-PE', { dateStyle: 'long' }).format(new Date());
 
-function showView(name) {
+function showView(name, { updateHistory = true, scroll = true } = {}) {
+  if (!views.some((view) => view.dataset.view === name)) name = 'resumen';
   views.forEach((view) => view.classList.toggle('active', view.dataset.view === name));
   document.querySelectorAll('.admin-menu [data-admin-view]').forEach((button) => button.classList.toggle('active', button.dataset.adminView === name));
   sidebar.classList.remove('open');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (updateHistory) {
+    history.replaceState(null, '', `${location.pathname}${location.search}#${name}`);
+    parent.postMessage({ tipo:'SKYBLOCK_ADMIN_CAMBIAR_VISTA', vista:name }, location.origin);
+  }
 }
 
 viewButtons.forEach((button) => button.addEventListener('click', (event) => {
@@ -41,6 +46,9 @@ viewButtons.forEach((button) => button.addEventListener('click', (event) => {
   showView(button.dataset.adminView);
 }));
 menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+const initialAdminView = location.hash.slice(1);
+showView(initialAdminView || 'resumen', { updateHistory:false, scroll:false });
+addEventListener('hashchange', () => showView(location.hash.slice(1) || 'resumen', { updateHistory:false }));
 
 const productStorageKey = 'skyblockStudioProducts';
 const productTypeStorageKey = 'skyblockStudioProductTypes';
