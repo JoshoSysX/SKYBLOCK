@@ -115,7 +115,9 @@ export default function App() {
   const [proteccionDesbloqueada, setProteccionDesbloqueada] = useState(false)
 
   const cargarProteccion = useCallback(async () => {
-    const { data } = await supabase.from('modo_proteccion_publico').select('*').eq('id', true).maybeSingle()
+    const lecturaPublica = await supabase.from('modo_proteccion_publico').select('*').eq('id', true).maybeSingle()
+    const respaldo = lecturaPublica.error ? await supabase.from('modo_proteccion').select('*').eq('id', true).maybeSingle() : null
+    const data = lecturaPublica.data || respaldo?.data
     const siguiente = data ? { ...PROTECCION_INICIAL, ...data } : PROTECCION_INICIAL
     setProteccion(siguiente)
     return siguiente
