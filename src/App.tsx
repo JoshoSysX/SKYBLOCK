@@ -12,7 +12,7 @@ const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
-const LEGACY_BUILD = 'maintenance-previews-20260928'
+const LEGACY_BUILD = 'protection-lifecycle-20261001'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   nombre: BRAND_UPPER,
@@ -26,16 +26,23 @@ const tiempoRestante = (fecha?: string | null, ahora = Date.now()) => {
   const dias = Math.floor(restante / 86400000), horas = Math.floor((restante % 86400000) / 3600000), minutos = Math.floor((restante % 3600000) / 60000), segundos = Math.floor((restante % 60000) / 1000)
   return { restante, dias, horas, minutos, segundos }
 }
-function PantallaProteccion({ configuracion, alDesbloquear }: { configuracion: ModoProteccion; alDesbloquear: () => void }) {
+function PantallaProteccion({ configuracion, alDesbloquear, alVencer }: { configuracion: ModoProteccion; alDesbloquear: () => void; alVencer: () => void }) {
   const [ahora, setAhora] = useState(Date.now())
   const [contrasena, setContrasena] = useState('')
   const [errorContrasena, setErrorContrasena] = useState('')
   const [validando, setValidando] = useState(false)
+  const vencimientoNotificado = useRef(false)
   useEffect(() => { const timer = window.setInterval(() => setAhora(Date.now()), 1000); return () => window.clearInterval(timer) }, [])
   useEffect(() => { if (!configuracion.requiere_contrasena) return; const clave = `skb-proteccion-${configuracion.actualizado_en || ''}`; if (sessionStorage.getItem(clave) === 'ok') alDesbloquear() }, [configuracion.actualizado_en, configuracion.requiere_contrasena, alDesbloquear])
   const tiempo = tiempoRestante(configuracion.finaliza_en, ahora)
   const terminada = configuracion.finaliza_en && tiempo.restante <= 0
   const mostrarReloj = configuracion.mostrar_cuenta_regresiva && configuracion.finaliza_en && !terminada
+  useEffect(() => { vencimientoNotificado.current = false }, [configuracion.finaliza_en])
+  useEffect(() => {
+    if (!terminada || vencimientoNotificado.current) return
+    vencimientoNotificado.current = true
+    void alVencer()
+  }, [terminada, alVencer])
   const estilo = { '--proteccion-fondo': configuracion.fondo_url ? `url("${configuracion.fondo_url}")` : undefined, '--proteccion-texto': configuracion.color_acento || '#ffffff' } as CSSProperties
   return <main className="proteccion-pantalla" style={estilo}>
     <div className="proteccion-fondo" aria-hidden="true" />
@@ -45,7 +52,7 @@ function PantallaProteccion({ configuracion, alDesbloquear }: { configuracion: M
       <span>SKYBLOCK STUDIO</span><h1>{configuracion.titulo || 'Volvemos pronto'}</h1>
       {configuracion.requiere_contrasena && <form className="proteccion-clave" onSubmit={async (evento) => { evento.preventDefault(); setValidando(true); setErrorContrasena(''); const { data, error } = await supabase.rpc('verificar_contrasena_modo_proteccion', { p_contrasena: contrasena }); setValidando(false); if (error || !data) { setErrorContrasena('Contraseña incorrecta.'); return } sessionStorage.setItem(`skb-proteccion-${configuracion.actualizado_en || ''}`, 'ok'); alDesbloquear() }}><label>Contraseña de acceso<input type="password" value={contrasena} onChange={(evento) => setContrasena(evento.target.value)} autoComplete="current-password" required /></label><button type="submit" disabled={validando}>{validando ? 'Verificando…' : 'Ingresar'}</button>{errorContrasena && <small role="alert">{errorContrasena}</small>}</form>}
       {configuracion.descripcion && <p>{configuracion.descripcion}</p>}
-      {terminada && <small className="proteccion-finalizada">La cuenta regresiva terminó. El modo de protección sigue activo hasta que lo desactives.</small>}
+      {terminada && <small className="proteccion-finalizada">La cuenta regresiva terminó. Estamos abriendo el sitio…</small>}
     </section>
   </main>
 }
@@ -115,6 +122,7 @@ export default function App() {
   const [proteccionDesbloqueada, setProteccionDesbloqueada] = useState(false)
 
   const cargarProteccion = useCallback(async () => {
+    await supabase.rpc('desactivar_modo_proteccion_vencido')
     const lecturaPublica = await supabase.from('modo_proteccion_publico').select('*').eq('id', true).maybeSingle()
     const respaldo = lecturaPublica.error ? await supabase.from('modo_proteccion').select('*').eq('id', true).maybeSingle() : null
     const data = lecturaPublica.data || respaldo?.data
@@ -122,6 +130,11 @@ export default function App() {
     setProteccion(siguiente)
     return siguiente
   }, [])
+
+  const desactivarProteccionVencida = useCallback(async () => {
+    await supabase.rpc('desactivar_modo_proteccion_vencido')
+    await cargarProteccion()
+  }, [cargarProteccion])
 
   useEffect(() => {
     const parametros = new URLSearchParams(location.search)
@@ -405,6 +418,20 @@ export default function App() {
         e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_PROTECCION', proteccion:data ? { ...PROTECCION_INICIAL, ...data } : PROTECCION_INICIAL, error:error?.message || '' }, { targetOrigin:e.origin })
         return
       }
+      if (e.data?.tipo === 'SKYBLOCK_ADMIN_CAMBIAR_PROTECCION_ACTIVA') {
+        const { user, esAdmin } = await obtenerAdmin(); let error: any = null; let proteccion: ModoProteccion = PROTECCION_INICIAL
+        try {
+          if (!user || !esAdmin) throw new Error('Acceso no autorizado')
+          const { data, error: errorActualizacion } = await supabase.from('modo_proteccion').update({ activo:Boolean(e.data.activo), actualizado_en:new Date().toISOString(), actualizado_por:user.id }).eq('id', true).select().single()
+          if (errorActualizacion) throw errorActualizacion
+          proteccion = { ...PROTECCION_INICIAL, ...data }
+          setProteccion(proteccion)
+          setProteccionDesbloqueada(false)
+        } catch (caught) { error = caught }
+        e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_PROTECCION_RESULTADO', ok:!error, proteccion, mensaje:error ? `No se pudo cambiar el estado: ${error instanceof Error ? error.message : 'error desconocido'}` : (proteccion.activo ? 'Protección activada inmediatamente.' : 'Protección desactivada inmediatamente.') }, { targetOrigin:e.origin })
+        if (!error) e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_PROTECCION', proteccion }, { targetOrigin:e.origin })
+        return
+      }
       if (e.data?.tipo === 'SKYBLOCK_ADMIN_GUARDAR_PROTECCION') {
         const { user, esAdmin } = await obtenerAdmin(); let error: any = null; let proteccion: ModoProteccion = PROTECCION_INICIAL
         try {
@@ -424,7 +451,7 @@ export default function App() {
           const requiereContrasena = Boolean(d.requiereContrasena), contrasena = String(d.contrasena || '')
           if (requiereContrasena && !anterior?.requiere_contrasena && contrasena.length < 4) throw new Error('Define una contraseña de al menos 4 caracteres.')
           if (contrasena && contrasena.length < 4) throw new Error('La contraseña debe tener al menos 4 caracteres.')
-          const payload = { id:true, activo:Boolean(d.activo), titulo:String(d.titulo || '').trim().slice(0,120) || 'Volvemos pronto', descripcion:String(d.descripcion || '').trim().slice(0,600), mostrar_cuenta_regresiva:Boolean(d.mostrarCuentaRegresiva), finaliza_en:fecha ? new Date(fecha).toISOString() : null, color_acento:colorAcento, requiere_contrasena:requiereContrasena, fondo_url:fondoUrl, fondo_identificador_publico:fondoId, actualizado_en:new Date().toISOString(), actualizado_por:user.id }
+          const payload = { id:true, activo:Boolean(anterior?.activo), titulo:String(d.titulo || '').trim().slice(0,120) || 'Volvemos pronto', descripcion:String(d.descripcion || '').trim().slice(0,600), mostrar_cuenta_regresiva:Boolean(d.mostrarCuentaRegresiva), finaliza_en:fecha ? new Date(fecha).toISOString() : null, color_acento:colorAcento, requiere_contrasena:requiereContrasena, fondo_url:fondoUrl, fondo_identificador_publico:fondoId, actualizado_en:new Date().toISOString(), actualizado_por:user.id }
           if (payload.mostrar_cuenta_regresiva && !payload.finaliza_en) throw new Error('Elige una fecha y hora para la cuenta regresiva.')
           const guardado = await supabase.from('modo_proteccion').upsert(payload, { onConflict:'id' }).select().single()
           if (guardado.error) throw guardado.error
@@ -652,6 +679,6 @@ export default function App() {
   }, [cargarPublicos, enviar])
 
   if (proteccion === null) return <main className="proteccion-cargando" aria-label="Cargando" />
-  if (proteccion.activo && !proteccionDesbloqueada && !['admin','login'].includes(ruta)) return <PantallaProteccion configuracion={proteccion} alDesbloquear={() => setProteccionDesbloqueada(true)} />
+  if (proteccion.activo && !proteccionDesbloqueada && !['admin','login'].includes(ruta)) return <PantallaProteccion configuracion={proteccion} alDesbloquear={() => setProteccionDesbloqueada(true)} alVencer={desactivarProteccionVencida} />
   return <iframe ref={frame} className="legacy-frontend" src={urlLegacy(ruta, location.search)} title={BRAND} allow="web-share" onLoad={() => void enviar()} />
 }
