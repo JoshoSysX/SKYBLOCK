@@ -190,7 +190,6 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    void comprobarAccesoAdmin()
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       window.setTimeout(() => { void comprobarAccesoAdmin() }, 0)
     })
