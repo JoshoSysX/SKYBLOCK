@@ -6,7 +6,7 @@ type PerfilEditorial = { nombre: string; biografia: string; avatar_url?: string 
 type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; reacciones?: unknown[]; error?: string }
 type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
-type ModoProteccion = { id?: boolean; activo: boolean; titulo: string; descripcion: string; mostrar_cuenta_regresiva: boolean; finaliza_en?: string | null; fondo_url?: string | null; fondo_identificador_publico?: string | null; color_acento?: string | null }
+type ModoProteccion = { id?: boolean; activo: boolean; titulo: string; descripcion: string; mostrar_cuenta_regresiva: boolean; finaliza_en?: string | null; fondo_url?: string | null; fondo_identificador_publico?: string | null; color_acento?: string | null; requiere_contrasena?: boolean; actualizado_en?: string }
 type EstadoSistema = { error?: string; actualizadoEn: string; supabase: boolean; almacenamientoBaseDatos: { usado: number; limite: number }; imagenes: number; bytesImagenes: number; registros: number; likes: number; mensajesNuevos: number; detalle: Record<string, number>; cloudinary: { disponible: boolean; error?: string; imagenesSubidas?: number | null; planUsado?: number | null; planLimite?: number | null; almacenamientoUsado?: number | null; almacenamientoLimite?: number | null; anchoBandaUsado?: number | null; anchoBandaLimite?: number | null } }
 const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
@@ -20,15 +20,19 @@ const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   avatar_url: profileImage,
   portada_url: null,
 }
-const PROTECCION_INICIAL: ModoProteccion = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null, fondo_identificador_publico:null, color_acento:'#ffffff' }
+const PROTECCION_INICIAL: ModoProteccion = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null, fondo_identificador_publico:null, color_acento:'#ffffff', requiere_contrasena:false }
 const tiempoRestante = (fecha?: string | null, ahora = Date.now()) => {
   const restante = fecha ? Math.max(0, new Date(fecha).getTime() - ahora) : 0
   const dias = Math.floor(restante / 86400000), horas = Math.floor((restante % 86400000) / 3600000), minutos = Math.floor((restante % 3600000) / 60000), segundos = Math.floor((restante % 60000) / 1000)
   return { restante, dias, horas, minutos, segundos }
 }
-function PantallaProteccion({ configuracion }: { configuracion: ModoProteccion }) {
+function PantallaProteccion({ configuracion, alDesbloquear }: { configuracion: ModoProteccion; alDesbloquear: () => void }) {
   const [ahora, setAhora] = useState(Date.now())
+  const [contrasena, setContrasena] = useState('')
+  const [errorContrasena, setErrorContrasena] = useState('')
+  const [validando, setValidando] = useState(false)
   useEffect(() => { const timer = window.setInterval(() => setAhora(Date.now()), 1000); return () => window.clearInterval(timer) }, [])
+  useEffect(() => { if (!configuracion.requiere_contrasena) return; const clave = `skb-proteccion-${configuracion.actualizado_en || ''}`; if (sessionStorage.getItem(clave) === 'ok') alDesbloquear() }, [configuracion.actualizado_en, configuracion.requiere_contrasena, alDesbloquear])
   const tiempo = tiempoRestante(configuracion.finaliza_en, ahora)
   const terminada = configuracion.finaliza_en && tiempo.restante <= 0
   const mostrarReloj = configuracion.mostrar_cuenta_regresiva && configuracion.finaliza_en && !terminada
@@ -38,7 +42,9 @@ function PantallaProteccion({ configuracion }: { configuracion: ModoProteccion }
     <a className="proteccion-login" href="/login?proteccion=1" aria-label="Inicio de sesión para administradores"><span aria-hidden="true">⌑</span> Inicio de sesión</a>
     <section className="proteccion-contenido">
       {mostrarReloj && <div className="proteccion-reloj" aria-label="Cuenta regresiva"><div><b>{String(tiempo.dias).padStart(2,'0')}</b><small>Días</small></div><i>:</i><div><b>{String(tiempo.horas).padStart(2,'0')}</b><small>Horas</small></div><i>:</i><div><b>{String(tiempo.minutos).padStart(2,'0')}</b><small>Minutos</small></div><i>:</i><div><b>{String(tiempo.segundos).padStart(2,'0')}</b><small>Segundos</small></div></div>}
-      <span>SKYBLOCK STUDIO</span><h1>{configuracion.titulo || 'Volvemos pronto'}</h1>{configuracion.descripcion && <p>{configuracion.descripcion}</p>}
+      <span>SKYBLOCK STUDIO</span><h1>{configuracion.titulo || 'Volvemos pronto'}</h1>
+      {configuracion.requiere_contrasena && <form className="proteccion-clave" onSubmit={async (evento) => { evento.preventDefault(); setValidando(true); setErrorContrasena(''); const { data, error } = await supabase.rpc('verificar_contrasena_modo_proteccion', { p_contrasena: contrasena }); setValidando(false); if (error || !data) { setErrorContrasena('Contraseña incorrecta.'); return } sessionStorage.setItem(`skb-proteccion-${configuracion.actualizado_en || ''}`, 'ok'); alDesbloquear() }}><label>Contraseña de acceso<input type="password" value={contrasena} onChange={(evento) => setContrasena(evento.target.value)} autoComplete="current-password" required /></label><button type="submit" disabled={validando}>{validando ? 'Verificando…' : 'Ingresar'}</button>{errorContrasena && <small role="alert">{errorContrasena}</small>}</form>}
+      {configuracion.descripcion && <p>{configuracion.descripcion}</p>}
       {terminada && <small className="proteccion-finalizada">La cuenta regresiva terminó. El modo de protección sigue activo hasta que lo desactives.</small>}
     </section>
   </main>
@@ -106,9 +112,10 @@ export default function App() {
   const [datos, setDatos] = useState<Datos>({ productos: [], colecciones: [], publicaciones: [], perfil: PERFIL_EDITORIAL_INICIAL })
   const [proteccion, setProteccion] = useState<ModoProteccion | null>(null)
   const [ruta, setRuta] = useState(rutaInicial)
+  const [proteccionDesbloqueada, setProteccionDesbloqueada] = useState(false)
 
   const cargarProteccion = useCallback(async () => {
-    const { data } = await supabase.from('modo_proteccion').select('*').eq('id', true).maybeSingle()
+    const { data } = await supabase.from('modo_proteccion_publico').select('*').eq('id', true).maybeSingle()
     const siguiente = data ? { ...PROTECCION_INICIAL, ...data } : PROTECCION_INICIAL
     setProteccion(siguiente)
     return siguiente
@@ -150,6 +157,7 @@ export default function App() {
   }, [])
 
   useEffect(() => { document.body.className = 'legacy-shell'; actualizarSeo(ruta); void cargarPublicos(); void cargarProteccion() }, [cargarPublicos, cargarProteccion, ruta])
+  useEffect(() => { setProteccionDesbloqueada(false) }, [proteccion?.actualizado_en])
 
   const obtenerAdmin = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -411,10 +419,14 @@ export default function App() {
           if (d.eliminarFondo) { fondoUrl = null; fondoId = null; if (anterior?.fondo_identificador_publico) await supabase.functions.invoke('cloudinary-delete', { body:{ assets:[{ publicId:anterior.fondo_identificador_publico, resourceType:'image' }] } }) }
           const fecha = String(d.finalizaEn || '').trim()
           const colorAcento = /^#[0-9a-f]{6}$/i.test(String(d.colorAcento || '')) ? String(d.colorAcento) : '#ffffff'
-          const payload = { id:true, activo:Boolean(d.activo), titulo:String(d.titulo || '').trim().slice(0,120) || 'Volvemos pronto', descripcion:String(d.descripcion || '').trim().slice(0,600), mostrar_cuenta_regresiva:Boolean(d.mostrarCuentaRegresiva), finaliza_en:fecha ? new Date(fecha).toISOString() : null, color_acento:colorAcento, fondo_url:fondoUrl, fondo_identificador_publico:fondoId, actualizado_en:new Date().toISOString(), actualizado_por:user.id }
+          const requiereContrasena = Boolean(d.requiereContrasena), contrasena = String(d.contrasena || '')
+          if (requiereContrasena && !anterior?.requiere_contrasena && contrasena.length < 4) throw new Error('Define una contraseña de al menos 4 caracteres.')
+          if (contrasena && contrasena.length < 4) throw new Error('La contraseña debe tener al menos 4 caracteres.')
+          const payload = { id:true, activo:Boolean(d.activo), titulo:String(d.titulo || '').trim().slice(0,120) || 'Volvemos pronto', descripcion:String(d.descripcion || '').trim().slice(0,600), mostrar_cuenta_regresiva:Boolean(d.mostrarCuentaRegresiva), finaliza_en:fecha ? new Date(fecha).toISOString() : null, color_acento:colorAcento, requiere_contrasena:requiereContrasena, fondo_url:fondoUrl, fondo_identificador_publico:fondoId, actualizado_en:new Date().toISOString(), actualizado_por:user.id }
           if (payload.mostrar_cuenta_regresiva && !payload.finaliza_en) throw new Error('Elige una fecha y hora para la cuenta regresiva.')
           const guardado = await supabase.from('modo_proteccion').upsert(payload, { onConflict:'id' }).select().single()
           if (guardado.error) throw guardado.error
+          if (!requiereContrasena || contrasena) { const { error: errorContrasena } = await supabase.rpc('configurar_contrasena_modo_proteccion', { p_requiere:requiereContrasena, p_contrasena:contrasena || null }); if (errorContrasena) throw errorContrasena }
           proteccion = { ...PROTECCION_INICIAL, ...guardado.data }; setProteccion(proteccion)
         } catch (caught) { error = caught }
         e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_PROTECCION_RESULTADO', ok:!error, proteccion, mensaje:error ? `No se pudo guardar: ${error instanceof Error ? error.message : 'error desconocido'}` : (proteccion.activo ? 'Modo de protección activado.' : 'Modo de protección desactivado.') }, { targetOrigin:e.origin })
@@ -638,6 +650,6 @@ export default function App() {
   }, [cargarPublicos, enviar])
 
   if (proteccion === null) return <main className="proteccion-cargando" aria-label="Cargando" />
-  if (proteccion.activo && !['admin','login'].includes(ruta)) return <PantallaProteccion configuracion={proteccion} />
+  if (proteccion.activo && !proteccionDesbloqueada && !['admin','login'].includes(ruta)) return <PantallaProteccion configuracion={proteccion} alDesbloquear={() => setProteccionDesbloqueada(true)} />
   return <iframe ref={frame} className="legacy-frontend" src={urlLegacy(ruta, location.search)} title={BRAND} allow="web-share" onLoad={() => void enviar()} />
 }
