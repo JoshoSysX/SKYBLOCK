@@ -120,6 +120,7 @@ export default function App() {
   const [proteccion, setProteccion] = useState<ModoProteccion | null>(null)
   const [ruta, setRuta] = useState(rutaInicial)
   const [proteccionDesbloqueada, setProteccionDesbloqueada] = useState(false)
+  const [adminConAcceso, setAdminConAcceso] = useState<boolean | null>(null)
 
   const cargarProteccion = useCallback(async () => {
     await supabase.rpc('desactivar_modo_proteccion_vencido')
@@ -182,6 +183,19 @@ export default function App() {
     const mfaVerificado = nivel?.currentLevel === 'aal2'
     return { user, rol: rol as Rol, esRolAdmin, mfaVerificado, esAdmin: esRolAdmin && mfaVerificado }
   }
+
+  const comprobarAccesoAdmin = useCallback(async () => {
+    const { esAdmin } = await obtenerAdmin()
+    setAdminConAcceso(esAdmin)
+  }, [])
+
+  useEffect(() => {
+    void comprobarAccesoAdmin()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      window.setTimeout(() => { void comprobarAccesoAdmin() }, 0)
+    })
+    return () => subscription.unsubscribe()
+  }, [comprobarAccesoAdmin])
 
   const iniciarMfaAdmin = async () => {
     const niveles = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
@@ -678,7 +692,7 @@ export default function App() {
     addEventListener('message', recibir); void enviar(); return () => removeEventListener('message', recibir)
   }, [cargarPublicos, enviar])
 
-  if (proteccion === null) return <main className="proteccion-cargando" aria-label="Cargando" />
-  if (proteccion.activo && !proteccionDesbloqueada && !['admin','login'].includes(ruta)) return <PantallaProteccion configuracion={proteccion} alDesbloquear={() => setProteccionDesbloqueada(true)} alVencer={desactivarProteccionVencida} />
+  if (proteccion === null || (proteccion.activo && adminConAcceso === null && !['admin','login'].includes(ruta))) return <main className="proteccion-cargando" aria-label="Cargando" />
+  if (proteccion.activo && !adminConAcceso && !proteccionDesbloqueada && !['admin','login'].includes(ruta)) return <PantallaProteccion configuracion={proteccion} alDesbloquear={() => setProteccionDesbloqueada(true)} alVencer={desactivarProteccionVencida} />
   return <iframe ref={frame} className="legacy-frontend" src={urlLegacy(ruta, location.search)} title={BRAND} allow="web-share" onLoad={() => void enviar()} />
 }
