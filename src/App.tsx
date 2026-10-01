@@ -12,7 +12,7 @@ const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
-const LEGACY_BUILD = 'protection-lifecycle-20261001'
+const LEGACY_BUILD = 'protection-modes-20261001'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   nombre: BRAND_UPPER,
@@ -462,6 +462,7 @@ export default function App() {
           const fecha = String(d.finalizaEn || '').trim()
           const colorAcento = /^#[0-9a-f]{6}$/i.test(String(d.colorAcento || '')) ? String(d.colorAcento) : '#ffffff'
           const requiereContrasena = Boolean(d.requiereContrasena), contrasena = String(d.contrasena || '')
+          if (Boolean(d.mostrarCuentaRegresiva) && requiereContrasena) throw new Error('La cuenta regresiva y la contraseña no se pueden usar al mismo tiempo.')
           if (requiereContrasena && !anterior?.requiere_contrasena && contrasena.length < 4) throw new Error('Define una contraseña de al menos 4 caracteres.')
           if (contrasena && contrasena.length < 4) throw new Error('La contraseña debe tener al menos 4 caracteres.')
           const payload = { id:true, activo:Boolean(anterior?.activo), titulo:String(d.titulo || '').trim().slice(0,120) || 'Volvemos pronto', descripcion:String(d.descripcion || '').trim().slice(0,600), mostrar_cuenta_regresiva:Boolean(d.mostrarCuentaRegresiva), finaliza_en:fecha ? new Date(fecha).toISOString() : null, color_acento:colorAcento, requiere_contrasena:requiereContrasena, fondo_url:fondoUrl, fondo_identificador_publico:fondoId, actualizado_en:new Date().toISOString(), actualizado_por:user.id }

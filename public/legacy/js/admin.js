@@ -1120,6 +1120,7 @@ const protectionDateField = document.getElementById('protectionDateField');
 const protectionBackground = document.getElementById('protectionBackground');
 const protectionRemoveBackground = document.getElementById('protectionRemoveBackground');
 const protectionStatus = document.getElementById('protectionStatus');
+const protectionModeWarning = document.getElementById('protectionModeWarning');
 const protectionPreviews = [...document.querySelectorAll('[data-protection-preview]')];
 const protectionPreviewBackgrounds = [...document.querySelectorAll('[data-protection-preview-bg]')];
 const protectionPreviewTitles = [...document.querySelectorAll('[data-protection-preview-title]')];
@@ -1130,11 +1131,22 @@ let protectionCurrent = { activo:false, titulo:'Volvemos pronto', descripcion:''
 let protectionPreviewObjectUrl = '';
 const dateTimeLocal = (value) => { if (!value) return ''; const date = new Date(value); const offset = date.getTimezoneOffset() * 60000; return new Date(date.getTime() - offset).toISOString().slice(0,16); };
 const previewCountdown = () => { const end = new Date(protectionEndsAt.value || 0).getTime(), remaining = Math.max(0, end - Date.now()); const days=Math.floor(remaining/86400000),hours=Math.floor((remaining%86400000)/3600000),minutes=Math.floor((remaining%3600000)/60000),seconds=Math.floor((remaining%60000)/1000); return [days,hours,minutes,seconds].map((value)=>String(value).padStart(2,'0')).join(' : '); };
+function syncProtectionModes() {
+  const temporizadorActivo = protectionCountdown.checked;
+  const contrasenaActiva = protectionPasswordEnabled.checked;
+  protectionCountdown.disabled = contrasenaActiva;
+  protectionPasswordEnabled.disabled = temporizadorActivo;
+  protectionCountdown.closest('label')?.classList.toggle('is-unavailable', contrasenaActiva);
+  protectionPasswordEnabled.closest('label')?.classList.toggle('is-unavailable', temporizadorActivo);
+  protectionModeWarning.hidden = !temporizadorActivo && !contrasenaActiva;
+  protectionModeWarning.textContent = temporizadorActivo ? 'La cuenta regresiva desactiva la protección automáticamente al terminar; por eso no se puede usar contraseña al mismo tiempo.' : 'La contraseña mantiene el acceso protegido hasta que la desactives manualmente; por eso no se puede usar cuenta regresiva al mismo tiempo.';
+}
 function renderProtectionPreview() {
   protectionPreviewTitles.forEach((preview) => { preview.textContent = protectionTitle.value.trim() || 'Volvemos pronto'; });
   protectionPreviewDescriptions.forEach((preview) => { preview.textContent = protectionDescription.value.trim() || 'Tu mensaje aparecerá aquí.'; });
   protectionDateField.hidden = !protectionCountdown.checked;
   protectionPasswordField.hidden = !protectionPasswordEnabled.checked;
+  syncProtectionModes();
   protectionPreviewPasswords.forEach((preview) => preview.hidden = !protectionPasswordEnabled.checked);
   protectionPreviewClocks.forEach((preview) => { preview.classList.toggle('hidden', !protectionCountdown.checked); if (protectionCountdown.checked) preview.textContent = previewCountdown(); });
   protectionPreviews.forEach((preview) => preview.style.setProperty('--proteccion-texto', protectionAccentColor.value || '#ffffff'));
@@ -1158,8 +1170,9 @@ function populateProtection(data = {}) {
   document.getElementById('protectionBackgroundText').textContent = protectionCurrent.fondo_url ? 'Cambiar imagen de fondo' : 'Elegir imagen de fondo';
   renderProtectionPreview();
 }
-[protectionTitle,protectionDescription,protectionCountdown,protectionEndsAt,protectionPasswordEnabled,protectionAccentColor].forEach((field) => field.addEventListener('input',renderProtectionPreview));
-protectionCountdown.addEventListener('change',renderProtectionPreview);
+[protectionTitle,protectionDescription,protectionEndsAt,protectionAccentColor].forEach((field) => field.addEventListener('input',renderProtectionPreview));
+protectionCountdown.addEventListener('change',() => { if (protectionCountdown.checked) { protectionPasswordEnabled.checked = false; protectionPassword.value = ''; } renderProtectionPreview(); });
+protectionPasswordEnabled.addEventListener('change',() => { if (protectionPasswordEnabled.checked) { protectionCountdown.checked = false; } renderProtectionPreview(); });
 protectionActive.addEventListener('change',() => { const activo = protectionActive.checked; protectionStatus.textContent = activo ? 'Activando protección…' : 'Desactivando protección…'; parent.postMessage({ tipo:'SKYBLOCK_ADMIN_CAMBIAR_PROTECCION_ACTIVA', activo },location.origin); });
 protectionBackground.addEventListener('change',() => { const file = protectionBackground.files?.[0]; if (!file) return; if (protectionPreviewObjectUrl) URL.revokeObjectURL(protectionPreviewObjectUrl); protectionPreviewObjectUrl = URL.createObjectURL(file); protectionPreviewBackgrounds.forEach((preview) => { preview.style.backgroundImage = `url("${protectionPreviewObjectUrl}")`; }); document.getElementById('protectionBackgroundText').textContent = file.name; protectionRemoveBackground.checked = false; });
 protectionRemoveBackground.addEventListener('change',() => { if (protectionRemoveBackground.checked) { protectionBackground.value = ''; protectionPreviewBackgrounds.forEach((preview) => { preview.style.backgroundImage = ''; }); } else if (protectionCurrent.fondo_url) protectionPreviewBackgrounds.forEach((preview) => { preview.style.backgroundImage = `url("${protectionCurrent.fondo_url}")`; }); });
