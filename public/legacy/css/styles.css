@@ -5669,7 +5669,7 @@ footer .footer-brand>.brand small {
   background:#fcfcfc url('../assets/image/PORTADA PRINCIPAL 2.jpg') center/auto 100% no-repeat;
   filter:none;
   transform-origin:center;
-  animation:heroEntranceZoom 1.35s cubic-bezier(.2,.72,.2,1) both
+  animation:none
 }
 
 @keyframes heroEntranceZoom {
