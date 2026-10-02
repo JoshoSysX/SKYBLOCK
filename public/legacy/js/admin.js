@@ -1140,7 +1140,7 @@ const protectionPreviewPasswords = [...document.querySelectorAll('[data-protecti
 let protectionCurrent = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null, color_acento:'#ffffff', requiere_contrasena:false };
 let protectionPreviewObjectUrl = '';
 const dateTimeLocal = (value) => { if (!value) return ''; const date = new Date(value); const offset = date.getTimezoneOffset() * 60000; return new Date(date.getTime() - offset).toISOString().slice(0,16); };
-const previewCountdown = () => { const end = new Date(protectionEndsAt.value || 0).getTime(), remaining = Math.max(0, end - Date.now()); const days=Math.floor(remaining/86400000),hours=Math.floor((remaining%86400000)/3600000),minutes=Math.floor((remaining%3600000)/60000),seconds=Math.floor((remaining%60000)/1000); return [days,hours,minutes,seconds].map((value)=>String(value).padStart(2,'0')).join(' : '); };
+const previewCountdown = () => { const end = new Date(protectionEndsAt.value || 0).getTime(), remaining = Math.max(0, end - Date.now()); const days=Math.floor(remaining/86400000),hours=Math.floor((remaining%86400000)/3600000),minutes=Math.floor((remaining%3600000)/60000),seconds=Math.floor((remaining%60000)/1000); return { dias:String(days).padStart(2,'0'), horas:String(hours).padStart(2,'0'), minutos:String(minutes).padStart(2,'0'), segundos:String(seconds).padStart(2,'0') }; };
 function syncProtectionModes() {
   const temporizadorActivo = protectionCountdown.checked;
   const contrasenaActiva = protectionPasswordEnabled.checked;
@@ -1158,7 +1158,7 @@ function renderProtectionPreview() {
   protectionPasswordField.hidden = !protectionPasswordEnabled.checked;
   syncProtectionModes();
   protectionPreviewPasswords.forEach((preview) => preview.hidden = !protectionPasswordEnabled.checked);
-  protectionPreviewClocks.forEach((preview) => { preview.classList.toggle('hidden', !protectionCountdown.checked); if (protectionCountdown.checked) preview.textContent = previewCountdown(); });
+  protectionPreviewClocks.forEach((preview) => { preview.classList.toggle('hidden', !protectionCountdown.checked); if (protectionCountdown.checked) { const tiempo = previewCountdown(); Object.entries(tiempo).forEach(([unidad, valor]) => { const numero = preview.querySelector(`[data-clock="${unidad}"]`); if (numero) numero.textContent = valor; }); } });
   protectionPreviews.forEach((preview) => preview.style.setProperty('--proteccion-texto', protectionAccentColor.value || '#ffffff'));
   protectionColorValue.textContent = (protectionAccentColor.value || '#ffffff').toUpperCase();
   protectionColorValue.style.background = protectionAccentColor.value || '#ffffff';
