@@ -980,11 +980,11 @@ footer {
   margin-top: 24px;
   background: #fff;
   color: #111;
-  border: 1px solid #e1e1de;
+  border: 0;
 }
 
 .benefits article {
-  border-right: 1px solid #ccc
+  border-right: 0
 }
 
 .benefits h3 {
