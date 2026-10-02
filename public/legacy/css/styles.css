@@ -5329,18 +5329,18 @@ footer .footer-brand>.brand small {
   }
 }
 
-/* Inicio con desplazamiento normal; sin saltos entre secciones. */
-.home-snap { scroll-snap-type:none; }
+/* El cambio entre secciones acompaña el desplazamiento sin forzar saltos. */
+.home-snap { scroll-snap-type:y proximity; scroll-behavior:smooth; }
 
 .home-page .hero,
 .home-page .hologram-section {
   min-height:100svh;
-  scroll-snap-align:none;
+  scroll-snap-align:start;
   scroll-snap-stop:normal
 }
 
 .home-page #shop {
-  scroll-snap-align:none;
+  scroll-snap-align:start;
   scroll-snap-stop:normal
 }
 
