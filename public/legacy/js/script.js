@@ -76,30 +76,6 @@ document.querySelectorAll('.featured-grid .product').forEach((product, index) =>
 const hologramSection = document.querySelector('.hologram-section');
 const hologramStage = document.querySelector('.hologram-stage');
 
-const introHero = document.querySelector('.home-page .hero');
-const featuredCollection = document.querySelector('.home-page #shop');
-if (introHero && hologramSection && featuredCollection) {
-  const introScrollSections = [introHero,hologramSection,featuredCollection];
-  let introScrollLocked = false;
-  window.addEventListener('wheel', (event) => {
-    if (introScrollLocked || Math.abs(event.deltaY) < 8) return;
-    const viewportHeight = window.innerHeight || 1;
-    const currentIndex = introScrollSections
-      .map((section,index) => ({ index,distance:Math.abs(section.getBoundingClientRect().top) }))
-      .sort((a,b) => a.distance - b.distance)[0].index;
-    const currentTop = introScrollSections[currentIndex].getBoundingClientRect().top;
-    if (Math.abs(currentTop) > viewportHeight * .48) return;
-
-    const direction = event.deltaY > 0 ? 1 : -1;
-    const nextIndex = currentIndex + direction;
-    if (nextIndex < 0 || nextIndex >= introScrollSections.length) return;
-    event.preventDefault();
-    introScrollLocked = true;
-    introScrollSections[nextIndex].scrollIntoView({ behavior:'smooth',block:'start' });
-    window.setTimeout(() => { introScrollLocked = false; }, 850);
-  }, { passive:false });
-}
-
 if (hologramSection && hologramStage) {
   hologramStage.addEventListener('dragstart', (event) => event.preventDefault());
   let rotationX = -4;
