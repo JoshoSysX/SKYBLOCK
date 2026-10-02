@@ -5329,19 +5329,23 @@ footer .footer-brand>.brand small {
   }
 }
 
-/* El cambio entre secciones acompaña el desplazamiento sin forzar saltos. */
-.home-snap { scroll-snap-type:y proximity; scroll-behavior:smooth; }
+/* Salto de pantalla únicamente entre el hero y el logotipo. */
+.home-snap {
+  scroll-snap-type:y proximity;
+  scroll-padding-top:0;
+  overscroll-behavior-y:auto
+}
 
 .home-page .hero,
 .home-page .hologram-section {
   min-height:100svh;
   scroll-snap-align:start;
-  scroll-snap-stop:normal
+  scroll-snap-stop:always
 }
 
 .home-page #shop {
   scroll-snap-align:start;
-  scroll-snap-stop:normal
+  scroll-snap-stop:always
 }
 
 @media(prefers-reduced-motion:reduce) {
@@ -5665,7 +5669,7 @@ footer .footer-brand>.brand small {
   background:#fcfcfc url('../assets/image/PORTADA PRINCIPAL 2.jpg') center/auto 100% no-repeat;
   filter:none;
   transform-origin:center;
-  animation:heroZoom 14s var(--ease) both
+  animation:heroEntranceZoom 1.35s cubic-bezier(.2,.72,.2,1) both
 }
 
 @keyframes heroEntranceZoom {
