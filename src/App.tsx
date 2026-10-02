@@ -263,6 +263,20 @@ export default function App() {
         })
       }
       const footer = documento?.querySelector<HTMLElement>('.site-footer')
+      const social = footer?.querySelector<HTMLElement>('.social')
+      if (social && !social.dataset.skyblockSocials) {
+        social.dataset.skyblockSocials = 'true'
+        social.replaceChildren(...[
+          ['Instagram', 'IG', 'https://www.instagram.com/skyblock_tpp?igsi=Zmp0NTF4dHFoZTY4'],
+          ['TikTok', 'TT', 'https://www.tiktok.com/@skyblock_tpp?_r=1&_t=ZS-99E1WuDctnx'],
+          ['Facebook', 'f', 'https://www.facebook.com/profile.php?id=61593904007232&locale=es_LA'],
+        ].map(([nombre, marca, href]) => {
+          const enlace = documento!.createElement('a')
+          enlace.href = href; enlace.target = '_blank'; enlace.rel = 'noopener noreferrer'; enlace.setAttribute('aria-label', nombre)
+          enlace.textContent = marca
+          return enlace
+        }))
+      }
       const socialColumn = [...(footer?.querySelectorAll<HTMLElement>('.footer-col') ?? [])].find(
         (column) => column.querySelector('h4')?.textContent?.trim() === 'Síguenos',
       )
