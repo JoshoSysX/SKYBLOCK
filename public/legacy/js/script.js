@@ -1,6 +1,15 @@
 const nav = document.getElementById('nav');
 const menuButton = document.getElementById('menuBtn');
 const mobileNav = document.getElementById('mobileNav');
+const navegarDesdeIframe = (destino) => {
+  const url = new URL(destino, location.href);
+  if (window.top !== window) {
+    url.searchParams.set('__embed', '1');
+    const version = new URL(location.href).searchParams.get('_skb');
+    if (version) url.searchParams.set('_skb', version);
+  }
+  window.location.href = `${url.pathname}${url.search}${url.hash}`;
+};
 
 window.addEventListener('scroll', () => {
   nav.classList.toggle('fixed', window.scrollY > 80);
@@ -60,7 +69,7 @@ const featuredProducts = ['void', 'skyblock', 'architect', 'utility'];
 document.querySelectorAll('.featured-grid .product').forEach((product, index) => {
   product.style.cursor = 'pointer';
   product.addEventListener('click', () => {
-    window.location.href = `producto.html?id=${featuredProducts[index]}`;
+    navegarDesdeIframe(`producto.html?id=${featuredProducts[index]}`);
   });
 });
 

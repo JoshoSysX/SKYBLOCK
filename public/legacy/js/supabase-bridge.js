@@ -1,4 +1,13 @@
 ;(() => {
+  const navegar = (destino) => {
+    const url = new URL(destino, location.href)
+    if (window.top !== window) {
+      url.searchParams.set('__embed', '1')
+      const version = new URL(location.href).searchParams.get('_skb')
+      if (version) url.searchParams.set('_skb', version)
+    }
+    location.href = `${url.pathname}${url.search}${url.hash}`
+  }
   const money = (v, m = 'PEN') =>
     new Intl.NumberFormat('es-PE', { style: 'currency', currency: m }).format(Number(v))
   const img = (e) =>
@@ -54,7 +63,7 @@
       )
       .join('')
     ;[...g.children].forEach((card, i) => {
-      const abrir = () => (location.href = `producto.html?id=${encodeURIComponent(ps[i].slug)}`)
+      const abrir = () => navegar(`producto.html?id=${encodeURIComponent(ps[i].slug)}`)
       card.onclick = abrir
       card.onkeydown = (e) => {
         if (e.key === 'Enter') abrir()
@@ -112,7 +121,7 @@
     }
     cards.forEach((t) => {
       if (t.dataset.blocked === 'true') return
-      const open = () => (location.href = `producto.html?id=${encodeURIComponent(t.dataset.slug)}`)
+      const open = () => navegar(`producto.html?id=${encodeURIComponent(t.dataset.slug)}`)
       t.onclick = open
       t.onkeydown = (e) => {
         if (e.key === 'Enter') open()

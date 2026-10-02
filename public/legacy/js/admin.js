@@ -1165,6 +1165,11 @@ function renderProtectionPreview() {
 }
 function populateProtection(data = {}) {
   protectionCurrent = { ...protectionCurrent, ...data };
+  const bothModesEnabled = Boolean(protectionCurrent.mostrar_cuenta_regresiva && protectionCurrent.requiere_contrasena);
+  if (bothModesEnabled) {
+    protectionCurrent.requiere_contrasena = false;
+    parent.postMessage({ tipo:'SKYBLOCK_ADMIN_NORMALIZAR_MODOS_PROTECCION' }, location.origin);
+  }
   protectionActive.checked = Boolean(protectionCurrent.activo);
   protectionTitle.value = protectionCurrent.titulo || '';
   protectionDescription.value = protectionCurrent.descripcion || '';

@@ -128,6 +128,8 @@ export default function App() {
     const respaldo = lecturaPublica.error ? await supabase.from('modo_proteccion').select('*').eq('id', true).maybeSingle() : null
     const data = lecturaPublica.data || respaldo?.data
     const siguiente = data ? { ...PROTECCION_INICIAL, ...data } : PROTECCION_INICIAL
+    // Nunca mostramos ambas barreras a la vez, incluso si existía una configuración antigua.
+    if (siguiente.mostrar_cuenta_regresiva && siguiente.requiere_contrasena) siguiente.requiere_contrasena = false
     setProteccion(siguiente)
     return siguiente
   }, [])
@@ -251,9 +253,12 @@ export default function App() {
           const destino = new URL(enlace.href, ventana.location.href)
           if (destino.origin !== location.origin || !destino.pathname.startsWith('/legacy/') || !destino.pathname.endsWith('.html')) return
           event.preventDefault()
-          destino.searchParams.delete('__embed')
-          destino.searchParams.set('__embed', '1')
-          ventana.location.href = `${destino.pathname}?${destino.searchParams.toString()}${destino.hash}`
+          const paginaDestino = destino.pathname.split('/').pop()?.replace(/\.html$/, '') || 'inicio'
+          if (!paginas.has(paginaDestino)) return
+          const hashDestino = paginaDestino === 'admin' ? destino.hash : ''
+          const destinoPublico = urlPublica(paginaDestino, destino.search, hashDestino)
+          if (`${location.pathname}${location.search}${location.hash}` !== destinoPublico) history.pushState(null, '', destinoPublico)
+          setRuta(paginaDestino)
         })
       }
       const footer = documento?.querySelector<HTMLElement>('.site-footer')
@@ -449,6 +454,22 @@ export default function App() {
           setProteccionDesbloqueada(false)
         } catch (caught) { error = caught }
         e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_PROTECCION_RESULTADO', ok:!error, proteccion, mensaje:error ? `No se pudo cambiar el estado: ${error instanceof Error ? error.message : 'error desconocido'}` : (proteccion.activo ? 'Protección activada inmediatamente.' : 'Protección desactivada inmediatamente.') }, { targetOrigin:e.origin })
+        if (!error) e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_PROTECCION', proteccion }, { targetOrigin:e.origin })
+        return
+      }
+      if (e.data?.tipo === 'SKYBLOCK_ADMIN_NORMALIZAR_MODOS_PROTECCION') {
+        const { user, esAdmin } = await obtenerAdmin(); let error: any = null; let proteccion: ModoProteccion = PROTECCION_INICIAL
+        try {
+          if (!user || !esAdmin) throw new Error('Acceso no autorizado')
+          const { data: actual, error: errorLectura } = await supabase.from('modo_proteccion').select('*').eq('id', true).maybeSingle()
+          if (errorLectura) throw errorLectura
+          const { data, error: errorActualizacion } = await supabase.from('modo_proteccion').update({ requiere_contrasena:false, actualizado_en:new Date().toISOString(), actualizado_por:user.id }).eq('id', true).select().single()
+          if (errorActualizacion) throw errorActualizacion
+          if (actual?.requiere_contrasena) { const { error: errorClave } = await supabase.rpc('configurar_contrasena_modo_proteccion', { p_requiere:false, p_contrasena:null }); if (errorClave) throw errorClave }
+          proteccion = { ...PROTECCION_INICIAL, ...data }
+          setProteccion(proteccion)
+        } catch (caught) { error = caught }
+        e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_PROTECCION_RESULTADO', ok:!error, proteccion, mensaje:error ? `No se pudo corregir la configuración: ${error instanceof Error ? error.message : 'error desconocido'}` : 'Se desactivó la contraseña porque el temporizador está activo.' }, { targetOrigin:e.origin })
         if (!error) e.source?.postMessage({ tipo:'SKYBLOCK_ADMIN_PROTECCION', proteccion }, { targetOrigin:e.origin })
         return
       }
