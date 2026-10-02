@@ -12,7 +12,7 @@ const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
-const LEGACY_BUILD = 'white-footer-20261001'
+const LEGACY_BUILD = 'black-footer-icons-20261001'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   nombre: BRAND_UPPER,
@@ -267,13 +267,18 @@ export default function App() {
       if (social && !social.dataset.skyblockSocials) {
         social.dataset.skyblockSocials = 'true'
         social.replaceChildren(...[
-          ['Instagram', 'IG', 'https://www.instagram.com/skyblock_tpp?igsi=Zmp0NTF4dHFoZTY4'],
-          ['TikTok', 'TT', 'https://www.tiktok.com/@skyblock_tpp?_r=1&_t=ZS-99E1WuDctnx'],
-          ['Facebook', 'f', 'https://www.facebook.com/profile.php?id=61593904007232&locale=es_LA'],
-        ].map(([nombre, marca, href]) => {
+          ['Instagram', 'https://www.instagram.com/skyblock_tpp?igsi=Zmp0NTF4dHFoZTY4', 'instagram'],
+          ['TikTok', 'https://www.tiktok.com/@skyblock_tpp?_r=1&_t=ZS-99E1WuDctnx', 'tiktok'],
+          ['Facebook', 'https://www.facebook.com/profile.php?id=61593904007232&locale=es_LA', 'facebook'],
+        ].map(([nombre, href, icono]) => {
           const enlace = documento!.createElement('a')
           enlace.href = href; enlace.target = '_blank'; enlace.rel = 'noopener noreferrer'; enlace.setAttribute('aria-label', nombre)
-          enlace.textContent = marca
+          const svg = documento!.createElementNS('http://www.w3.org/2000/svg', 'svg')
+          svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true')
+          if (icono === 'instagram') svg.innerHTML = '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.7" r="1" class="social-fill"/>'
+          if (icono === 'tiktok') svg.innerHTML = '<path d="M14.5 3v11.1a3.8 3.8 0 1 1-3.2-3.8"/><path d="M14.5 3c.8 2.8 2.4 4.3 5 4.7"/>'
+          if (icono === 'facebook') svg.innerHTML = '<path d="M14.2 21v-8h2.7l.4-3h-3.1V8.1c0-.9.3-1.6 1.7-1.6H17V3.8c-.4-.1-1.2-.2-2.2-.2-2.2 0-3.7 1.3-3.7 3.8V10H8.5v3h2.6v8"/>'
+          enlace.append(svg)
           return enlace
         }))
       }
