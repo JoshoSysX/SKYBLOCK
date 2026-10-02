@@ -1122,6 +1122,8 @@ const protectionEndsAt = document.getElementById('protectionEndsAt');
 const protectionPasswordEnabled = document.getElementById('protectionPasswordEnabled');
 const protectionPassword = document.getElementById('protectionPassword');
 const protectionPasswordField = document.getElementById('protectionPasswordField');
+const protectionPasswordToggle = document.getElementById('protectionPasswordToggle');
+const protectionPasswordMasked = document.getElementById('protectionPasswordMasked');
 const protectionAccentColor = document.getElementById('protectionAccentColor');
 const protectionColorValue = document.getElementById('protectionColorValue');
 const protectionDateField = document.getElementById('protectionDateField');
@@ -1177,6 +1179,10 @@ function populateProtection(data = {}) {
   protectionEndsAt.value = dateTimeLocal(protectionCurrent.finaliza_en);
   protectionPasswordEnabled.checked = Boolean(protectionCurrent.requiere_contrasena);
   protectionPassword.value = '';
+  protectionPassword.type = 'password';
+  protectionPasswordToggle.setAttribute('aria-label', 'Mostrar contraseña');
+  protectionPasswordToggle.setAttribute('aria-pressed', 'false');
+  protectionPasswordMasked.hidden = !protectionPasswordEnabled.checked;
   protectionAccentColor.value = /^#[0-9a-f]{6}$/i.test(protectionCurrent.color_acento || '') ? protectionCurrent.color_acento : '#ffffff';
   protectionRemoveBackground.checked = false;
   protectionPreviewBackgrounds.forEach((preview) => { preview.style.backgroundImage = protectionCurrent.fondo_url ? `url("${protectionCurrent.fondo_url}")` : ''; });
@@ -1186,6 +1192,7 @@ function populateProtection(data = {}) {
 [protectionTitle,protectionDescription,protectionEndsAt,protectionAccentColor].forEach((field) => field.addEventListener('input',renderProtectionPreview));
 protectionCountdown.addEventListener('change',() => { if (protectionCountdown.checked) { protectionPasswordEnabled.checked = false; protectionPassword.value = ''; } renderProtectionPreview(); });
 protectionPasswordEnabled.addEventListener('change',() => { if (protectionPasswordEnabled.checked) { protectionCountdown.checked = false; } renderProtectionPreview(); });
+protectionPasswordToggle.addEventListener('click',() => { const mostrar = protectionPassword.type === 'password'; protectionPassword.type = mostrar ? 'text' : 'password'; protectionPasswordToggle.setAttribute('aria-label', mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña'); protectionPasswordToggle.setAttribute('aria-pressed', String(mostrar)); });
 protectionActive.addEventListener('change',() => { const activo = protectionActive.checked; protectionStatus.textContent = activo ? 'Activando protección…' : 'Desactivando protección…'; parent.postMessage({ tipo:'SKYBLOCK_ADMIN_CAMBIAR_PROTECCION_ACTIVA', activo },location.origin); });
 protectionBackground.addEventListener('change',() => { const file = protectionBackground.files?.[0]; if (!file) return; if (protectionPreviewObjectUrl) URL.revokeObjectURL(protectionPreviewObjectUrl); protectionPreviewObjectUrl = URL.createObjectURL(file); protectionPreviewBackgrounds.forEach((preview) => { preview.style.backgroundImage = `url("${protectionPreviewObjectUrl}")`; }); document.getElementById('protectionBackgroundText').textContent = file.name; protectionRemoveBackground.checked = false; });
 protectionRemoveBackground.addEventListener('change',() => { if (protectionRemoveBackground.checked) { protectionBackground.value = ''; protectionPreviewBackgrounds.forEach((preview) => { preview.style.backgroundImage = ''; }); } else if (protectionCurrent.fondo_url) protectionPreviewBackgrounds.forEach((preview) => { preview.style.backgroundImage = `url("${protectionCurrent.fondo_url}")`; }); });

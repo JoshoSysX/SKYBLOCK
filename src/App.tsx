@@ -12,7 +12,7 @@ const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
-const LEGACY_BUILD = 'protection-modes-20261001'
+const LEGACY_BUILD = 'password-visibility-20261001'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   nombre: BRAND_UPPER,
@@ -31,6 +31,7 @@ function PantallaProteccion({ configuracion, alDesbloquear, alVencer }: { config
   const [contrasena, setContrasena] = useState('')
   const [errorContrasena, setErrorContrasena] = useState('')
   const [validando, setValidando] = useState(false)
+  const [mostrarContrasena, setMostrarContrasena] = useState(false)
   const vencimientoNotificado = useRef(false)
   useEffect(() => { const timer = window.setInterval(() => setAhora(Date.now()), 1000); return () => window.clearInterval(timer) }, [])
   useEffect(() => { if (!configuracion.requiere_contrasena) return; const clave = `skb-proteccion-${configuracion.actualizado_en || ''}`; if (sessionStorage.getItem(clave) === 'ok') alDesbloquear() }, [configuracion.actualizado_en, configuracion.requiere_contrasena, alDesbloquear])
@@ -50,7 +51,7 @@ function PantallaProteccion({ configuracion, alDesbloquear, alVencer }: { config
     <section className="proteccion-contenido">
       {mostrarReloj && <div className="proteccion-reloj" aria-label="Cuenta regresiva"><div><b>{String(tiempo.dias).padStart(2,'0')}</b><small>Días</small></div><i>:</i><div><b>{String(tiempo.horas).padStart(2,'0')}</b><small>Horas</small></div><i>:</i><div><b>{String(tiempo.minutos).padStart(2,'0')}</b><small>Minutos</small></div><i>:</i><div><b>{String(tiempo.segundos).padStart(2,'0')}</b><small>Segundos</small></div></div>}
       <span>SKYBLOCK STUDIO</span><h1>{configuracion.titulo || 'Volvemos pronto'}</h1>
-      {configuracion.requiere_contrasena && <form className="proteccion-clave" onSubmit={async (evento) => { evento.preventDefault(); setValidando(true); setErrorContrasena(''); const { data, error } = await supabase.rpc('verificar_contrasena_modo_proteccion', { p_contrasena: contrasena }); setValidando(false); if (error || !data) { setErrorContrasena('Contraseña incorrecta.'); return } sessionStorage.setItem(`skb-proteccion-${configuracion.actualizado_en || ''}`, 'ok'); alDesbloquear() }}><label>Contraseña de acceso<input type="password" value={contrasena} onChange={(evento) => setContrasena(evento.target.value)} autoComplete="current-password" required /></label><button type="submit" disabled={validando}>{validando ? 'Verificando…' : 'Ingresar'}</button>{errorContrasena && <small role="alert">{errorContrasena}</small>}</form>}
+      {configuracion.requiere_contrasena && <form className="proteccion-clave" onSubmit={async (evento) => { evento.preventDefault(); setValidando(true); setErrorContrasena(''); const { data, error } = await supabase.rpc('verificar_contrasena_modo_proteccion', { p_contrasena: contrasena }); setValidando(false); if (error || !data) { setErrorContrasena('Contraseña incorrecta.'); return } sessionStorage.setItem(`skb-proteccion-${configuracion.actualizado_en || ''}`, 'ok'); alDesbloquear() }}><label>Contraseña de acceso<span className="proteccion-input-clave"><input type={mostrarContrasena ? 'text' : 'password'} value={contrasena} onChange={(evento) => setContrasena(evento.target.value)} autoComplete="current-password" required /><button className="proteccion-ver-clave" type="button" onClick={() => setMostrarContrasena((visible) => !visible)} aria-label={mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={mostrarContrasena}>{mostrarContrasena ? 'Ocultar' : 'Ver'}<span aria-hidden="true">◉</span></button></span></label><button type="submit" disabled={validando}>{validando ? 'Verificando…' : 'Ingresar'}</button>{errorContrasena && <small role="alert">{errorContrasena}</small>}</form>}
       {configuracion.descripcion && <p>{configuracion.descripcion}</p>}
       {terminada && <small className="proteccion-finalizada">La cuenta regresiva terminó. Estamos abriendo el sitio…</small>}
     </section>
