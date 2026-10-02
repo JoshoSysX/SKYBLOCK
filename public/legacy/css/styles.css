@@ -1807,35 +1807,38 @@ footer[data-chapter] {
 
 /* No Restock: un único cuadro, un único título */
 .restock-section {
-  min-height: clamp(620px, 48vw, 820px);
+  min-height: clamp(520px, 39vw, 650px);
   display: grid;
-  grid-template-columns: 1.1fr .9fr;
+  grid-template-columns: minmax(0,1.18fr) minmax(330px,.82fr);
   align-items: stretch;
   background: #0d0e0f
 }
 
 .restock-main {
   min-height: 0;
-  padding: clamp(55px, 7vw, 115px);
+  padding: clamp(45px, 5.7vw, 92px);
   background:
-    linear-gradient(90deg, rgba(5, 6, 7, .34), rgba(5, 6, 7, .08)),
-    url('../assets/image/PORTADA RESTOCK.jpg') 30% center/cover no-repeat;
+    linear-gradient(90deg, rgba(5, 6, 7, .58) 0%, rgba(5, 6, 7, .24) 55%, rgba(5, 6, 7, .06)),
+    url('../assets/image/PORTADA RESTOCK.jpg') 35% center/cover no-repeat;
 }
 
 .restock-reason {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 24px;
-  padding: clamp(55px, 7vw, 115px) clamp(45px, 6vw, 95px);
+  gap: 31px;
+  padding:clamp(45px,5.7vw,82px) clamp(35px,4.5vw,70px);
   border-top: 0;
-  border-left: 0;
-  background: #000;
+  border-left: 1px solid #ffffff1c;
+  background: linear-gradient(135deg,#101112,#050606);
   backdrop-filter: none;
 }
 
 .restock-reason .story-number {
   align-self: auto;
+  color:#777a78;
+  font-size:9px;
+  letter-spacing:.18em;
 }
 
 .restock-reason .story-copy>span {
@@ -1846,6 +1849,17 @@ footer[data-chapter] {
   text-transform: uppercase;
   color: var(--accent);
 }
+
+.restock-main .light-button {
+  min-width:205px;
+  background:#f5f5f1;
+  border-color:#f5f5f1;
+  color:#101112;
+}
+
+.restock-main .light-button:hover { background:var(--accent); border-color:var(--accent); color:#101112; }
+.restock-reason .story-copy { max-width:450px; }
+.restock-reason .story-copy p { margin:0 0 18px; color:#b9bbb7; font-size:11px; line-height:1.8; }
 
 @media(max-width:800px) {
   .restock-section {
@@ -1861,8 +1875,8 @@ footer[data-chapter] {
   }
 
   .restock-reason {
-    border-left: 0;
-    border-top: 0;
+    border-left:0;
+    border-top:1px solid #ffffff1c;
     padding: 55px 35px
   }
 }
