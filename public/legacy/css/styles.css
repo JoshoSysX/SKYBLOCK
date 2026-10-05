@@ -959,6 +959,10 @@ footer {
     padding-bottom:28px;
   }
 
+  .home-page .light-page>#shop .product-image {
+    height:clamp(260px,21vw,430px);
+  }
+
 }
 
 .product {
