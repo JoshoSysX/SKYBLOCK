@@ -18,12 +18,21 @@
       /[&<>'"]/g,
       (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c],
     )
-  const limitedStock = (p) => {
-    if (!p.es_limitado || !Number.isFinite(Number(p.unidades_limitadas))) return ''
-    const available = !p.stock_por_talla && p.stock_disponible !== null && p.stock_disponible !== undefined && Number.isFinite(Number(p.stock_disponible))
+  const availableUnits = (p) => {
+    if (!p.es_limitado || !Number.isFinite(Number(p.unidades_limitadas))) return null
+    return !p.stock_por_talla && p.stock_disponible !== null && p.stock_disponible !== undefined && Number.isFinite(Number(p.stock_disponible))
       ? Math.max(0, Number(p.stock_disponible))
       : (p.tallas || []).reduce((total, size) => total + Math.max(0, Number(size.stock) || 0), 0)
+  }
+  const limitedStock = (p) => {
+    const available = availableUnits(p)
+    if (available === null) return ''
     return `<span class="limited-stock">Stock ${available}/${Number(p.unidades_limitadas)}</span>`
+  }
+  const featuredTag = (p) => {
+    const available = availableUnits(p)
+    if (!p.es_limitado) return ''
+    return `<span class="tag${available === 0 ? ' sold' : ''}">${available === 0 ? 'Agotado' : 'Edición limitada'}</span>`
   }
   const carouselImage = (url, width) => {
     try {
@@ -59,7 +68,7 @@
       .slice(0, 4)
       .map(
         (p) =>
-          `<article class="product" tabindex="0" role="link"><div class="product-image"><img src="${esc(img(p))}" alt="${esc(p.imagenes?.[0]?.texto_alternativo || p.nombre)}"></div><div class="product-copy"><h3>${esc(p.tipo?.nombre || 'Producto')} <span>${esc(p.nombre)}</span></h3><b>${money(p.precio, p.moneda)}</b><button class="buy">Ver producto <span>→</span></button></div></article>`,
+          `<article class="product" tabindex="0" role="link"><div class="product-image">${featuredTag(p)}<img src="${esc(img(p))}" alt="${esc(p.imagenes?.[0]?.texto_alternativo || p.nombre)}"></div><div class="product-copy"><h3>${esc(p.tipo?.nombre || 'Producto')} <span>${esc(p.nombre)}</span></h3><b>${money(p.precio, p.moneda)}</b><button class="buy">Ver producto <span>→</span></button></div></article>`,
       )
       .join('')
     ;[...g.children].forEach((card, i) => {
