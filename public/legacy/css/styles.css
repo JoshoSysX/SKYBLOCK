@@ -936,6 +936,19 @@ footer {
   gap: 14px
 }
 
+/* La colección destacada se extiende de borde a borde de la pantalla. */
+.home-page .light-page>#shop {
+  margin-inline:calc(clamp(25px, 6.5vw, 106px) * -1);
+}
+
+.home-page .light-page>#shop .section-head {
+  padding-inline:clamp(25px, 6.5vw, 106px);
+}
+
+.home-page .light-page>#shop .featured-grid {
+  gap:0;
+}
+
 .product {
   background: #e3e3e0
 }
