@@ -952,6 +952,18 @@ footer {
 .home-page .light-page>#shop .product-image { position:relative; }
 .home-page .light-page>#shop .product-image .tag { top:18px; left:18px; }
 
+@media(min-width:801px) {
+  /* La colección cabe en la primera pantalla; la siguiente sección empieza al desplazarse. */
+  .home-page .light-page>#shop {
+    min-height:calc(100svh - 62px);
+    padding-bottom:28px;
+  }
+
+  .home-page .light-page>#shop .product-image {
+    height:clamp(255px,20vw,390px);
+  }
+}
+
 .product {
   background: #e3e3e0
 }
