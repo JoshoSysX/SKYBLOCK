@@ -938,7 +938,11 @@ footer {
 
 .home-page .light-page>#shop .product-image { position:relative; }
 .home-page .light-page>#shop .product-image .tag { top:18px; left:18px; }
-.home-page .light-page>#shop + .restock-section { margin-top:clamp(85px,9vw,150px); }
+
+@media(min-width:801px) {
+  .home-page .light-page>#shop { min-height:calc(100svh - 62px); }
+  .home-page .light-page>#shop + .restock-section { margin-top:28px; }
+}
 
 .product {
   background: #e3e3e0
