@@ -960,9 +960,15 @@ footer {
   }
 
   .home-page .light-page>#shop .product-image {
-    height:clamp(260px,21vw,430px);
+    height:clamp(230px,17vw,340px);
   }
 
+}
+
+.home-page .light-page>#shop .product,
+.home-page .light-page>#shop .product:hover {
+  box-shadow:none;
+  transform:none;
 }
 
 .product {
