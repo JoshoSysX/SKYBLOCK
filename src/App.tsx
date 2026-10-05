@@ -12,7 +12,7 @@ const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
-const LEGACY_BUILD = 'featured-original-layout-20261005'
+const LEGACY_BUILD = 'restock-lower-20261005'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   nombre: BRAND_UPPER,
