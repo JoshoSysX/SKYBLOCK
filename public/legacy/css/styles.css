@@ -6441,6 +6441,8 @@ body.catalog-page,
 .site-footer .footer-brand:before{font-size:10px}
 .site-footer .footer-brand .brand{margin:0}
 .site-footer .brand small{font-size:.37em}
-.site-footer .footer-brand{margin:8px auto 22px;padding-inline:18px}
+.site-footer .footer-brand{margin:18px auto 30px;padding-inline:18px}
 .site-footer .footer-brand>p{margin:0!important}
 .site-footer .footer-col a:before{display:none}
+.site-footer .copyright{margin-top:20px}
+@media(max-width:620px){.site-footer .copyright{margin-top:0}}
