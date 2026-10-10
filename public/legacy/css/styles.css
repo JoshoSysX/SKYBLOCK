@@ -6438,6 +6438,9 @@ body.catalog-page,
 /* Alineación editorial del bloque de marca y de los enlaces. */
 .site-footer .footer-brand{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
 .site-footer .footer-brand:before{margin:0}
+.site-footer .footer-brand:before{font-size:10px}
 .site-footer .footer-brand .brand{margin:0}
+.site-footer .brand small{font-size:.37em}
+.site-footer .footer-brand{margin:8px auto 22px;padding-inline:18px}
 .site-footer .footer-brand>p{margin:0!important}
 .site-footer .footer-col a:before{display:none}
