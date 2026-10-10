@@ -717,7 +717,13 @@ export default function App() {
       if(e.data?.tipo==='SKYBLOCK_SOLICITAR_CONFIGURACION_PUBLICA'){
         e.source?.postMessage({tipo:'SKYBLOCK_CONFIGURACION_PUBLICA',turnstileSiteKey:import.meta.env.VITE_TURNSTILE_SITE_KEY||''},{targetOrigin:e.origin});return
       }
-      if (e.data?.tipo === 'SKYBLOCK_LOGOUT') { await supabase.auth.signOut(); if (frame.current?.contentWindow) frame.current.contentWindow.location.href = 'inicio.html'; return }
+      if (e.data?.tipo === 'SKYBLOCK_LOGOUT') {
+        await supabase.auth.signOut()
+        setAdminConAcceso(false)
+        history.replaceState(null, '', '/')
+        setRuta('inicio')
+        return
+      }
       if (e.data?.tipo === 'SKYBLOCK_LOGIN') {
         const { correo, contrasena } = e.data
         const { data, error } = await supabase.auth.signInWithPassword({ email: correo, password: contrasena })
