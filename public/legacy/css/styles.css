@@ -6421,3 +6421,12 @@ body.catalog-page,
 
 /* El crédito conserva el enlace, pero se integra visualmente al texto. */
 .site-footer .copyright a,.site-footer .copyright a:hover,.site-footer .copyright a:focus-visible{color:inherit;font:inherit;letter-spacing:inherit;text-transform:none;text-decoration:none}
+
+/* Pie más limpio: los bloques se organizan por espacio, no por líneas. */
+.site-footer{border-top:0}
+.site-footer:after{display:none}
+.site-footer .footer-brand{border:0}
+.site-footer .footer-col{padding-left:0;border-left:0}
+.site-footer .footer-col:before{display:none}
+.site-footer .copyright{border-top:0}
+.site-footer .social a:before{display:none}
