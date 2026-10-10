@@ -3,6 +3,24 @@ const mobileNav = document.getElementById('mobileNav');
 const securityContainer=document.getElementById('turnstileContainer');
 const turnstileToken=document.getElementById('turnstileToken');
 let turnstileWidgetId=null;
+const contactForm=document.getElementById('contactForm');
+const emailField=document.getElementById('contactEmailField');
+const phoneField=document.getElementById('contactPhoneField');
+const emailInput=contactForm.elements.correo;
+const phoneInput=contactForm.elements.telefono;
+
+function updateContactChannel() {
+  const channel=contactForm.elements.canalContacto.value;
+  const usePhone=channel==='telefono';
+  emailField.hidden=usePhone;
+  phoneField.hidden=!usePhone;
+  emailInput.required=!usePhone;
+  phoneInput.required=usePhone;
+  if(usePhone) emailInput.value=''; else phoneInput.value='';
+}
+
+contactForm.querySelectorAll('input[name="canalContacto"]').forEach(input=>input.addEventListener('change',updateContactChannel));
+updateContactChannel();
 
 function loadTurnstile(siteKey) {
   if(!siteKey){securityContainer.innerHTML='<span>La verificación estará disponible al publicar la página.</span>';return;}
@@ -17,7 +35,7 @@ menuButton.addEventListener('click', () => {
   menuButton.setAttribute('aria-expanded', String(open));
 });
 
-document.getElementById('contactForm').addEventListener('submit', (event) => {
+contactForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   if(!turnstileToken.value){document.getElementById('formStatus').textContent='Completa la verificación de seguridad.';return;}
@@ -32,11 +50,11 @@ addEventListener('message',(event)=>{
   if(event.origin!==location.origin)return;
   if(event.data?.tipo==='SKYBLOCK_CONFIGURACION_PUBLICA'){loadTurnstile(event.data.turnstileSiteKey);return;}
   if(event.data?.tipo!=='SKYBLOCK_CONTACTO_RESULTADO')return;
-  const form=document.getElementById('contactForm'),button=form.querySelector('button');
+  const form=contactForm,button=form.querySelector('button');
   document.getElementById('formStatus').textContent=event.data.mensaje;
   button.disabled=false;
   button.innerHTML=event.data.ok?'Mensaje enviado <span>✓</span>':'Enviar mensaje <span>→</span>';
-  if(event.data.ok)form.reset();
+  if(event.data.ok){form.reset();updateContactChannel();}
   turnstileToken.value='';
   if(window.turnstile&&turnstileWidgetId!==null)window.turnstile.reset(turnstileWidgetId);
 });

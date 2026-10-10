@@ -755,7 +755,10 @@ function renderInboxMessages() {
   if (!inboxMessages.some((message) => message.id === selectedInboxMessageId)) selectedInboxMessageId = inboxMessages[0].id;
   const selected = inboxMessages.find((message) => message.id === selectedInboxMessageId) || inboxMessages[0];
   inboxList.innerHTML = inboxMessages.map((message) => `<button type="button" class="${message.id === selected.id ? 'active' : ''}" data-inbox-message="${cleanText(message.id)}"><b>${cleanText(initials(message.nombre))}</b><span><strong>${cleanText(message.nombre || 'Sin nombre')}</strong><small>${cleanText(message.asunto || 'Consulta')}</small></span><time>${cleanText(messageDate(message.creado_en))}</time></button>`).join('');
-  inboxDetail.innerHTML = `<span>Contacto / ${cleanText(selected.estado || 'Nuevo')}</span><h2>${cleanText(selected.asunto || 'Consulta')}</h2><div><b>${cleanText(selected.nombre || 'Sin nombre')}</b><small>${cleanText(selected.correo || '')} · ${cleanText(messageDate(selected.creado_en))}</small></div><p>${cleanText(selected.mensaje || '')}</p>`;
+  const isPhoneContact = selected.canal_contacto === 'telefono';
+  const contactValue = isPhoneContact ? selected.telefono : selected.correo;
+  const contactLabel = isPhoneContact ? 'Teléfono' : 'Correo';
+  inboxDetail.innerHTML = `<span>Contacto / ${cleanText(selected.estado || 'Nuevo')}</span><h2>${cleanText(selected.asunto || 'Consulta')}</h2><div><b>${cleanText(selected.nombre || 'Sin nombre')}</b><small>${cleanText(contactLabel)}: ${cleanText(contactValue || 'Sin dato')} · ${cleanText(messageDate(selected.creado_en))}</small></div><p>${cleanText(selected.mensaje || '')}</p>`;
 }
 
 inboxList.addEventListener('click', (event) => {

@@ -45,8 +45,14 @@
       <form class="contact-form" id="contactForm">
         <div class="form-row">
           <label>Nombre<input name="nombre" type="text" placeholder="Tu nombre" required></label>
-          <label>Correo electrónico<input name="correo" type="email" placeholder="tu@correo.com" required></label>
+          <fieldset class="contact-preference">
+            <legend>¿Cómo te respondemos?</legend>
+            <label><input name="canalContacto" type="radio" value="correo" checked> Correo</label>
+            <label><input name="canalContacto" type="radio" value="telefono"> Teléfono</label>
+          </fieldset>
         </div>
+        <label id="contactEmailField">Correo electrónico<input name="correo" type="email" placeholder="tu@correo.com" autocomplete="email" required></label>
+        <label id="contactPhoneField" hidden>Número de teléfono<input name="telefono" type="tel" placeholder="Ej.: +51 904 604 842" autocomplete="tel" inputmode="tel"></label>
         <label>Motivo<select name="motivo" required><option value="">Selecciona una opción</option><option>Información de producto</option><option>Tallas y disponibilidad</option><option>Lanzamientos</option><option>Colaboraciones</option><option>Otro</option></select></label>
         <label>Mensaje<textarea name="mensaje" rows="6" placeholder="Cuéntanos cómo podemos ayudarte" required></textarea></label>
         <div class="contact-security" id="turnstileContainer"><span>Preparando verificación segura…</span></div>
@@ -65,6 +71,6 @@
     <div class="footer-col"><h4>Síguenos</h4><a href="https://www.instagram.com/skyblock_tpp?igsi=Zmp0NTF4dHFoZTY4" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://www.tiktok.com/@skyblock_tpp?_r=1&amp;_t=ZS-99E1WuDctnx" target="_blank" rel="noopener noreferrer">TikTok</a><a href="https://www.facebook.com/profile.php?id=61593904007232&amp;locale=es_LA" target="_blank" rel="noopener noreferrer">Facebook</a></div>
     <p class="copyright">© 2026 SKYBLOCK STUDIO<br>Todos los derechos reservados.<br><br>Diseñado y desarrollado por <a href="https://github.com/JoshoSysX" target="_blank" rel="noopener noreferrer">JoshoSysX</a><br>con pasión en Tarapoto.</p>
   </footer>
-  <script src="js/contacto.js"></script>
+  <script src="js/contacto.js?v=contact-channel-20261010"></script>
 </body>
 </html>

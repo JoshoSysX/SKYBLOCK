@@ -30,11 +30,15 @@ Deno.serve(async (request) => {
   try {
     const body=await request.json()
     const nombre=String(body?.nombre||'').trim()
+    const canalContacto=body?.canalContacto==='telefono'?'telefono':'correo'
     const correo=String(body?.correo||'').trim().toLowerCase()
+    const telefono=String(body?.telefono||'').trim()
     const asunto=String(body?.motivo||'').trim()
     const mensaje=String(body?.mensaje||'').trim()
     const turnstileToken=String(body?.turnstileToken||'')
-    if(nombre.length<2||nombre.length>120||!/^\S+@\S+\.\S+$/.test(correo)||correo.length>254||asunto.length<2||asunto.length>160||mensaje.length<10||mensaje.length>4000)
+    const validEmail=/^\S+@\S+\.\S+$/.test(correo)&&correo.length<=254
+    const validPhone=/^\+?[0-9][0-9\s().-]{6,19}$/.test(telefono)
+    if(nombre.length<2||nombre.length>120||(canalContacto==='correo'?!validEmail:!validPhone)||asunto.length<2||asunto.length>160||mensaje.length<10||mensaje.length>4000)
       return respond(origin,{ok:false,mensaje:'Revisa los datos y completa correctamente todos los campos.'},400)
     if(!turnstileToken||turnstileToken.length>2048)
       return respond(origin,{ok:false,mensaje:'Completa la verificación de seguridad.'},400)
@@ -60,7 +64,7 @@ Deno.serve(async (request) => {
     if((attempts.count||0)>=5) return respond(origin,{ok:false,mensaje:'Has enviado varios mensajes. Espera 15 minutos antes de intentarlo nuevamente.'},429)
     const attempt=await supabase.from('contacto_intentos').insert({ip_hash:ipHash})
     if(attempt.error) throw attempt.error
-    const saved=await supabase.from('mensajes_contacto').insert({nombre,correo,asunto,mensaje,estado:'nuevo'})
+    const saved=await supabase.from('mensajes_contacto').insert({nombre,correo:canalContacto==='correo'?correo:null,telefono:canalContacto==='telefono'?telefono:null,canal_contacto:canalContacto,asunto,mensaje,estado:'nuevo'})
     if(saved.error) throw saved.error
     void supabase.from('contacto_intentos').delete().lt('creado_en',new Date(Date.now()-24*60*60*1000).toISOString())
     return respond(origin,{ok:true,mensaje:'Gracias por escribirnos. Te responderemos en un máximo de 12–24 horas.'})
