@@ -6446,3 +6446,8 @@ body.catalog-page,
 .site-footer .footer-col a:before{display:none}
 .site-footer .copyright{margin-top:20px}
 @media(max-width:620px){.site-footer .copyright{margin-top:0}}
+
+/* El cierre de sesión nunca debe quedar fuera de la pantalla del panel. */
+.admin-sidebar{box-sizing:border-box}
+.admin-menu{min-height:0;flex:1;overflow-y:auto;scrollbar-width:thin}
+.admin-sidebar-foot{flex:0 0 auto;margin-top:14px;background:#0b0c0d}
