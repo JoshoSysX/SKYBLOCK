@@ -1,5 +1,7 @@
 ;(() => {
-  const storageKey = 'skb_cookie_preferences_v1'
+  // Nueva versión del aviso: pedimos la elección de nuevo tras corregir su carga.
+  // Después de esta primera vez la decisión continúa guardada normalmente.
+  const storageKey = 'skb_cookie_preferences_v2'
   const getMeasurementId = () => {
     try {
       return String(window.SKYBLOCK_GA_MEASUREMENT_ID || window.top?.SKYBLOCK_GA_MEASUREMENT_ID || document.documentElement.dataset.gaMeasurementId || '').trim()
