@@ -13,4 +13,17 @@
   consent.src = 'js/cookie-consent.js?v=20261010-4'
   consent.async = false
   document.head.appendChild(consent)
+
+  // La navegación pública la controla el shell. Interceptarla al capturar el clic
+  // evita que el iframe cargue primero la página anterior y luego se corrija.
+  document.addEventListener('click', (event) => {
+    const link = event.target instanceof Element ? event.target.closest('a[href]') : null
+    if (!link || link.target === '_blank' || event.defaultPrevented) return
+    const target = new URL(link.href, location.href)
+    if (target.origin !== location.origin || !target.pathname.startsWith('/legacy/') || !target.pathname.endsWith('.html')) return
+    const page = target.pathname.split('/').pop()?.replace(/\.html$/, '') || 'inicio'
+    event.preventDefault()
+    event.stopPropagation()
+    window.top.postMessage({ tipo:'SKYBLOCK_NAVEGAR', pagina:page, search:target.search, hash:target.hash }, location.origin)
+  }, true)
 })()

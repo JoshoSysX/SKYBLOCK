@@ -439,6 +439,14 @@ export default function App() {
     const recibir = async (e: MessageEvent) => {
       if (e.origin !== location.origin) return
       if (e.data?.tipo === 'SKYBLOCK_SOLICITAR_DATOS') { void enviar(String(e.data.dispositivoId || '')); return }
+      if (e.data?.tipo === 'SKYBLOCK_NAVEGAR') {
+        const pagina = String(e.data.pagina || '')
+        if (!paginas.has(pagina)) return
+        const destino = urlPublica(pagina, String(e.data.search || ''), pagina === 'admin' ? String(e.data.hash || '') : '')
+        if (`${location.pathname}${location.search}${location.hash}` !== destino) history.pushState(null, '', destino)
+        setRuta(pagina)
+        return
+      }
       if (e.data?.tipo === 'SKYBLOCK_ADMIN_CAMBIAR_VISTA') {
         const vista = String(e.data.vista || '')
         const vistasValidas = new Set(['resumen','productos','colecciones','verificacion','posts','correos','mensajes','proteccion'])
