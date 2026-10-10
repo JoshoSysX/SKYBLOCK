@@ -8,12 +8,24 @@ addEventListener('scroll',()=>nav.classList.toggle('fixed',scrollY>40));
 menuButton.addEventListener('click',()=>{const open=mobileNav.classList.toggle('open');document.body.classList.toggle('lock',open);menuButton.setAttribute('aria-expanded',String(open))});
 const esc=(value='')=>{const node=document.createElement('span');node.textContent=String(value);return node.innerHTML};
 const images=(post)=>[...(post.imagenes||[])].sort((a,b)=>Number(a.posicion||0)-Number(b.posicion||0));
+const mediaFormat=(post)=>['square','landscape','portrait'].includes(post.formato_media)?post.formato_media:'portrait';
 const createDeviceId=()=>{if(crypto?.randomUUID)return crypto.randomUUID();return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,char=>{const value=Math.random()*16|0;return(char==='x'?value:(value&3|8)).toString(16)})};
 const deviceId=()=>{let id=localStorage.getItem(deviceKey);if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id||'')){id=createDeviceId();localStorage.setItem(deviceKey,id)}return id};
 const publicPostsUrl=()=>`${location.origin}/posts`;
 async function copyLink(url){
   if(navigator.clipboard?.writeText){try{await navigator.clipboard.writeText(url);return true}catch{}}
   const field=document.createElement('textarea');field.value=url;field.setAttribute('readonly','');field.style.cssText='position:fixed;opacity:0;pointer-events:none';document.body.append(field);field.select();const copied=document.execCommand('copy');field.remove();return copied;
+}
+
+function preparePostMediaLoaders(root=postsFeed){
+  root.querySelectorAll('.post-carousel-slide').forEach(slide=>{
+    const image=slide.querySelector('img');
+    if(!image)return;
+    const finish=()=>{slide.classList.add('is-loaded');slide.setAttribute('aria-busy','false')};
+    if(image.complete){finish();return}
+    image.addEventListener('load',finish,{once:true});
+    image.addEventListener('error',finish,{once:true});
+  });
 }
 
 function applyProfile(raw={}) {
@@ -31,9 +43,10 @@ function render(posts=[],profile={},reacciones=[]){
   postsFeed.innerHTML=posts.length?posts.map(post=>{
     const media=images(post),date=post.publicado_en?new Intl.DateTimeFormat('es-PE',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(post.publicado_en)).toUpperCase():'';
     const reaccion=resumen.get(String(post.id))||{total:0,marcado:false};
-    const carousel=media.length?`<div class="post-carousel" data-carousel><div class="post-carousel-track">${media.map((item)=>`<img src="${esc(item.url_segura)}" alt="${esc(item.texto_alternativo||post.titulo)}" loading="lazy" decoding="async">`).join('')}</div>${media.length>1?`<button class="post-carousel-arrow previous" type="button" data-carousel-previous aria-label="Foto anterior">←</button><button class="post-carousel-arrow next" type="button" data-carousel-next aria-label="Siguiente foto">→</button><div class="post-carousel-count">1 / ${media.length}</div>`:''}</div>`:'';
+    const carousel=media.length?`<div class="post-carousel" data-carousel data-media-format="${mediaFormat(post)}"><div class="post-carousel-track">${media.map((item)=>`<figure class="post-carousel-slide" aria-busy="true"><img src="${esc(item.url_segura)}" alt="${esc(item.texto_alternativo||post.titulo)}" loading="lazy" decoding="async"><figcaption class="post-media-loader" role="status">Cargando publicación</figcaption></figure>`).join('')}</div>${media.length>1?`<button class="post-carousel-arrow previous" type="button" data-carousel-previous aria-label="Foto anterior">←</button><button class="post-carousel-arrow next" type="button" data-carousel-next aria-label="Siguiente foto">→</button><div class="post-carousel-count">1 / ${media.length}</div>`:''}</div>`:'';
     return `<article class="studio-post" data-post-id="${esc(post.id)}"><header><div class="post-avatar${profile.avatar_url?' has-image':''}"${profile.avatar_url?` style="background-image:url('${esc(profile.avatar_url)}')"`:''}>SB</div><div><b>${esc(profile.nombre||defaultProfile.nombre)}</b><span>${esc(date)}</span></div></header><div class="post-copy"><h2>${esc(post.titulo)}</h2>${post.descripcion||post.contenido?`<p>${esc(post.descripcion||post.contenido)}</p>`:''}</div>${carousel}<footer><button type="button" class="post-action${reaccion.marcado?' liked':''}" data-like-post="${esc(post.id)}" aria-pressed="${reaccion.marcado}"><span aria-hidden="true">${reaccion.marcado?'♥':'♡'}</span><strong class="post-like-count">${reaccion.total}</strong><em>${reaccion.marcado?'Te gusta':'Me gusta'}</em></button><button type="button" class="post-action" data-share-post="${esc(post.id)}"><span aria-hidden="true">↗</span><em>Compartir</em></button></footer></article>`
   }).join(''):'<div class="posts-empty"><h2>Aún no hay publicaciones.</h2><p>Las historias aparecerán aquí cuando se publiquen desde el panel.</p></div>';
+  preparePostMediaLoaders();
 }
 
 postsFeed.addEventListener('click',async(event)=>{

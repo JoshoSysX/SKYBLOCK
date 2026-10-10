@@ -2,6 +2,7 @@ const views = [...document.querySelectorAll('.admin-view')];
 const viewButtons = [...document.querySelectorAll('[data-admin-view]')];
 const sidebar = document.getElementById('adminSidebar');
 const menuToggle = document.getElementById('adminMenuToggle');
+const menuBackdrop = document.getElementById('adminMenuBackdrop');
 const modal = document.getElementById('productModal');
 const toast = document.getElementById('adminToast');
 const stockAdjustmentModal = document.getElementById('stockAdjustmentModal');
@@ -29,11 +30,21 @@ function guardarEnSupabase(tipo, datos) {
 
 document.getElementById('adminDate').textContent = new Intl.DateTimeFormat('es-PE', { dateStyle: 'long' }).format(new Date());
 
+function setAdminMenuOpen(open) {
+  const isOpen = Boolean(open);
+  sidebar.classList.toggle('open', isOpen);
+  document.body.classList.toggle('admin-menu-open', isOpen);
+  menuToggle.setAttribute('aria-expanded', String(isOpen));
+  menuToggle.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
+  menuBackdrop.setAttribute('aria-hidden', String(!isOpen));
+  menuBackdrop.tabIndex = isOpen ? 0 : -1;
+}
+
 function showView(name, { updateHistory = true, scroll = true } = {}) {
   if (!views.some((view) => view.dataset.view === name)) name = 'resumen';
   views.forEach((view) => view.classList.toggle('active', view.dataset.view === name));
   document.querySelectorAll('.admin-menu [data-admin-view]').forEach((button) => button.classList.toggle('active', button.dataset.adminView === name));
-  sidebar.classList.remove('open');
+  setAdminMenuOpen(false);
   if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
   if (updateHistory) {
     history.replaceState(null, '', `${location.pathname}${location.search}#${name}`);
@@ -45,7 +56,14 @@ viewButtons.forEach((button) => button.addEventListener('click', (event) => {
   event.preventDefault();
   showView(button.dataset.adminView);
 }));
-menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+menuToggle.addEventListener('click', () => setAdminMenuOpen(!sidebar.classList.contains('open')));
+menuBackdrop.addEventListener('click', () => setAdminMenuOpen(false));
+addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && sidebar.classList.contains('open')) {
+    setAdminMenuOpen(false);
+    menuToggle.focus();
+  }
+});
 const initialAdminView = location.hash.slice(1);
 showView(initialAdminView || 'resumen', { updateHistory:false, scroll:false });
 addEventListener('hashchange', () => showView(location.hash.slice(1) || 'resumen', { updateHistory:false }));
@@ -152,7 +170,8 @@ function renderProducts(updateDashboard = true) {
     const stockLabel = product.blocked ? 'Bloqueado' : product.stockUnlimited ? '' : stock > 0 ? `${limitedCounter}${usesStockBySize(product) ? ` · ${stockBySize}` : ''}` : '';
     const stockActions = product.stockUnlimited ? '' : `<button type="button" class="admin-product-stock add" data-adjust-stock="add" data-product-id="${product.id}">+ Stock</button>${stock > 0 ? `<button type="button" class="admin-product-stock remove" data-adjust-stock="remove" data-product-id="${product.id}">− Stock</button>` : ''}`;
     const stockStatus = stockLabel ? `<em class="${product.blocked ? 'blocked' : stock <= 5 ? 'low' : ''}">${stockLabel}</em>` : '<span class="admin-stock-empty" aria-hidden="true"></span>';
-    return `<article class="${product.blocked ? 'is-blocked' : ''}"><img src="${product.blocked ? 'assets/image/skb-bloqueado.png' : product.image}" alt="${product.blocked ? `Producto ${product.name} bloqueado` : product.name}"><div><b>${product.name}</b><span>SKB — ${product.collection}</span><small>${String(product.type).toUpperCase()} · ${availableSizes}</small></div><strong>${money(product.price)}</strong>${stockStatus}${product.limited ? '<i>Limitada</i>' : '<i class="standard">Regular</i>'}<div class="admin-product-actions">${stockActions}<button type="button" class="admin-product-lock ${product.blocked ? 'unlock' : ''}" data-toggle-product="${product.id}">${product.blocked ? 'Desbloquear' : 'Bloquear'}</button><button type="button" data-edit-product="${product.id}" aria-label="Editar ${product.name}">Editar</button><button type="button" class="admin-product-delete" data-delete-product="${product.id}" aria-label="Eliminar ${product.name}">Eliminar</button></div></article>`;
+    const priceLabel = Number(product.discountPercent || 0) > 0 ? `<span class="admin-product-regular-price">${money(product.regularPrice)}</span>${money(product.price)}<small class="admin-product-discount-badge">−${Number(product.discountPercent).toFixed(0)}%</small>` : money(product.price);
+    return `<article class="${product.blocked ? 'is-blocked' : ''}"><img src="${product.blocked ? 'assets/image/skb-bloqueado.png' : product.image}" alt="${product.blocked ? `Producto ${product.name} bloqueado` : product.name}"><div><b>${product.name}</b><span>SKB — ${product.collection}</span><small>${String(product.type).toUpperCase()} · ${availableSizes}</small></div><strong>${priceLabel}</strong>${stockStatus}${product.limited ? '<i>Limitada</i>' : '<i class="standard">Regular</i>'}<div class="admin-product-actions">${stockActions}<button type="button" class="admin-product-lock ${product.blocked ? 'unlock' : ''}" data-toggle-product="${product.id}">${product.blocked ? 'Desbloquear' : 'Bloquear'}</button><button type="button" data-edit-product="${product.id}" aria-label="Editar ${product.name}">Editar</button><button type="button" class="admin-product-delete" data-delete-product="${product.id}" aria-label="Eliminar ${product.name}">Eliminar</button></div></article>`;
   }).join('') || '<p class="admin-empty-products">No hay productos que coincidan con la búsqueda.</p>';
   document.getElementById('adminProductCount').textContent = products.length;
   const publishedProducts = document.getElementById('adminPublishedProducts');
@@ -192,6 +211,37 @@ function syncLimitedStockFields() {
   });
 }
 
+function syncProductDiscount() {
+  const regularInput = document.getElementById('productPrice');
+  const active = document.getElementById('productDiscountActive').checked;
+  const mode = document.getElementById('productDiscountMode').value;
+  const fields = document.getElementById('productDiscountFields');
+  const percentField = document.getElementById('productDiscountPercentField');
+  const saleField = document.getElementById('productDiscountSaleField');
+  const percentInput = document.getElementById('productDiscountPercent');
+  const saleInput = document.getElementById('productDiscountSalePrice');
+  const summary = document.getElementById('productDiscountSummary');
+  fields.hidden = !active;
+  percentField.hidden = !active || mode !== 'percent';
+  saleField.hidden = !active || mode !== 'sale';
+  if (!active) { summary.textContent = ''; return { regular:Number(regularInput.value || 0), price:Number(regularInput.value || 0), percent:0 }; }
+  const regular = Number(regularInput.value);
+  if (!Number.isFinite(regular) || regular <= 0) { summary.textContent = 'Primero indica un precio regular válido.'; return { regular:0, price:0, percent:0 }; }
+  let percent = Number(percentInput.value || 0);
+  let price = Number(saleInput.value || regular);
+  if (mode === 'percent') {
+    percent = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
+    price = Math.max(0, regular * (1 - percent / 100));
+    saleInput.value = price.toFixed(2);
+  } else {
+    price = Math.max(0, Math.min(regular, Number.isFinite(price) ? price : regular));
+    percent = regular ? (1 - price / regular) * 100 : 0;
+    percentInput.value = percent.toFixed(2);
+  }
+  summary.textContent = percent > 0 ? `Precio final: ${money(price)} · Ahorras ${money(regular - price)} (${percent.toFixed(2)}%).` : 'El descuento debe ser mayor a 0%.';
+  return { regular, price, percent };
+}
+
 function openProductEditor(product = null) {
   if (!product && collections.length === 0) {
     toast.textContent = 'Primero debes crear una colección.';
@@ -209,10 +259,16 @@ function openProductEditor(product = null) {
   if (product?.collection && !collectionNames.includes(product.collection)) collectionNames.push(product.collection);
   productCollectionSelect.innerHTML = collectionNames.map((name) => `<option value="${name}">${name}</option>`).join('');
   productCollectionSelect.value = product?.collection || collectionNames[0] || '';
-  document.getElementById('productPrice').value = product?.price ?? '';
+  document.getElementById('productPrice').value = product?.regularPrice ?? product?.price ?? '';
+  document.getElementById('productDiscountActive').checked = Number(product?.discountPercent || 0) > 0;
+  document.getElementById('productDiscountMode').value = 'percent';
+  document.getElementById('productDiscountPercent').value = Number(product?.discountPercent || 0) || '';
+  document.getElementById('productDiscountSalePrice').value = product?.price ?? '';
+  syncProductDiscount();
   document.getElementById('productDescription').value = product?.description || '';
   document.getElementById('productMaterials').value = product?.materials || '';
   document.getElementById('productLimited').checked = Boolean(product?.limited);
+  document.getElementById('productSoldOut').checked = Boolean(product?.soldOut);
   document.getElementById('productStockBySize').checked = usesStockBySize(product);
   document.getElementById('productStockUnlimited').checked = product ? Boolean(product.stockUnlimited) : true;
   document.getElementById('productStockSingle').checked = product ? !usesStockBySize(product) && !product.stockUnlimited : false;
@@ -364,6 +420,11 @@ document.getElementById('stockAdjustmentForm').addEventListener('submit', (event
 document.getElementById('productLimited').addEventListener('change',(event) => {
   syncLimitedStockFields();
 });
+document.getElementById('productDiscountActive').addEventListener('change', () => syncProductDiscount());
+document.getElementById('productDiscountMode').addEventListener('change', syncProductDiscount);
+document.getElementById('productDiscountPercent').addEventListener('input', syncProductDiscount);
+document.getElementById('productDiscountSalePrice').addEventListener('input', syncProductDiscount);
+document.getElementById('productPrice').addEventListener('input', () => syncProductDiscount());
 document.querySelectorAll('input[name="productStockMode"]').forEach((input) => input.addEventListener('change', syncLimitedStockFields));
 sizeOptions.forEach((size) => document.getElementById(`size${size.id}Available`).addEventListener('change', syncLimitedStockFields));
 
@@ -437,16 +498,21 @@ document.getElementById('adminProductForm').addEventListener('submit', (event) =
     return;
   }
   const id = document.getElementById('productId').value || `product-${Date.now()}`;
+  const discount = syncProductDiscount();
+  if (!Number.isFinite(discount.regular) || discount.regular <= 0) { status.textContent = 'Indica un precio regular válido.'; return; }
   const product = {
     id,
     name:document.getElementById('productName').value.trim(),
     type:document.getElementById('productType').value,
     collection:document.getElementById('productCollection').value,
-    price:Number(document.getElementById('productPrice').value),
+    price:discount.price,
+    regularPrice:discount.regular,
+    discountPercent:discount.percent,
     description:document.getElementById('productDescription').value.trim(),
     materials:document.getElementById('productMaterials').value.trim(),
     sizes:selectedSizes,
     limited:isLimited,
+    soldOut:document.getElementById('productSoldOut').checked,
     limitedUnits:isLimited ? limitedUnits : null,
     stockAvailable:!stockUnlimited && !stockBySize ? stockAvailable : null,
     stockBySize:!stockUnlimited && stockBySize,
@@ -797,9 +863,30 @@ const postForm = document.getElementById('adminPostForm');
 const postImageInput = document.getElementById('postImage');
 const postPreview = document.getElementById('postImagePreview');
 const postModal = document.getElementById('postModal');
+const postMediaFormatInput = document.getElementById('postMediaFormat');
+const postFormatOptions = [...document.querySelectorAll('[data-post-format-option]')];
 let postImageData = [];
 let adminPosts = [];
 const adminFeedProfile = { nombre:'SKYBLOCK STUDIO', biografia:'', avatar_url:'', portada_url:'' };
+const postMediaFormats = new Set(['square','landscape','portrait']);
+const selectedPostMediaFormat = () => postMediaFormatInput.value || 'portrait';
+const normalizePostMediaFormat = (format) => postMediaFormats.has(format) ? format : 'portrait';
+function setPostMediaFormat(format) {
+  const next = normalizePostMediaFormat(format);
+  postMediaFormatInput.value = next;
+  postFormatOptions.forEach((option) => {
+    const selected = option.dataset.postFormatOption === next;
+    option.classList.toggle('active', selected);
+    option.setAttribute('aria-pressed', String(selected));
+  });
+}
+function renderPostPreviewMedia() {
+  const format = normalizePostMediaFormat(selectedPostMediaFormat());
+  postPreview.dataset.mediaFormat = format;
+  postPreview.innerHTML = postImageData.length
+    ? `<div class="post-carousel-track">${postImageData.map((image) => `<figure class="post-carousel-slide is-loaded"><img src="${image}" alt="Vista previa del post"></figure>`).join('')}</div>${postImageData.length > 1 ? `<div class="post-carousel-count">1 / ${postImageData.length}</div>` : ''}`
+    : '<div class="post-preview-empty">Vista previa de las fotografías</div>';
+}
 
 function renderAdminFeedProfile() {
   const name=document.getElementById('adminPostsProfileName'),bio=document.getElementById('adminPostsProfileBio'),avatar=document.getElementById('adminPostsProfileAvatar'),cover=document.getElementById('adminPostsProfileCover'),count=document.getElementById('adminPostsProfileCount');
@@ -816,7 +903,7 @@ function renderAdminPosts() {
   const posts = storedPosts();
   document.getElementById('adminPostCount').textContent = posts.length;
   renderAdminFeedProfile();
-  document.getElementById('adminPostList').innerHTML = posts.map((post) => `<article class="admin-feed-post"><header><div class="admin-feed-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>${cleanText(post.date)}</span></div><button class="admin-post-more" type="button" data-post-menu="${post.id}" aria-label="Opciones de ${cleanText(post.title)}" aria-expanded="false">•••</button><div class="admin-post-menu" id="post-menu-${post.id}" hidden><button type="button" data-edit-post="${post.id}">Editar</button><button type="button" data-delete-post="${post.id}">Eliminar</button></div></header><div class="admin-feed-copy"><h3>${cleanText(post.title)}</h3>${post.description ? `<p>${cleanText(post.description)}</p>` : ''}</div>${post.images.length ? `<div class="admin-feed-media ${post.images.length === 1 ? 'is-single' : ''}">${post.images.slice(0,3).map((item) => `<img src="${item.url}" alt="${cleanText(item.alt || post.title)}">`).join('')}${post.images.length > 3 ? `<b>+${post.images.length - 3}</b>` : ''}</div>` : ''}</article>`).join('') || '<p class="admin-empty-products">Aún no hay posts. Crea la primera publicación.</p>';
+  document.getElementById('adminPostList').innerHTML = posts.map((post) => { const format=normalizePostMediaFormat(post.mediaFormat); return `<article class="admin-feed-post"><header><div class="admin-feed-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>${cleanText(post.date)}</span></div><button class="admin-post-more" type="button" data-post-menu="${post.id}" aria-label="Opciones de ${cleanText(post.title)}" aria-expanded="false">•••</button><div class="admin-post-menu" id="post-menu-${post.id}" hidden><button type="button" data-edit-post="${post.id}">Editar</button><button type="button" data-delete-post="${post.id}">Eliminar</button></div></header><div class="admin-feed-copy"><h3>${cleanText(post.title)}</h3>${post.description ? `<p>${cleanText(post.description)}</p>` : ''}</div>${post.images.length ? `<div class="admin-feed-media ${post.images.length === 1 ? 'is-single' : ''}" data-media-format="${format}">${post.images.slice(0,3).map((item) => `<img src="${item.url}" alt="${cleanText(item.alt || post.title)}">`).join('')}${post.images.length > 3 ? `<b>+${post.images.length - 3}</b>` : ''}</div>` : ''}</article>`; }).join('') || '<p class="admin-empty-products">Aún no hay posts. Crea la primera publicación.</p>';
 }
 renderAdminPosts();
 
@@ -841,14 +928,16 @@ postImageInput.addEventListener('change', () => {
     status.textContent = files.length > 10 ? 'Puedes seleccionar como máximo 10 fotografías.' : `Cada fotografía debe pesar como máximo ${MAX_IMAGE_SIZE_MB} MB.`;
     return;
   }
-  Promise.all(files.map((file) => new Promise((resolve) => { const reader = new FileReader(); reader.addEventListener('load', () => resolve(reader.result)); reader.readAsDataURL(file); }))).then((images) => { postImageData = images; postPreview.innerHTML = images.map((image) => `<img src="${image}" alt="Vista previa del post">`).join(''); document.getElementById('postUploadText').textContent = `${files.length} fotografía${files.length === 1 ? '' : 's'} seleccionada${files.length === 1 ? '' : 's'}`; status.textContent = ''; });
+  Promise.all(files.map((file) => new Promise((resolve) => { const reader = new FileReader(); reader.addEventListener('load', () => resolve(reader.result)); reader.readAsDataURL(file); }))).then((images) => { postImageData = images; renderPostPreviewMedia(); document.getElementById('postUploadText').textContent = `${files.length} fotografía${files.length === 1 ? '' : 's'} seleccionada${files.length === 1 ? '' : 's'}`; status.textContent = ''; });
 });
+postFormatOptions.forEach((option) => option.addEventListener('click', () => { setPostMediaFormat(option.dataset.postFormatOption); renderPostPreviewMedia(); }));
 
 function resetPostEditor(message = '') {
   postForm.reset();
+  setPostMediaFormat('portrait');
   document.getElementById('postEditId').value = '';
   postImageData = [];
-  postPreview.innerHTML = '<span>Vista previa de la fotografía</span>';
+  renderPostPreviewMedia();
   document.getElementById('postUploadText').textContent = 'Seleccionar fotografías';
   document.getElementById('previewPostTitle').textContent = 'Título de la publicación';
   document.getElementById('previewPostDescription').textContent = 'La descripción del post aparecerá aquí mientras escribes.';
@@ -863,7 +952,9 @@ function editPost(post) {
   document.getElementById('postDescription').value = post.description;
   document.getElementById('postAlt').value = post.alt;
   postImageData = post.images.map((image) => image.url);
-  postPreview.innerHTML = post.images.map((image) => `<img src="${image.url}" alt="${cleanText(image.alt || post.alt)}">`).join('');
+  const format = normalizePostMediaFormat(post.mediaFormat);
+  setPostMediaFormat(format);
+  renderPostPreviewMedia();
   document.getElementById('previewPostTitle').textContent = post.title;
   document.getElementById('previewPostDescription').textContent = post.description;
   document.getElementById('postUploadText').textContent = 'Cambiar fotografías (opcional)';
@@ -905,6 +996,7 @@ postForm.addEventListener('submit', (event) => {
     titulo: document.getElementById('postTitle').value.trim(),
     descripcion: document.getElementById('postDescription').value.trim(),
     alt: document.getElementById('postAlt').value.trim(),
+    formatoMedia: normalizePostMediaFormat(selectedPostMediaFormat()),
     archivos
   };
   document.getElementById('savePostButton').disabled = true;
@@ -924,6 +1016,7 @@ window.addEventListener('message',(event) => {
         alt:imagen?.texto_alternativo || post.titulo,
         image:imagen?.url_segura || '',
         images:[...(post.imagenes || [])].sort((a,b) => Number(a.posicion || 0) - Number(b.posicion || 0)).map((item) => ({ url:item.url_segura || '', alt:item.texto_alternativo || post.titulo })),
+        mediaFormat:normalizePostMediaFormat(post.formato_media),
         date:new Intl.DateTimeFormat('es-PE',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(post.publicado_en || post.creado_en)).toUpperCase()
       };
     });
@@ -1126,6 +1219,8 @@ const protectionPasswordToggle = document.getElementById('protectionPasswordTogg
 const protectionPasswordMasked = document.getElementById('protectionPasswordMasked');
 const protectionAccentColor = document.getElementById('protectionAccentColor');
 const protectionColorValue = document.getElementById('protectionColorValue');
+const protectionBackgroundBlur = document.getElementById('protectionBackgroundBlur');
+const protectionBackgroundBlurValue = document.getElementById('protectionBackgroundBlurValue');
 const protectionDateField = document.getElementById('protectionDateField');
 const protectionBackground = document.getElementById('protectionBackground');
 const protectionRemoveBackground = document.getElementById('protectionRemoveBackground');
@@ -1137,7 +1232,7 @@ const protectionPreviewTitles = [...document.querySelectorAll('[data-protection-
 const protectionPreviewDescriptions = [...document.querySelectorAll('[data-protection-preview-description]')];
 const protectionPreviewClocks = [...document.querySelectorAll('[data-protection-preview-clock]')];
 const protectionPreviewPasswords = [...document.querySelectorAll('[data-protection-preview-password]')];
-let protectionCurrent = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null, color_acento:'#ffffff', requiere_contrasena:false };
+let protectionCurrent = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null, color_acento:'#ffffff', desenfoque_fondo:4, requiere_contrasena:false };
 let protectionPreviewObjectUrl = '';
 const dateTimeLocal = (value) => { if (!value) return ''; const date = new Date(value); const offset = date.getTimezoneOffset() * 60000; return new Date(date.getTime() - offset).toISOString().slice(0,16); };
 const minimumProtectionDate = () => { const date = new Date(Date.now() + 60000); date.setSeconds(0, 0); return dateTimeLocal(date.toISOString()); };
@@ -1162,6 +1257,9 @@ function renderProtectionPreview() {
   protectionPreviewPasswords.forEach((preview) => preview.hidden = !protectionPasswordEnabled.checked);
   protectionPreviewClocks.forEach((preview) => { preview.classList.toggle('hidden', !protectionCountdown.checked); if (protectionCountdown.checked) { const tiempo = previewCountdown(); Object.entries(tiempo).forEach(([unidad, valor]) => { const numero = preview.querySelector(`[data-clock="${unidad}"]`); if (numero) numero.textContent = valor; }); } });
   protectionPreviews.forEach((preview) => preview.style.setProperty('--proteccion-texto', protectionAccentColor.value || '#ffffff'));
+  const desenfoque = Math.min(20, Math.max(0, Number(protectionBackgroundBlur.value) || 0));
+  protectionPreviews.forEach((preview) => preview.style.setProperty('--proteccion-desenfoque', `${desenfoque}px`));
+  protectionBackgroundBlurValue.textContent = `${desenfoque} px`;
   protectionColorValue.textContent = (protectionAccentColor.value || '#ffffff').toUpperCase();
   protectionColorValue.style.background = protectionAccentColor.value || '#ffffff';
   const hex = (protectionAccentColor.value || '#ffffff').slice(1); const luminancia = (parseInt(hex.slice(0,2),16)*299 + parseInt(hex.slice(2,4),16)*587 + parseInt(hex.slice(4,6),16)*114) / 1000;
@@ -1186,12 +1284,13 @@ function populateProtection(data = {}) {
   protectionPasswordToggle.setAttribute('aria-pressed', 'false');
   protectionPasswordMasked.hidden = !protectionPasswordEnabled.checked;
   protectionAccentColor.value = /^#[0-9a-f]{6}$/i.test(protectionCurrent.color_acento || '') ? protectionCurrent.color_acento : '#ffffff';
+  protectionBackgroundBlur.value = String(Math.min(20, Math.max(0, Number(protectionCurrent.desenfoque_fondo ?? 4) || 0)));
   protectionRemoveBackground.checked = false;
   protectionPreviewBackgrounds.forEach((preview) => { preview.style.backgroundImage = protectionCurrent.fondo_url ? `url("${protectionCurrent.fondo_url}")` : ''; });
   document.getElementById('protectionBackgroundText').textContent = protectionCurrent.fondo_url ? 'Cambiar imagen de fondo' : 'Elegir imagen de fondo';
   renderProtectionPreview();
 }
-[protectionTitle,protectionDescription,protectionEndsAt,protectionAccentColor].forEach((field) => field.addEventListener('input',renderProtectionPreview));
+[protectionTitle,protectionDescription,protectionEndsAt,protectionAccentColor,protectionBackgroundBlur].forEach((field) => field.addEventListener('input',renderProtectionPreview));
 protectionCountdown.addEventListener('change',() => { if (protectionCountdown.checked) { protectionPasswordEnabled.checked = false; protectionPassword.value = ''; } renderProtectionPreview(); });
 protectionPasswordEnabled.addEventListener('change',() => { if (protectionPasswordEnabled.checked) { protectionCountdown.checked = false; } renderProtectionPreview(); });
 protectionPasswordToggle.addEventListener('click',() => { const mostrar = protectionPassword.type === 'password'; protectionPassword.type = mostrar ? 'text' : 'password'; protectionPasswordToggle.setAttribute('aria-label', mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña'); protectionPasswordToggle.setAttribute('aria-pressed', String(mostrar)); });
@@ -1199,6 +1298,6 @@ protectionActive.addEventListener('change',() => { const activo = protectionActi
 protectionBackground.addEventListener('change',() => { const file = protectionBackground.files?.[0]; if (!file) return; if (protectionPreviewObjectUrl) URL.revokeObjectURL(protectionPreviewObjectUrl); protectionPreviewObjectUrl = URL.createObjectURL(file); protectionPreviewBackgrounds.forEach((preview) => { preview.style.backgroundImage = `url("${protectionPreviewObjectUrl}")`; }); document.getElementById('protectionBackgroundText').textContent = file.name; protectionRemoveBackground.checked = false; });
 protectionRemoveBackground.addEventListener('change',() => { if (protectionRemoveBackground.checked) { protectionBackground.value = ''; protectionPreviewBackgrounds.forEach((preview) => { preview.style.backgroundImage = ''; }); } else if (protectionCurrent.fondo_url) protectionPreviewBackgrounds.forEach((preview) => { preview.style.backgroundImage = `url("${protectionCurrent.fondo_url}")`; }); });
 window.setInterval(() => { if (protectionCountdown.checked) renderProtectionPreview(); }, 1000);
-protectionForm.addEventListener('submit',(event) => { event.preventDefault(); if (protectionCountdown.checked && (!protectionEndsAt.value || new Date(protectionEndsAt.value).getTime() <= Date.now())) { protectionStatus.textContent = 'Elige una fecha y hora futura para la cuenta regresiva.'; protectionEndsAt.focus(); return; } protectionStatus.textContent = 'Guardando información…'; parent.postMessage({ tipo:'SKYBLOCK_ADMIN_GUARDAR_PROTECCION', datos:{ titulo:protectionTitle.value, descripcion:protectionDescription.value, mostrarCuentaRegresiva:protectionCountdown.checked, finalizaEn:protectionEndsAt.value, requiereContrasena:protectionPasswordEnabled.checked, contrasena:protectionPassword.value, colorAcento:protectionAccentColor.value, fondoArchivo:protectionBackground.files?.[0] || null, eliminarFondo:protectionRemoveBackground.checked } },location.origin); });
+protectionForm.addEventListener('submit',(event) => { event.preventDefault(); if (protectionCountdown.checked && (!protectionEndsAt.value || new Date(protectionEndsAt.value).getTime() <= Date.now())) { protectionStatus.textContent = 'Elige una fecha y hora futura para la cuenta regresiva.'; protectionEndsAt.focus(); return; } protectionStatus.textContent = 'Guardando información…'; parent.postMessage({ tipo:'SKYBLOCK_ADMIN_GUARDAR_PROTECCION', datos:{ titulo:protectionTitle.value, descripcion:protectionDescription.value, mostrarCuentaRegresiva:protectionCountdown.checked, finalizaEn:protectionEndsAt.value, requiereContrasena:protectionPasswordEnabled.checked, contrasena:protectionPassword.value, colorAcento:protectionAccentColor.value, desenfoqueFondo:Number(protectionBackgroundBlur.value), fondoArchivo:protectionBackground.files?.[0] || null, eliminarFondo:protectionRemoveBackground.checked } },location.origin); });
 window.addEventListener('message',(event) => { if (event.origin !== location.origin) return; if (event.data?.tipo === 'SKYBLOCK_ADMIN_PROTECCION') populateProtection(event.data.proteccion || {}); if (event.data?.tipo === 'SKYBLOCK_ADMIN_PROTECCION_RESULTADO') { protectionStatus.textContent = event.data.mensaje || ''; if (event.data.ok) populateProtection(event.data.proteccion || {}); } });
 parent.postMessage({ tipo:'SKYBLOCK_ADMIN_SOLICITAR_PROTECCION' },location.origin);

@@ -6,7 +6,7 @@
   <meta name="description" content="Panel administrativo de SKYBLOCK STUDIO.">
   <meta name="robots" content="noindex,nofollow">
   <title>Panel administrativo | SKYBLOCK STUDIO</title>
-  <link rel="stylesheet" href="css/styles.css?v=protection-mode-20260928">
+  <link rel="stylesheet" href="css/styles.css?v=manual-sold-out-20261010">
   <script>if(window.top===window.self)window.location.replace('/')</script>
 </head>
 <body class="admin-page">
@@ -20,17 +20,17 @@
       <button data-admin-view="posts"><i>05</i>Perfil <span id="adminPostCount">2</span></button>
       <button data-admin-view="correos"><i>06</i>Correos</button>
       <button data-admin-view="mensajes"><i>07</i>Mensajes <span id="adminMessageCount">0</span></button>
-      <button data-admin-view="sistema"><i>08</i>Estado del sistema</button>
-      <button data-admin-view="proteccion"><i>09</i>Protección</button>
+      <button data-admin-view="proteccion"><i>08</i>Protección</button>
     </nav>
     <div class="admin-sidebar-foot"><a href="inicio.html">← Ver tienda</a><button id="logoutDemo">Cerrar sesión</button></div>
   </aside>
+  <button class="admin-menu-backdrop" id="adminMenuBackdrop" type="button" aria-label="Cerrar menú" aria-hidden="true" tabindex="-1"></button>
 
   <main class="admin-main">
-    <header class="admin-topbar"><button class="admin-menu-toggle" id="adminMenuToggle" aria-label="Abrir menú">☰</button><div><span>Panel de control</span><strong id="adminDate"></strong></div><div class="admin-user"><span>Administrador</span><b>JS</b></div></header>
+    <header class="admin-topbar"><button class="admin-menu-toggle" id="adminMenuToggle" aria-label="Abrir menú" aria-controls="adminSidebar" aria-expanded="false">☰</button><div><span>Panel de control</span><strong id="adminDate"></strong></div><div class="admin-user"><span>Administrador</span><b>JS</b></div></header>
 
     <section class="admin-view active" data-view="resumen">
-      <div class="admin-title admin-dashboard-title"><div><span>Centro de operaciones</span><h1 id="adminGreeting">Inventario.</h1><p id="adminDashboardSubtitle">Alertas y disponibilidad de tus prendas. Las ventas se mostrarán cuando registres pedidos.</p></div><div class="admin-title-actions"><button class="admin-secondary" type="button" data-dashboard-action="verificacion">+ Registrar código</button><button class="admin-primary" data-open-product>+ Nuevo producto</button></div></div>
+      <div class="admin-title admin-dashboard-title"><div><span>Centro de operaciones</span><h1 id="adminGreeting">Inventario.</h1><p id="adminDashboardSubtitle">Alertas y disponibilidad de tus prendas. Las ventas se mostrarán cuando registres pedidos.</p></div></div>
       <div class="admin-stats admin-live-stats">
         <article><span>Productos activos</span><strong id="dashboardProductTotal">00</strong><small id="dashboardProductNote">Sin productos registrados</small></article>
         <article><span>Unidades disponibles</span><strong id="dashboardUnitsAvailable">00</strong><small id="dashboardUnitsNote">Sin inventario registrado</small></article>
@@ -41,6 +41,39 @@
         <section class="admin-card dashboard-priorities"><div class="admin-card-head"><div><span>Alertas de inventario</span><h2>Requiere atención</h2></div><button type="button" data-dashboard-action="productos">Abrir inventario →</button></div><div id="dashboardPriorityList" class="dashboard-priority-list"></div></section>
         <section class="admin-card dashboard-readiness"><div class="admin-card-head"><div><span>Disponibilidad</span><h2>Radar de stock</h2></div></div><div id="dashboardReadiness" class="dashboard-readiness-list"></div><div class="dashboard-quick-actions"><button type="button" data-dashboard-action="productos">Gestionar productos</button><button type="button" data-dashboard-action="colecciones">Gestionar colecciones</button></div></section>
       </div>
+      <section class="admin-system-summary" aria-labelledby="systemSummaryTitle">
+        <div class="admin-system-summary-title"><div><span>Diagnóstico privado</span><h2 id="systemSummaryTitle">Estado del sistema.</h2><p>Información operativa de la tienda, Supabase y los recursos de imagen.</p></div><button class="admin-secondary" id="refreshSystemStatus" type="button">Actualizar ahora</button></div>
+        <div class="system-health-grid">
+          <article class="system-health-card"><span>Supabase</span><strong id="systemSupabaseStatus">Comprobando</strong><p id="systemSupabaseNote">Verificando la conexión a los datos.</p></article>
+          <article class="system-health-card"><span>Cloudinary</span><strong id="systemCloudinaryStatus">Comprobando</strong><p id="systemCloudinaryNote">Verificando los recursos de imagen.</p></article>
+          <article class="system-health-card"><span>Última lectura</span><strong id="systemUpdatedAt">—</strong><p>Se actualiza al abrir el panel o al pulsar el botón.</p></article>
+        </div>
+        <section class="system-capacity-grid" aria-label="Capacidad y recursos">
+          <article class="system-capacity-card system-capacity-database">
+            <div class="system-capacity-head"><span>Supabase</span><b id="systemDatabasePercent">—</b></div>
+            <h2>Base de datos</h2><strong id="systemDatabaseAvailable">—</strong><p>Espacio disponible</p>
+            <div class="system-progress" id="systemDatabaseProgress" style="--meter-value:0"><i></i></div>
+            <small id="systemDatabaseUsage">Calculando uso de PostgreSQL</small>
+          </article>
+          <article class="system-capacity-card system-capacity-cloudinary">
+            <div class="system-capacity-head"><span>Cloudinary</span><b id="systemCloudinaryPercent">En uso</b></div>
+            <h2>Imágenes y espacio</h2><strong id="systemCloudinaryUsed">—</strong><p>Espacio utilizado</p>
+            <div class="system-progress system-progress-unknown" id="systemCloudinaryProgress" style="--meter-value:0"><i></i></div>
+            <small id="systemCloudinaryLimit">Leyendo límite de Cloudinary</small>
+            <div class="system-image-total"><b id="systemCloudinaryImageCount">00</b><span>imágenes subidas</span></div>
+          </article>
+        </section>
+        <div class="system-metric-grid system-quick-grid">
+          <article><span>Registros operativos</span><strong id="systemDatabaseRecords">00</strong><small>Productos, colecciones, publicaciones y más</small></article>
+          <article><span>Imágenes registradas</span><strong id="systemImageCount">00</strong><small id="systemImageStorage">0.00 GB en archivos registrados</small></article>
+          <article><span>Interacciones</span><strong id="systemLikeCount">00</strong><small>Likes almacenados por dispositivo</small></article>
+          <article><span>Mensajes pendientes</span><strong id="systemNewMessages">00</strong><small>Consultas nuevas por revisar</small></article>
+        </div>
+        <div class="system-detail-grid">
+          <section class="admin-card"><div class="admin-card-head"><div><span>Datos de la tienda</span><h2>Contenido guardado</h2></div></div><dl class="system-list" id="systemDatabaseList"></dl></section>
+          <section class="admin-card system-reading-guide"><div class="admin-card-head"><div><span>Cómo leerlo</span><h2>Estado de recursos</h2></div></div><div><b>Base de datos</b><p>El medidor compara el uso real con el límite de tu plan.</p></div><div><b>Cloudinary</b><p>Si Cloudinary no comunica un límite, mostramos el uso real sin estimaciones.</p></div></section>
+        </div>
+      </section>
     </section>
 
     <section class="admin-view" data-view="productos">
@@ -108,40 +141,6 @@
       <div class="admin-inbox"><div class="admin-message-list" id="adminMessageList"></div><article class="admin-message" id="adminMessageDetail"></article></div>
     </section>
 
-    <section class="admin-view" data-view="sistema">
-      <div class="admin-title"><div><span>Diagnóstico privado</span><h1>Estado del sistema.</h1><p>Información operativa de la tienda, Supabase y los recursos de imagen.</p></div><button class="admin-secondary" id="refreshSystemStatus" type="button">Actualizar ahora</button></div>
-      <div class="system-health-grid">
-        <article class="system-health-card"><span>Supabase</span><strong id="systemSupabaseStatus">Comprobando</strong><p id="systemSupabaseNote">Verificando la conexión a los datos.</p></article>
-        <article class="system-health-card"><span>Cloudinary</span><strong id="systemCloudinaryStatus">Comprobando</strong><p id="systemCloudinaryNote">Verificando los recursos de imagen.</p></article>
-        <article class="system-health-card"><span>Última lectura</span><strong id="systemUpdatedAt">—</strong><p>Se actualiza al abrir el panel o al pulsar el botón.</p></article>
-      </div>
-      <section class="system-capacity-grid" aria-label="Capacidad y recursos">
-        <article class="system-capacity-card system-capacity-database">
-          <div class="system-capacity-head"><span>Supabase</span><b id="systemDatabasePercent">—</b></div>
-          <h2>Base de datos</h2><strong id="systemDatabaseAvailable">—</strong><p>Espacio disponible</p>
-          <div class="system-progress" id="systemDatabaseProgress" style="--meter-value:0"><i></i></div>
-          <small id="systemDatabaseUsage">Calculando uso de PostgreSQL</small>
-        </article>
-        <article class="system-capacity-card system-capacity-cloudinary">
-          <div class="system-capacity-head"><span>Cloudinary</span><b id="systemCloudinaryPercent">En uso</b></div>
-          <h2>Imágenes y espacio</h2><strong id="systemCloudinaryUsed">—</strong><p>Espacio utilizado</p>
-          <div class="system-progress system-progress-unknown" id="systemCloudinaryProgress" style="--meter-value:0"><i></i></div>
-          <small id="systemCloudinaryLimit">Leyendo límite de Cloudinary</small>
-          <div class="system-image-total"><b id="systemCloudinaryImageCount">00</b><span>imágenes subidas</span></div>
-        </article>
-      </section>
-      <div class="system-metric-grid system-quick-grid">
-        <article><span>Registros operativos</span><strong id="systemDatabaseRecords">00</strong><small>Productos, colecciones, publicaciones y más</small></article>
-        <article><span>Imágenes registradas</span><strong id="systemImageCount">00</strong><small id="systemImageStorage">0.00 GB en archivos registrados</small></article>
-        <article><span>Interacciones</span><strong id="systemLikeCount">00</strong><small>Likes almacenados por dispositivo</small></article>
-        <article><span>Mensajes pendientes</span><strong id="systemNewMessages">00</strong><small>Consultas nuevas por revisar</small></article>
-      </div>
-      <div class="system-detail-grid">
-        <section class="admin-card"><div class="admin-card-head"><div><span>Datos de la tienda</span><h2>Contenido guardado</h2></div></div><dl class="system-list" id="systemDatabaseList"></dl></section>
-        <section class="admin-card system-reading-guide"><div class="admin-card-head"><div><span>Cómo leerlo</span><h2>Estado de recursos</h2></div></div><div><b>Base de datos</b><p>El medidor compara el uso real con el límite de tu plan.</p></div><div><b>Cloudinary</b><p>Si Cloudinary no comunica un límite, mostramos el uso real sin estimaciones.</p></div></section>
-      </div>
-    </section>
-
     <section class="admin-view" data-view="proteccion">
       <div class="admin-title"><div><span>Control de acceso</span><h1>Protección.</h1><p>Activa una pantalla temporal mientras trabajas. El panel administrativo sigue disponible para que puedas desactivarla.</p></div></div>
       <div class="admin-protection-layout">
@@ -156,6 +155,7 @@
             <label id="protectionPasswordField" hidden>Contraseña de acceso<span class="admin-password-control"><input id="protectionPassword" type="password" minlength="4" autocomplete="new-password" placeholder="Mínimo 4 caracteres"><button id="protectionPasswordToggle" type="button" aria-label="Mostrar contraseña" aria-pressed="false">👁</button></span><small id="protectionPasswordMasked">Contraseña configurada: ••••••••</small><small>Déjalo vacío para conservar la contraseña actual.</small></label>
             <p class="admin-protection-warning" id="protectionModeWarning" hidden role="status"></p>
             <label class="admin-color-field">Color de toda la tipografía<span><input id="protectionAccentColor" type="color" value="#ffffff" aria-label="Color de toda la tipografía"><b id="protectionColorValue">#FFFFFF</b></span></label>
+            <label class="admin-range-field">Desenfoque del fondo<span><input id="protectionBackgroundBlur" type="range" min="0" max="20" step="1" value="4" aria-describedby="protectionBackgroundBlurValue"><b id="protectionBackgroundBlurValue">4 px</b></span><small>0 px deja la imagen nítida. Ajusta el nivel hasta 20 px.</small></label>
             <label class="admin-upload" for="protectionBackground"><span id="protectionBackgroundText">Elegir imagen de fondo</span><small>JPG, PNG o WEBP · Se ajusta y aplica desenfoque automáticamente</small><input id="protectionBackground" type="file" accept="image/jpeg,image/png,image/webp"></label>
             <label class="admin-check" id="protectionRemoveBackgroundWrap"><input id="protectionRemoveBackground" type="checkbox">Quitar imagen de fondo actual</label>
             <button class="admin-primary" type="submit">Guardar protección</button><p class="admin-post-status" id="protectionStatus" role="status"></p>
@@ -168,8 +168,8 @@
 
   <div class="admin-modal" id="postModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="postModalTitle">
     <div class="admin-modal-card admin-post-modal-card"><button class="admin-modal-close" id="closePostModal" type="button" aria-label="Cerrar post">×</button><div class="admin-post-layout">
-      <form class="admin-card admin-post-form" id="adminPostForm"><input id="postEditId" type="hidden"><div class="admin-card-head"><div><span>Nueva publicación</span><h2 id="postModalTitle">Crear post</h2></div></div><div class="admin-post-fields"><label>Título<input id="postTitle" required maxlength="80" placeholder="Ej. Detrás de la nueva colección"></label><label>Descripción<textarea id="postDescription" maxlength="600" rows="5" placeholder="Cuenta la historia detrás de las fotografías..."></textarea></label><label>Descripción de las imágenes <small>Para accesibilidad</small><input id="postAlt" maxlength="140" placeholder="Describe brevemente lo que aparece"></label><label class="admin-upload" for="postImage"><span id="postUploadText">Seleccionar fotografías</span><small>JPG, PNG o WEBP · Hasta 10 fotos · Máximo 150 MB cada una</small><input id="postImage" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><div class="admin-post-actions"><button class="admin-secondary" id="cancelPostEdit" type="button">Cancelar</button><button class="admin-primary" id="savePostButton" type="submit">Publicar post</button></div><p class="admin-post-status" id="postStatus"></p></div></form>
-      <section class="admin-post-preview"><span>Vista previa</span><article class="studio-post"><header><div class="post-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>AHORA</span></div><i>•••</i></header><div class="post-copy"><h2 id="previewPostTitle">Título de la publicación</h2><p id="previewPostDescription"></p></div><div class="post-preview-image" id="postImagePreview"><span>Vista previa de las fotografías</span></div></article></section>
+      <form class="admin-card admin-post-form" id="adminPostForm"><input id="postEditId" type="hidden"><div class="admin-card-head"><div><span>Nueva publicación</span><h2 id="postModalTitle">Crear post</h2></div></div><div class="admin-post-fields"><label>Título<input id="postTitle" required maxlength="80" placeholder="Ej. Detrás de la nueva colección"></label><label>Descripción<textarea id="postDescription" maxlength="600" rows="5" placeholder="Cuenta la historia detrás de las fotografías..."></textarea></label><section class="admin-post-format" aria-labelledby="postFormatLabel"><div id="postFormatLabel">Formato de publicación</div><small>Elige uno: la vista previa cambiará al instante y se conservará en el perfil admin y el feed público.</small><input id="postMediaFormat" type="hidden" value="portrait"><div class="admin-post-format-options" role="group" aria-label="Formato de publicación"><button type="button" data-post-format-option="square" aria-pressed="false"><i class="post-format-shape square" aria-hidden="true"></i><b>1:1</b><span>Cuadrado</span></button><button type="button" data-post-format-option="landscape" aria-pressed="false"><i class="post-format-shape landscape" aria-hidden="true"></i><b>1.91:1</b><span>Horizontal</span></button><button type="button" data-post-format-option="portrait" aria-pressed="true"><i class="post-format-shape portrait" aria-hidden="true"></i><b>4:5</b><span>Vertical</span></button></div></section><label>Descripción de las imágenes <small>Para accesibilidad</small><input id="postAlt" maxlength="140" placeholder="Describe brevemente lo que aparece"></label><label class="admin-upload" for="postImage"><span id="postUploadText">Seleccionar fotografías</span><small>JPG, PNG o WEBP · Hasta 10 fotos · Máximo 150 MB cada una</small><input id="postImage" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><div class="admin-post-actions"><button class="admin-secondary" id="cancelPostEdit" type="button">Cancelar</button><button class="admin-primary" id="savePostButton" type="submit">Publicar post</button></div><p class="admin-post-status" id="postStatus"></p></div></form>
+      <section class="admin-post-preview"><span>Vista previa</span><article class="studio-post"><header><div class="post-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>AHORA</span></div></header><div class="post-copy"><h2 id="previewPostTitle">Título de la publicación</h2><p id="previewPostDescription">La descripción del post aparecerá aquí mientras escribes.</p></div><div class="post-carousel post-preview-carousel" id="postImagePreview" data-media-format="portrait"><div class="post-preview-empty">Vista previa de las fotografías</div></div><footer><button class="post-action" type="button" tabindex="-1"><span aria-hidden="true">♡</span><strong>0</strong><em>Me gusta</em></button><button class="post-action" type="button" tabindex="-1"><span aria-hidden="true">↗</span><em>Compartir</em></button></footer></article></section>
     </div></div>
   </div>
   <div class="admin-modal" id="editorialProfileModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="editorialProfileTitle">
@@ -186,7 +186,8 @@
         <section class="admin-product-fields">
           <label>Nombre del producto<input id="productName" required maxlength="90" placeholder="Ej. Camiseta Extragrande Void"></label>
           <div class="admin-form-row"><label>Tipo<select id="productType" required></select></label><label>Colección<select id="productCollection" required><option value="">Primero crea una colección</option></select></label></div>
-          <div class="admin-form-row"><label>Costo / Precio<input id="productPrice" type="number" required min="0" step="0.01" placeholder="39.99"></label></div>
+          <div class="admin-form-row"><label>Precio regular<input id="productPrice" type="number" required min="0" step="0.01" placeholder="39.99"></label></div>
+          <fieldset class="admin-product-discount"><legend>Descuento</legend><label class="admin-switch"><input id="productDiscountActive" type="checkbox"><span></span>Aplicar descuento</label><div id="productDiscountFields" hidden><label>Modo de cálculo<select id="productDiscountMode"><option value="percent">Por porcentaje</option><option value="sale">Por precio de oferta</option></select></label><label id="productDiscountPercentField">Porcentaje de descuento<input id="productDiscountPercent" type="number" min="0" max="100" step="0.01" placeholder="Ej. 20"></label><label id="productDiscountSaleField" hidden>Precio de oferta<input id="productDiscountSalePrice" type="number" min="0" step="0.01" placeholder="Precio final"></label><p id="productDiscountSummary" aria-live="polite"></p></div></fieldset>
           <label>Descripción del diseño<textarea id="productDescription" required maxlength="600" rows="4" placeholder="Describe el concepto, corte y detalles visuales del producto"></textarea></label>
           <label>Materiales y acabados<textarea id="productMaterials" required maxlength="500" rows="3" placeholder="Ej. Algodón Jersey 20/1, cuello reforzado, bordado frontal y costuras dobles"></textarea><small>Esta información aparecerá en “Detalles y materiales” dentro del producto.</small></label>
           <fieldset class="admin-size-stock"><legend>Tallas disponibles</legend>
@@ -199,6 +200,7 @@
             <label class="admin-size-option"><span><input id="sizeOneAvailable" type="checkbox">Única</span><input class="stock-by-size-input" id="stockOne" type="number" min="0" value="0" aria-label="Stock talla única" hidden disabled></label>
           </fieldset>
           <label class="admin-check-row"><input id="productLimited" type="checkbox"><span><b>Prenda limitada</b><small>Marcar como edición limitada y sin reposición.</small></span></label>
+          <label class="admin-check-row"><input id="productSoldOut" type="checkbox"><span><b>Agotado</b><small>Actívalo para mostrar “Agotado”, ocultar la etiqueta DTF y desactivar consultas por WhatsApp.</small></span></label>
           <div class="admin-stock-mode" id="productStockModeField" role="radiogroup" aria-label="Forma de administrar el stock"><span>Administrar stock</span><label><input id="productStockSingle" name="productStockMode" type="radio" checked>Stock único</label><label><input id="productStockBySize" name="productStockMode" type="radio">Por tallas</label><label id="productStockUnlimitedOption"><input id="productStockUnlimited" name="productStockMode" type="radio">Stock ilimitado</label></div>
           <label id="productLimitedUnitsField" hidden>Total de prendas limitadas<input id="productLimitedUnits" type="number" min="1" step="1" placeholder="Ej. 25"><small>Es el límite original de la edición y el máximo de códigos para este diseño.</small></label>
           <label id="productAvailableStockField" hidden>Stock disponible<input id="productAvailableStock" type="number" min="0" step="1" placeholder="Ej. 25"><small>Actualiza este número cuando salgan prendas. En el catálogo se mostrará como Stock disponible / total.</small></label>
@@ -219,6 +221,6 @@
   <div class="admin-modal" id="verificationModal" aria-hidden="true"><form class="admin-modal-card admin-verification-editor" id="verificationForm"><button class="admin-modal-close" id="closeVerificationModal" type="button" aria-label="Cerrar código">×</button><span>Registro de autenticidad</span><h2 id="verificationModalTitle">Nuevo código</h2><input id="verificationId" type="hidden"><label>Código de autenticidad<input id="verificationCode" required maxlength="32" placeholder="SKB-XXXX-XXXX" autocomplete="off"></label><div class="admin-form-row"><label>Colección<select id="verificationCollection" required></select></label><label>Diseño / producto<select id="verificationProduct" required></select></label></div><label>Número de serie<input id="verificationSeries" required maxlength="20" placeholder="Se completa según el diseño"></label><label>Propietario<input id="verificationOwner" maxlength="100" placeholder="Sin registrar"></label><label>Estado<select id="verificationStatus"><option value="active">Activo</option><option value="blocked">Bloqueado</option></select></label><small class="admin-verification-note">El código quedará asociado a la colección y al diseño seleccionados. La cantidad máxima depende del límite configurado en el producto.</small><div class="admin-product-editor-actions"><button class="admin-secondary" id="cancelVerificationEdit" type="button">Cancelar</button><button class="admin-primary" type="submit">Guardar código</button></div><p id="verificationFormStatus"></p></form></div>
   <div class="admin-confirm" id="adminConfirm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="adminConfirmTitle" aria-describedby="adminConfirmMessage"><section class="admin-confirm-card"><div class="admin-confirm-mark" aria-hidden="true">!</div><span>Confirmar acción</span><h2 id="adminConfirmTitle">¿Estás seguro?</h2><p id="adminConfirmMessage"></p><div class="admin-confirm-actions"><button class="admin-secondary" id="adminConfirmCancel" type="button">Cancelar</button><button class="admin-confirm-danger" id="adminConfirmAccept" type="button">Eliminar</button></div></section></div>
   <div class="toast" id="adminToast" role="status"></div>
-  <script src="js/admin.js?v=protection-mode-20260928"></script>
+  <script src="js/admin.js?v=manual-sold-out-20261010"></script>
 </body>
 </html>

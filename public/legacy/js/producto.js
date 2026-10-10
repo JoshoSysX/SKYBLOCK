@@ -8,6 +8,7 @@ document.querySelector('.product-thumbs')?.addEventListener('click', (event) => 
 });
 
 addToCart.onclick = () => {
+  if (addToCart.disabled || addToCart.getAttribute('aria-disabled') === 'true') return;
   const selected = document.querySelector('.size-picker button.active');
   if (!selected) return sizeError.classList.add('show');
   const currentProduct = productName.textContent.trim();

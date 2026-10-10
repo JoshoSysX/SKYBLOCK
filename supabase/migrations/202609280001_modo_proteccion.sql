@@ -16,11 +16,13 @@ insert into public.modo_proteccion (id) values (true) on conflict (id) do nothin
 
 alter table public.modo_proteccion enable row level security;
 
+drop policy if exists modo_proteccion_lectura_publica on public.modo_proteccion;
 create policy modo_proteccion_lectura_publica
 on public.modo_proteccion for select
 to anon, authenticated
 using (true);
 
+drop policy if exists modo_proteccion_administracion on public.modo_proteccion;
 create policy modo_proteccion_administracion
 on public.modo_proteccion for all
 to authenticated

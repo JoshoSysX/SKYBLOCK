@@ -6,12 +6,13 @@ type PerfilEditorial = { nombre: string; biografia: string; avatar_url?: string 
 type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; reacciones?: unknown[]; error?: string }
 type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
-type ModoProteccion = { id?: boolean; activo: boolean; titulo: string; descripcion: string; mostrar_cuenta_regresiva: boolean; finaliza_en?: string | null; fondo_url?: string | null; fondo_identificador_publico?: string | null; color_acento?: string | null; requiere_contrasena?: boolean; actualizado_en?: string }
+type ModoProteccion = { id?: boolean; activo: boolean; titulo: string; descripcion: string; mostrar_cuenta_regresiva: boolean; finaliza_en?: string | null; fondo_url?: string | null; fondo_identificador_publico?: string | null; color_acento?: string | null; desenfoque_fondo?: number | null; requiere_contrasena?: boolean; actualizado_en?: string }
 type EstadoSistema = { error?: string; actualizadoEn: string; supabase: boolean; almacenamientoBaseDatos: { usado: number; limite: number }; imagenes: number; bytesImagenes: number; registros: number; likes: number; mensajesNuevos: number; detalle: Record<string, number>; cloudinary: { disponible: boolean; error?: string; imagenesSubidas?: number | null; planUsado?: number | null; planLimite?: number | null; almacenamientoUsado?: number | null; almacenamientoLimite?: number | null; anchoBandaUsado?: number | null; anchoBandaLimite?: number | null } }
 const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
+const GOOGLE_ANALYTICS_MEASUREMENT_ID = String(import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-Z59ZXX8QDH').trim()
 const LEGACY_BUILD = 'restock-next-screen-20261005'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
@@ -20,7 +21,7 @@ const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   avatar_url: profileImage,
   portada_url: null,
 }
-const PROTECCION_INICIAL: ModoProteccion = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null, fondo_identificador_publico:null, color_acento:'#ffffff', requiere_contrasena:false }
+const PROTECCION_INICIAL: ModoProteccion = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null, fondo_identificador_publico:null, color_acento:'#ffffff', desenfoque_fondo:4, requiere_contrasena:false }
 const tiempoRestante = (fecha?: string | null, ahora = Date.now()) => {
   const restante = fecha ? Math.max(0, new Date(fecha).getTime() - ahora) : 0
   const dias = Math.floor(restante / 86400000), horas = Math.floor((restante % 86400000) / 3600000), minutos = Math.floor((restante % 3600000) / 60000), segundos = Math.floor((restante % 60000) / 1000)
@@ -44,7 +45,8 @@ function PantallaProteccion({ configuracion, alDesbloquear, alVencer }: { config
     vencimientoNotificado.current = true
     void alVencer()
   }, [terminada, alVencer])
-  const estilo = { '--proteccion-fondo': configuracion.fondo_url ? `url("${configuracion.fondo_url}")` : undefined, '--proteccion-texto': configuracion.color_acento || '#ffffff' } as CSSProperties
+  const desenfoque = Math.min(20, Math.max(0, Number(configuracion.desenfoque_fondo ?? 4) || 0))
+  const estilo = { '--proteccion-fondo': configuracion.fondo_url ? `url("${configuracion.fondo_url}")` : undefined, '--proteccion-texto': configuracion.color_acento || '#ffffff', '--proteccion-desenfoque': `${desenfoque}px` } as CSSProperties
   return <main className="proteccion-pantalla" style={estilo}>
     <div className="proteccion-fondo" aria-hidden="true" />
     <a className="proteccion-login" href="/login?proteccion=1" aria-label="Inicio de sesión para administradores"><span aria-hidden="true">⌑</span> Inicio de sesión</a>
@@ -122,6 +124,10 @@ export default function App() {
   const [ruta, setRuta] = useState(rutaInicial)
   const [proteccionDesbloqueada, setProteccionDesbloqueada] = useState(false)
   const [adminConAcceso, setAdminConAcceso] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    ;(window as Window & typeof globalThis & { SKYBLOCK_GA_MEASUREMENT_ID?: string }).SKYBLOCK_GA_MEASUREMENT_ID = GOOGLE_ANALYTICS_MEASUREMENT_ID
+  }, [])
 
   const cargarProteccion = useCallback(async () => {
     await supabase.rpc('desactivar_modo_proteccion_vencido')
@@ -400,7 +406,7 @@ export default function App() {
     ])
     const error = productos.error || colecciones.error || tipos.error || codigos.error
     const cs = (colecciones.data ?? []).map((c: any) => ({ id:c.id, name:c.nombre, slug:c.slug, edition:c.numero_edicion, status:c.estado === 'publicado' ? 'published' : c.estado === 'archivado' ? 'upcoming' : 'draft', limited:false, description:c.descripcion, story:c.historia, cover:[...(c.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0))[0]?.url_segura || '' }))
-    const ps = (productos.data ?? []).map((p: any) => { const images=[...(p.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0)); const sizes=Object.fromEntries(ordenarTallas(p.tallas || []).map((t:any)=>[t.talla,t.stock])); const stockBySize=p.stock_por_talla === true || p.stock_por_talla === 'true'; const stockUnlimited=p.stock_ilimitado === true || p.stock_ilimitado === 'true'; return { id:p.id, name:p.nombre, type:p.tipo?.nombre || '', collection:p.coleccion?.nombre || '', price:Number(p.precio), description:p.descripcion, materials:p.materiales || '', sizes, limited:p.es_limitado, limitedUnits:p.unidades_limitadas, stockBySize, stockUnlimited, stockAvailable:p.stock_disponible ?? Object.values(sizes).reduce((sum:number,stock:any)=>sum+Number(stock||0),0), blocked:p.estado === 'archivado', image:images[0]?.url_segura || '', gallery:images.slice(1).map((i:FilaImagen)=>i.url_segura) } })
+    const ps = (productos.data ?? []).map((p: any) => { const images=[...(p.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0)); const sizes=Object.fromEntries(ordenarTallas(p.tallas || []).map((t:any)=>[t.talla,t.stock])); const stockBySize=p.stock_por_talla === true || p.stock_por_talla === 'true'; const stockUnlimited=p.stock_ilimitado === true || p.stock_ilimitado === 'true'; return { id:p.id, name:p.nombre, type:p.tipo?.nombre || '', collection:p.coleccion?.nombre || '', price:Number(p.precio), regularPrice:Number(p.precio_original ?? p.precio), discountPercent:Number(p.descuento_porcentaje || 0), description:p.descripcion, materials:p.materiales || '', sizes, limited:p.es_limitado, limitedUnits:p.unidades_limitadas, soldOut:Boolean(p.agotado_manual), stockBySize, stockUnlimited, stockAvailable:p.stock_disponible ?? Object.values(sizes).reduce((sum:number,stock:any)=>sum+Number(stock||0),0), blocked:p.estado === 'archivado', image:images[0]?.url_segura || '', gallery:images.slice(1).map((i:FilaImagen)=>i.url_segura) } })
     const codes = (codigos.data ?? []).map((c:any) => ({ id:c.id, hash:String(c.codigo_hmac || '').replace(/^\\x/,''), code:String(c.codigo_admin || ''), codeHint:`•••• ${c.ultimos_cuatro}`, series:c.numero_serie, collection:c.coleccion?.nombre || '', product:c.producto?.nombre || '', owner:c.propietario_nombre || 'Sin registrar', status:c.estado === 'bloqueado' || c.estado === 'anulado' ? 'blocked' : 'active' }))
     return { productos: ps, colecciones: cs, tipos: (tipos.data ?? []).map((t:any)=>t.nombre), codigos: codes, error: error?.message || '' }
   }
@@ -435,7 +441,7 @@ export default function App() {
       if (e.data?.tipo === 'SKYBLOCK_SOLICITAR_DATOS') { void enviar(String(e.data.dispositivoId || '')); return }
       if (e.data?.tipo === 'SKYBLOCK_ADMIN_CAMBIAR_VISTA') {
         const vista = String(e.data.vista || '')
-        const vistasValidas = new Set(['resumen','productos','colecciones','verificacion','posts','correos','mensajes','sistema','proteccion'])
+        const vistasValidas = new Set(['resumen','productos','colecciones','verificacion','posts','correos','mensajes','proteccion'])
         if (vista && vistasValidas.has(vista)) history.replaceState(null, '', `/admin${location.search}${`#${vista}`}`)
         return
       }
@@ -511,12 +517,13 @@ export default function App() {
           const fechaFinal = fecha ? new Date(fecha) : null
           const fechaFinalValida = Boolean(fechaFinal && !Number.isNaN(fechaFinal.getTime()))
           const colorAcento = /^#[0-9a-f]{6}$/i.test(String(d.colorAcento || '')) ? String(d.colorAcento) : '#ffffff'
+          const desenfoqueFondo = Math.min(20, Math.max(0, Number(d.desenfoqueFondo) || 0))
           const requiereContrasena = Boolean(d.requiereContrasena), contrasena = String(d.contrasena || '')
           if (Boolean(d.mostrarCuentaRegresiva) && requiereContrasena) throw new Error('La cuenta regresiva y la contraseña no se pueden usar al mismo tiempo.')
           if (requiereContrasena && !anterior?.requiere_contrasena && contrasena.length < 4) throw new Error('Define una contraseña de al menos 4 caracteres.')
           if (contrasena && contrasena.length < 4) throw new Error('La contraseña debe tener al menos 4 caracteres.')
           if (Boolean(d.mostrarCuentaRegresiva) && (!fechaFinalValida || fechaFinal!.getTime() <= Date.now())) throw new Error('La cuenta regresiva debe finalizar en una fecha y hora futura.')
-          const payload = { id:true, activo:Boolean(anterior?.activo), titulo:String(d.titulo || '').trim().slice(0,120) || 'Volvemos pronto', descripcion:String(d.descripcion || '').trim().slice(0,600), mostrar_cuenta_regresiva:Boolean(d.mostrarCuentaRegresiva), finaliza_en:fechaFinalValida ? fechaFinal!.toISOString() : null, color_acento:colorAcento, requiere_contrasena:requiereContrasena, fondo_url:fondoUrl, fondo_identificador_publico:fondoId, actualizado_en:new Date().toISOString(), actualizado_por:user.id }
+          const payload = { id:true, activo:Boolean(anterior?.activo), titulo:String(d.titulo || '').trim().slice(0,120) || 'Volvemos pronto', descripcion:String(d.descripcion || '').trim().slice(0,600), mostrar_cuenta_regresiva:Boolean(d.mostrarCuentaRegresiva), finaliza_en:fechaFinalValida ? fechaFinal!.toISOString() : null, color_acento:colorAcento, desenfoque_fondo:desenfoqueFondo, requiere_contrasena:requiereContrasena, fondo_url:fondoUrl, fondo_identificador_publico:fondoId, actualizado_en:new Date().toISOString(), actualizado_por:user.id }
           if (payload.mostrar_cuenta_regresiva && !payload.finaliza_en) throw new Error('Elige una fecha y hora para la cuenta regresiva.')
           const guardado = await supabase.from('modo_proteccion').upsert(payload, { onConflict:'id' }).select().single()
           if (guardado.error) throw guardado.error
@@ -568,7 +575,8 @@ export default function App() {
             const limitedUnits=Number(d.limitedUnits||0);if(d.limited&&(!Number.isInteger(limitedUnits)||limitedUnits<1))throw new Error('Indica el total de prendas limitadas')
             const stockBySize=Boolean(d.stockBySize),stockUnlimited=!d.limited&&Boolean(d.stockUnlimited),stockAvailable=Number(d.stockAvailable);const totalBySize=Object.values(d.sizes||{}).reduce((sum:number,stock:any)=>sum+Number(stock||0),0);if(d.limited&&stockBySize&&totalBySize>limitedUnits)throw new Error('El stock por tallas no puede superar el total de prendas limitadas');if(!stockUnlimited&&!stockBySize&&(!Number.isInteger(stockAvailable)||stockAvailable<0||(d.limited&&stockAvailable>limitedUnits)))throw new Error('El stock disponible debe ser válido')
             if(idValido&&d.limited){const codigos=await supabase.from('codigos_autenticidad').select('id',{count:'exact',head:true}).eq('producto_id',d.id);if(codigos.error)throw codigos.error;if((codigos.count||0)>limitedUnits)throw new Error(`Este diseño ya tiene ${codigos.count} códigos y no puede reducirse a ${limitedUnits} prendas`)}
-            const payload={tipo_producto_id:tipo.id,coleccion_id:coleccion.id,nombre:String(d.name||'').trim(),slug:String(d.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),precio:Number(d.price),moneda:'PEN',descripcion:String(d.description||'').trim(),materiales:String(d.materials||'').trim(),estado:d.blocked?'archivado':'publicado',es_limitado:Boolean(d.limited),unidades_limitadas:d.limited?limitedUnits:null,stock_por_talla:!stockUnlimited&&stockBySize,stock_ilimitado:stockUnlimited,stock_disponible:!stockUnlimited&&!stockBySize?stockAvailable:null,creado_por:user.id}
+            const precioRegular=Number(d.regularPrice ?? d.price),descuentoPorcentaje=Math.max(0,Math.min(100,Number(d.discountPercent || 0)));if(!Number.isFinite(precioRegular)||precioRegular<=0||!Number.isFinite(Number(d.price))||Number(d.price)<0||Number(d.price)>precioRegular)throw new Error('El precio o descuento no es válido')
+            const payload={tipo_producto_id:tipo.id,coleccion_id:coleccion.id,nombre:String(d.name||'').trim(),slug:String(d.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),precio:Number(d.price),precio_original:precioRegular,descuento_porcentaje:descuentoPorcentaje,moneda:'PEN',descripcion:String(d.description||'').trim(),materiales:String(d.materials||'').trim(),estado:d.blocked?'archivado':'publicado',es_limitado:Boolean(d.limited),agotado_manual:Boolean(d.soldOut),unidades_limitadas:d.limited?limitedUnits:null,stock_por_talla:!stockUnlimited&&stockBySize,stock_ilimitado:stockUnlimited,stock_disponible:!stockUnlimited&&!stockBySize?stockAvailable:null,creado_por:user.id}
             const saved=idValido?await supabase.from('productos').update(payload).eq('id',d.id).select('id').single():await supabase.from('productos').insert(payload).select('id').single(); if(saved.error)throw saved.error
             const tallasEliminadas=await supabase.from('tallas_producto').delete().eq('producto_id',saved.data.id);if(tallasEliminadas.error)throw tallasEliminadas.error
             const tallas=Object.entries(d.sizes||{}).map(([talla,stock])=>({producto_id:saved.data.id,talla,stock:Number(stock)}));if(!tallas.length)throw new Error('Selecciona al menos una talla');if(tallas.length){const tr=await supabase.from('tallas_producto').insert(tallas).select('talla');if(tr.error)throw tr.error;if((tr.data||[]).length!==tallas.length)throw new Error('No se guardaron todas las tallas seleccionadas')}
@@ -652,7 +660,8 @@ export default function App() {
             if (result.error) throw result.error
           } else {
             const d = e.data.datos || {}, id = String(d.id || '')
-            const payload = { titulo: String(d.titulo || '').trim(), descripcion: String(d.descripcion || '').trim(), contenido: String(d.descripcion || '').trim(), estado: 'publicado' as const, autor_id: user.id, publicado_en: new Date().toISOString() }
+            const formatosPost = new Set(['square','landscape','portrait'])
+            const payload = { titulo: String(d.titulo || '').trim(), descripcion: String(d.descripcion || '').trim(), contenido: String(d.descripcion || '').trim(), formato_media: formatosPost.has(String(d.formatoMedia)) ? String(d.formatoMedia) : 'portrait', estado: 'publicado' as const, autor_id: user.id, publicado_en: new Date().toISOString() }
             const saved = id
               ? await supabase.from('publicaciones').update(payload).eq('id', id).select('id').single()
               : await supabase.from('publicaciones').insert({ ...payload, slug: `${String(d.titulo || 'post').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Date.now()}` }).select('id').single()

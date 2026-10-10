@@ -23,7 +23,7 @@ html, body, #root { width: 100%; min-width: 320px; min-height: 100%; margin: 0; 
 
 .proteccion-cargando { min-height:100vh; display:grid; place-items:center; background:#08090a; }
 .proteccion-pantalla { position:relative; min-height:100vh; isolation:isolate; display:grid; place-items:center; overflow:hidden; padding:clamp(24px,5vw,72px); background:#111214; color:#fff; text-align:center; }
-.proteccion-fondo { position:absolute; z-index:-2; inset:-14px; background:var(--proteccion-fondo,linear-gradient(135deg,#15191d,#303942)) center/cover no-repeat; filter:blur(4px); transform:scale(1.02); opacity:1; }
+.proteccion-fondo { position:absolute; z-index:-2; inset:-14px; background:var(--proteccion-fondo,linear-gradient(135deg,#15191d,#303942)) center/cover no-repeat; filter:blur(var(--proteccion-desenfoque,4px)); transform:scale(1.02); opacity:1; }
 .proteccion-pantalla:after { content:''; position:absolute; z-index:-1; inset:0; background:linear-gradient(90deg,#0002,#0000000d 45%,#0002); }
 .proteccion-login { position:absolute; top:clamp(16px,2.4vw,30px); right:clamp(16px,3vw,38px); z-index:2; display:inline-flex; align-items:center; gap:7px; padding:9px 12px; border:1px solid color-mix(in srgb,var(--proteccion-texto) 68%,transparent); border-radius:8px; background:#10101024; box-shadow:0 6px 18px #0002; color:var(--proteccion-texto); font:700 10px 'Manrope',sans-serif; letter-spacing:.01em; text-decoration:none; backdrop-filter:blur(3px); transition:.2s ease; }
 .proteccion-login:hover { background:#ffffff26; transform:translateY(-1px); }.proteccion-login span { color:var(--proteccion-texto); font-size:17px; line-height:.6; }

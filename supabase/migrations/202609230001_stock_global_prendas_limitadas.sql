@@ -18,6 +18,7 @@ set stock_disponible = coalesce((
   where t.producto_id = p.id
 ), 0)
 where p.es_limitado
+  and not p.stock_por_talla
   and p.stock_disponible is null;
 
 -- Los productos regulares existentes no tenían límite de unidades.

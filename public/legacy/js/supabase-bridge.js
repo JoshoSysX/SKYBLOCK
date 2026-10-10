@@ -10,6 +10,17 @@
   }
   const money = (v, m = 'PEN') =>
     new Intl.NumberFormat('es-PE', { style: 'currency', currency: m }).format(Number(v))
+  const discount = (p) => {
+    const regular = Number(p.precio_original), sale = Number(p.precio)
+    const percentage = Math.max(0, Math.min(100, Number(p.descuento_porcentaje || (regular > sale ? (1 - sale / regular) * 100 : 0))))
+    return regular > sale && percentage > 0 ? { regular, percentage } : null
+  }
+  const priceMarkup = (p) => {
+    const offer = discount(p)
+    return offer ? `<span class="price-previous">${money(offer.regular, p.moneda)}</span><span class="price-current">${money(p.precio, p.moneda)}</span>` : money(p.precio, p.moneda)
+  }
+  const discountTag = (p) => { const offer = discount(p); return offer ? `<span class="tag discount-tag">−${offer.percentage.toFixed(0)}%</span>` : '' }
+  const techniqueTag = (p) => /\bDTF\b/i.test(`${p.descripcion || ''} ${p.materiales || ''}`) ? '<span class="tag technique-tag">DTF</span>' : ''
   const img = (e) =>
     [...(e.imagenes || [])].sort((a, b) => a.posicion - b.posicion)[0]?.url_segura ||
     'assets/image/skb-bloqueado.png'
@@ -29,10 +40,11 @@
     if (available === null) return ''
     return `<span class="limited-stock">Stock ${available}/${Number(p.unidades_limitadas)}</span>`
   }
+  const isSoldOut = (p) => Boolean(p.agotado_manual) || (p.es_limitado && availableUnits(p) === 0)
   const featuredTag = (p) => {
     const available = availableUnits(p)
-    if (!p.es_limitado) return ''
-    return `<span class="tag${available === 0 ? ' sold' : ''}">${available === 0 ? 'Agotado' : 'Edición limitada'}</span>`
+    if (isSoldOut(p)) return `<span class="tag sold">Agotado</span>${discountTag(p)}`
+    return `${p.es_limitado ? `<span class="tag${available === 0 ? ' sold' : ''}">${available === 0 ? 'Agotado' : 'Edición limitada'}</span>` : ''}${techniqueTag(p)}${discountTag(p)}`
   }
   const carouselImage = (url, width) => {
     try {
@@ -66,10 +78,10 @@
     }
     g.innerHTML = ps
       .slice(0, 4)
-      .map(
-        (p) =>
-          `<article class="product" tabindex="0" role="link"><div class="product-image">${featuredTag(p)}<img src="${esc(img(p))}" alt="${esc(p.imagenes?.[0]?.texto_alternativo || p.nombre)}"></div><div class="product-copy"><h3>${esc(p.tipo?.nombre || 'Producto')} <span>${esc(p.nombre)}</span></h3><b>${money(p.precio, p.moneda)}</b><button class="buy">Ver producto <span>→</span></button></div></article>`,
-      )
+      .map((p) => {
+        const agotado = isSoldOut(p)
+        return `<article class="catalog-card home-catalog-card${agotado ? ' catalog-card-sold' : ''}" tabindex="0" role="link"><div class="catalog-image">${featuredTag(p)}<img src="${esc(img(p))}" alt="${esc(p.imagenes?.[0]?.texto_alternativo || p.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(p.nombre)}</h2>${limitedStock(p)}</div><strong class="product-price-stack">${priceMarkup(p)}</strong><button class="quick-add">Ver producto <span>→</span></button></div></article>`
+      })
       .join('')
     ;[...g.children].forEach((card, i) => {
       const abrir = () => navegar(`producto.html?id=${encodeURIComponent(ps[i].slug)}`)
@@ -85,7 +97,8 @@
     g.innerHTML = ps
       .map((p) => {
         const bloqueado = p.estado === 'archivado'
-        return `<article class="catalog-card${bloqueado ? ' catalog-card-blocked' : ''}" tabindex="${bloqueado ? '-1' : '0'}" ${bloqueado ? 'aria-disabled="true"' : 'role="link"'} data-blocked="${bloqueado}" data-slug="${esc(p.slug)}" data-category="${esc(p.tipo?.slug || 'otros')}" data-name="${esc(p.nombre)}" data-price="${p.precio}"><div class="catalog-image">${bloqueado ? '<span class="tag blocked-tag">Bloqueado</span>' : p.es_limitado ? '<span class="tag">Edición limitada</span>' : ''}<img src="${bloqueado ? 'assets/image/skb-bloqueado.png' : esc(img(p))}" alt="${bloqueado ? `Producto ${esc(p.nombre)} bloqueado temporalmente` : esc(p.imagenes?.[0]?.texto_alternativo || p.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(p.nombre)}</h2>${bloqueado ? '' : limitedStock(p)}</div><strong>${money(p.precio, p.moneda)}</strong><button class="quick-add" ${bloqueado ? 'disabled' : ''}>${bloqueado ? 'No disponible' : 'Ver producto'} <span>${bloqueado ? '×' : '→'}</span></button></div></article>`
+        const agotado = isSoldOut(p)
+        return `<article class="catalog-card${bloqueado ? ' catalog-card-blocked' : ''}${agotado ? ' catalog-card-sold' : ''}" tabindex="${bloqueado ? '-1' : '0'}" ${bloqueado ? 'aria-disabled="true"' : 'role="link"'} data-blocked="${bloqueado}" data-slug="${esc(p.slug)}" data-category="${esc(p.tipo?.slug || 'otros')}" data-name="${esc(p.nombre)}" data-price="${p.precio}"><div class="catalog-image">${bloqueado ? '<span class="tag blocked-tag">Bloqueado</span>' : featuredTag(p)}<img src="${bloqueado ? 'assets/image/skb-bloqueado.png' : esc(img(p))}" alt="${bloqueado ? `Producto ${esc(p.nombre)} bloqueado temporalmente` : esc(p.imagenes?.[0]?.texto_alternativo || p.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(p.nombre)}</h2>${bloqueado ? '' : limitedStock(p)}</div><strong class="product-price-stack">${priceMarkup(p)}</strong><button class="quick-add" ${bloqueado ? 'disabled' : ''}>${bloqueado ? 'No disponible' : 'Ver producto'} <span>${bloqueado ? '×' : '→'}</span></button></div></article>`
       })
       .join('')
     const cards = [...g.querySelectorAll('.catalog-card')],
@@ -176,7 +189,7 @@
     }
     document.title = `${p.nombre} | SKYBLOCK STUDIO`
     productName.textContent = p.nombre
-    productPrice.textContent = money(p.precio, p.moneda)
+    productPrice.innerHTML = priceMarkup(p)
     const stock = document.getElementById('productLimitedStock')
     if (stock) {
       stock.hidden = !p.es_limitado
@@ -191,9 +204,13 @@
         ? `Edición / ${p.coleccion?.numero_edicion || '001'} · No restock`
         : ''
     }
-    productTag.textContent = p.es_limitado ? 'Edición limitada' : p.tipo?.nombre || 'SKYBLOCK'
+    const agotado = isSoldOut(p)
+    productTag.textContent = agotado ? 'Agotado' : p.es_limitado ? 'Edición limitada' : p.tipo?.nombre || 'SKYBLOCK'
     sizeBlock.hidden = false
     addToCart.hidden = false
+    addToCart.disabled = agotado
+    addToCart.setAttribute('aria-disabled', String(agotado))
+    addToCart.innerHTML = agotado ? 'Agotado <span>×</span>' : 'Consultar disponibilidad <span>→</span>'
     const is = [...(p.imagenes || [])]
         .filter((i) => i.url_segura)
         .sort((a, b) => a.posicion - b.posicion)
@@ -274,10 +291,10 @@
     storyTwo.textContent = 'Una colección construida por SKYBLOCK STUDIO en Tarapoto.'
     productCount.textContent = items.length
     collectionProductGrid.innerHTML = items
-      .map(
-        (p) =>
-          `<a class="catalog-card" href="producto.html?id=${encodeURIComponent(p.slug)}"><div class="catalog-image"><span class="tag">Edición ${esc(c.numero_edicion)}</span><img src="${esc(img(p))}" alt="${esc(p.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(p.nombre)}</h2>${limitedStock(p)}</div><strong>${money(p.precio, p.moneda)}</strong><span class="collection-buy">Ver prenda <b>→</b></span></div></a>`,
-      )
+      .map((p) => {
+        const agotado = isSoldOut(p)
+        return `<a class="catalog-card${agotado ? ' catalog-card-sold' : ''}" href="producto.html?id=${encodeURIComponent(p.slug)}"><div class="catalog-image"><span class="tag${agotado ? ' sold' : ''}">${agotado ? 'Agotado' : `Edición ${esc(c.numero_edicion)}`}</span>${agotado ? '' : techniqueTag(p)}${discountTag(p)}<img src="${esc(img(p))}" alt="${esc(p.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(p.nombre)}</h2>${limitedStock(p)}</div><strong class="product-price-stack">${priceMarkup(p)}</strong><span class="collection-buy">Ver prenda <b>→</b></span></div></a>`
+      })
       .join('')
   }
   function colecciones(cs) {
