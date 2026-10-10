@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import { supabase } from './lib/supabase'
 import profileImage from '../assets/image/PERFIL.jpg'
 
-type PerfilEditorial = { nombre: string; biografia: string; avatar_url?: string | null; portada_url?: string | null }
+type EtiquetaPerfil = { titulo: string; url: string }
+type PerfilEditorial = { nombre: string; biografia: string; avatar_url?: string | null; portada_url?: string | null; etiquetas?: EtiquetaPerfil[]; etiqueta_titulo?: string | null; etiqueta_url?: string | null }
 type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; reacciones?: unknown[]; error?: string }
 type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
@@ -13,13 +14,37 @@ const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
 const GOOGLE_ANALYTICS_MEASUREMENT_ID = String(import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-Z59ZXX8QDH').trim()
-const LEGACY_BUILD = 'restock-next-screen-20261005'
+const LEGACY_BUILD = 'post-tags-clean-20261010'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const enlacePerfilSeguro = (valor: unknown) => {
+  const enlace = String(valor || '').trim()
+  if (!enlace) return ''
+  try {
+    const url = new URL(enlace)
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : ''
+  } catch { return '' }
+}
+const normalizarEtiquetasPerfil = (valor: unknown): EtiquetaPerfil[] => Array.isArray(valor)
+  ? valor.slice(0, 6).map((etiqueta) => ({ titulo: String(etiqueta?.titulo || '').trim().slice(0, 48), url: enlacePerfilSeguro(etiqueta?.url) })).filter((etiqueta) => etiqueta.titulo && etiqueta.url)
+  : []
+const PERFIL_ETIQUETA_LOCAL_KEY = 'skyblock-perfil-etiqueta-local'
+const esEntornoLocal = () => typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
+const leerEtiquetaLocal = (): Pick<PerfilEditorial, 'etiquetas'> => {
+  if (!esEntornoLocal()) return {}
+  try {
+    const etiqueta = JSON.parse(window.localStorage.getItem(PERFIL_ETIQUETA_LOCAL_KEY) || '{}')
+    return { etiquetas: normalizarEtiquetasPerfil(etiqueta.etiquetas) }
+  } catch { return {} }
+}
+const guardarEtiquetaLocal = (etiquetas: EtiquetaPerfil[]) => {
+  if (esEntornoLocal()) window.localStorage.setItem(PERFIL_ETIQUETA_LOCAL_KEY, JSON.stringify({ etiquetas }))
+}
 const PERFIL_EDITORIAL_INICIAL: PerfilEditorial = {
   nombre: BRAND_UPPER,
   biografia: '',
   avatar_url: profileImage,
   portada_url: null,
+  etiquetas: [],
 }
 const PROTECCION_INICIAL: ModoProteccion = { activo:false, titulo:'Volvemos pronto', descripcion:'', mostrar_cuenta_regresiva:false, finaliza_en:null, fondo_url:null, fondo_identificador_publico:null, color_acento:'#ffffff', desenfoque_fondo:4, requiere_contrasena:false }
 const tiempoRestante = (fecha?: string | null, ahora = Date.now()) => {
@@ -176,7 +201,7 @@ export default function App() {
     ])
     const next = p.error || c.error || posts.error
       ? { productos: [], colecciones: [], publicaciones: [], perfil: PERFIL_EDITORIAL_INICIAL, error: 'No se pudieron cargar los datos.' }
-      : { productos: (p.data ?? []).map((producto: any) => ({ ...producto, tallas: ordenarTallas(producto.tallas || []) })), colecciones: c.data ?? [], publicaciones: posts.data ?? [], perfil: perfil.data ? { ...PERFIL_EDITORIAL_INICIAL, ...perfil.data } : PERFIL_EDITORIAL_INICIAL }
+      : { productos: (p.data ?? []).map((producto: any) => ({ ...producto, tallas: ordenarTallas(producto.tallas || []) })), colecciones: c.data ?? [], publicaciones: posts.data ?? [], perfil: { ...(perfil.data ? { ...PERFIL_EDITORIAL_INICIAL, ...perfil.data } : PERFIL_EDITORIAL_INICIAL), ...leerEtiquetaLocal() } }
     setDatos(next)
     return next
   }, [])
@@ -634,18 +659,31 @@ export default function App() {
           if (errorActual && errorActual.code !== 'PGRST116') throw errorActual
           const avatar = d.avatarArchivo instanceof File ? await subirCloudinary(d.avatarArchivo) : null
           const portada = d.portadaArchivo instanceof File ? await subirCloudinary(d.portadaArchivo) : null
+          const etiquetasIngresadas = Array.isArray(d.etiquetas) ? d.etiquetas.slice(0, 6) : []
+          const etiquetas = etiquetasIngresadas.map((etiqueta: unknown): { titulo: string; urlIngresada: string } => ({ titulo: String((etiqueta as EtiquetaPerfil)?.titulo || '').trim().slice(0, 48), urlIngresada: String((etiqueta as EtiquetaPerfil)?.url || '').trim() }))
+          if (etiquetas.some((etiqueta: { titulo: string; urlIngresada: string }) => Boolean(etiqueta.titulo) !== Boolean(etiqueta.urlIngresada))) throw new Error('Completa tanto el título como el enlace de cada etiqueta.')
+          if (etiquetas.some((etiqueta: { titulo: string; urlIngresada: string }) => etiqueta.urlIngresada && !enlacePerfilSeguro(etiqueta.urlIngresada))) throw new Error('Cada etiqueta debe usar un enlace válido que empiece con http:// o https://.')
+          const etiquetasValidas = etiquetas.filter((etiqueta: { titulo: string; urlIngresada: string }) => etiqueta.titulo && etiqueta.urlIngresada).map((etiqueta: { titulo: string; urlIngresada: string }): EtiquetaPerfil => ({ titulo: etiqueta.titulo, url: enlacePerfilSeguro(etiqueta.urlIngresada) }))
           const payload = {
             id: true,
             nombre: String(d.nombre || '').trim() || BRAND_UPPER,
             biografia: String(d.biografia || '').trim() || PERFIL_EDITORIAL_INICIAL.biografia,
             avatar_url: avatar?.secure_url || actual?.avatar_url || null,
             portada_url: portada?.secure_url || actual?.portada_url || null,
+            etiquetas: etiquetasValidas,
             actualizado_en: new Date().toISOString(),
             actualizado_por: user.id,
           }
-          const guardado = await supabase.from('perfil_editorial').upsert(payload, { onConflict: 'id' }).select().single()
+          let guardado = await supabase.from('perfil_editorial').upsert(payload, { onConflict: 'id' }).select().single()
+          if (guardado.error && esEntornoLocal() && /etiquetas|etiqueta_titulo|etiqueta_url/i.test(`${guardado.error.message} ${guardado.error.details || ''}`)) {
+            guardarEtiquetaLocal(etiquetasValidas)
+            const { etiquetas: _etiquetas, ...payloadSinEtiqueta } = payload
+            guardado = await supabase.from('perfil_editorial').upsert(payloadSinEtiqueta, { onConflict: 'id' }).select().single()
+          } else if (!guardado.error && esEntornoLocal()) {
+            window.localStorage.removeItem(PERFIL_ETIQUETA_LOCAL_KEY)
+          }
           if (guardado.error) throw guardado.error
-          perfil = { ...PERFIL_EDITORIAL_INICIAL, ...guardado.data }
+          perfil = { ...PERFIL_EDITORIAL_INICIAL, ...guardado.data, ...leerEtiquetaLocal() }
           error = null
         } catch (caught) { error = caught }
         if (!error) {
@@ -669,7 +707,12 @@ export default function App() {
           } else {
             const d = e.data.datos || {}, id = String(d.id || '')
             const formatosPost = new Set(['square','landscape','portrait'])
-            const payload = { titulo: String(d.titulo || '').trim(), descripcion: String(d.descripcion || '').trim(), contenido: String(d.descripcion || '').trim(), formato_media: formatosPost.has(String(d.formatoMedia)) ? String(d.formatoMedia) : 'portrait', estado: 'publicado' as const, autor_id: user.id, publicado_en: new Date().toISOString() }
+            const etiquetasIngresadas = Array.isArray(d.etiquetas) ? d.etiquetas.slice(0, 6) : []
+            const etiquetas = etiquetasIngresadas.map((etiqueta: unknown): { titulo: string; urlIngresada: string } => ({ titulo: String((etiqueta as EtiquetaPerfil)?.titulo || '').trim().slice(0, 48), urlIngresada: String((etiqueta as EtiquetaPerfil)?.url || '').trim() }))
+            if (etiquetas.some((etiqueta: { titulo: string; urlIngresada: string }) => Boolean(etiqueta.titulo) !== Boolean(etiqueta.urlIngresada))) throw new Error('Completa tanto el título como el enlace de cada etiqueta.')
+            if (etiquetas.some((etiqueta: { titulo: string; urlIngresada: string }) => etiqueta.urlIngresada && !enlacePerfilSeguro(etiqueta.urlIngresada))) throw new Error('Cada etiqueta debe usar un enlace válido que empiece con http:// o https://.')
+            const etiquetasValidas = etiquetas.filter((etiqueta: { titulo: string; urlIngresada: string }) => etiqueta.titulo && etiqueta.urlIngresada).map((etiqueta: { titulo: string; urlIngresada: string }): EtiquetaPerfil => ({ titulo: etiqueta.titulo, url: enlacePerfilSeguro(etiqueta.urlIngresada) }))
+            const payload = { titulo: String(d.titulo || '').trim(), descripcion: String(d.descripcion || '').trim(), contenido: String(d.descripcion || '').trim(), etiquetas: etiquetasValidas, formato_media: formatosPost.has(String(d.formatoMedia)) ? String(d.formatoMedia) : 'portrait', estado: 'publicado' as const, autor_id: user.id, publicado_en: new Date().toISOString() }
             const saved = id
               ? await supabase.from('publicaciones').update(payload).eq('id', id).select('id').single()
               : await supabase.from('publicaciones').insert({ ...payload, slug: `${String(d.titulo || 'post').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Date.now()}` }).select('id').single()

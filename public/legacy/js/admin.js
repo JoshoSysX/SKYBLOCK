@@ -870,8 +870,16 @@ const postMediaFormatInput = document.getElementById('postMediaFormat');
 const postFormatOptions = [...document.querySelectorAll('[data-post-format-option]')];
 let postImageData = [];
 let adminPosts = [];
-const adminFeedProfile = { nombre:'SKYBLOCK STUDIO', biografia:'', avatar_url:'', portada_url:'' };
+const adminFeedProfile = { nombre:'SKYBLOCK STUDIO', biografia:'', avatar_url:'', portada_url:'', etiquetas:[] };
 const postMediaFormats = new Set(['square','landscape','portrait']);
+function profileLinkElements(rawLinks, className) {
+  return (Array.isArray(rawLinks) ? rawLinks : []).slice(0,6).map((item) => {
+    const title=String(item?.titulo||'').trim(); let url=''; try { const parsed=new URL(String(item?.url||'').trim()); if(['https:','http:'].includes(parsed.protocol))url=parsed.href; } catch {}
+    if(!title||!url)return null;
+    const link=document.createElement('a'); link.className=className; link.href=url; link.target='_blank'; link.rel='noopener noreferrer';
+    const text=document.createElement('span'); text.textContent=title; const arrow=document.createElement('b'); arrow.setAttribute('aria-hidden','true'); arrow.textContent='→'; link.append(text,arrow); return link;
+  }).filter(Boolean);
+}
 const selectedPostMediaFormat = () => postMediaFormatInput.value || 'portrait';
 const normalizePostMediaFormat = (format) => postMediaFormats.has(format) ? format : 'portrait';
 function setPostMediaFormat(format) {
@@ -892,10 +900,11 @@ function renderPostPreviewMedia() {
 }
 
 function renderAdminFeedProfile() {
-  const name=document.getElementById('adminPostsProfileName'),bio=document.getElementById('adminPostsProfileBio'),avatar=document.getElementById('adminPostsProfileAvatar'),cover=document.getElementById('adminPostsProfileCover'),count=document.getElementById('adminPostsProfileCount');
+  const name=document.getElementById('adminPostsProfileName'),bio=document.getElementById('adminPostsProfileBio'),avatar=document.getElementById('adminPostsProfileAvatar'),cover=document.getElementById('adminPostsProfileCover'),count=document.getElementById('adminPostsProfileCount'),links=document.getElementById('adminPostsProfileLinks');
   name.textContent=adminFeedProfile.nombre || 'SKYBLOCK STUDIO'; bio.textContent=adminFeedProfile.biografia || ''; count.textContent=String(adminPosts.length).padStart(2,'0');
   avatar.style.backgroundImage=adminFeedProfile.avatar_url?`url("${adminFeedProfile.avatar_url}")`:''; avatar.textContent=adminFeedProfile.avatar_url?'':'SB'; avatar.classList.toggle('has-image',Boolean(adminFeedProfile.avatar_url));
   cover.style.backgroundImage=adminFeedProfile.portada_url?`linear-gradient(90deg,rgba(7,8,9,.28),rgba(7,8,9,.06)),url("${adminFeedProfile.portada_url}")`:'';
+  links.replaceChildren(...profileLinkElements(adminFeedProfile.etiquetas, 'admin-feed-profile-link'));
 }
 
 function storedPosts() {
@@ -920,6 +929,14 @@ document.getElementById('postTitle').addEventListener('input', (event) => {
 document.getElementById('postDescription').addEventListener('input', (event) => {
   document.getElementById('previewPostDescription').textContent = event.target.value || 'La descripción del post aparecerá aquí mientras escribes.';
 });
+const postLinks=document.createElement('section'); postLinks.className='admin-profile-link-fields';
+postLinks.innerHTML='<strong>Etiquetas al final del mensaje</strong><small>Opcional. Agrega hasta seis enlaces para esta publicación.</small><div class="admin-profile-links"></div><button class="admin-secondary admin-add-profile-link" type="button">+ Agregar etiqueta</button>';
+document.getElementById('postDescription').closest('label').after(postLinks);
+const postLinksRows=postLinks.querySelector('.admin-profile-links'),addPostLink=postLinks.querySelector('button'),previewPostTags=document.getElementById('previewPostTags');
+const postLinksValue=()=>[...postLinksRows.querySelectorAll('.admin-profile-link-row')].map((row)=>({titulo:row.querySelector('[data-post-link-title]').value.trim(),url:row.querySelector('[data-post-link-url]').value.trim()}));
+const refreshPostLinksPreview=()=>previewPostTags.replaceChildren(...profileLinkElements(postLinksValue(),'post-tag'));
+const addPostLinkRow=(link={})=>{if(postLinksRows.children.length>=6)return;const row=document.createElement('div');row.className='admin-profile-link-row';const title=document.createElement('input');title.maxLength=48;title.placeholder='Texto de la etiqueta';title.dataset.postLinkTitle='';title.value=link.titulo||'';const url=document.createElement('input');url.type='url';url.maxLength=500;url.placeholder='https://...';url.dataset.postLinkUrl='';url.value=link.url||'';const remove=document.createElement('button');remove.type='button';remove.className='admin-remove-profile-link';remove.textContent='×';remove.addEventListener('click',()=>{row.remove();refreshPostLinksPreview()});title.addEventListener('input',refreshPostLinksPreview);url.addEventListener('input',refreshPostLinksPreview);row.append(title,url,remove);postLinksRows.append(row);refreshPostLinksPreview();};
+addPostLink.addEventListener('click',()=>addPostLinkRow());
 
 postImageInput.addEventListener('change', () => {
   const files = [...postImageInput.files];
@@ -944,6 +961,8 @@ function resetPostEditor(message = '') {
   document.getElementById('postUploadText').textContent = 'Seleccionar fotografías';
   document.getElementById('previewPostTitle').textContent = 'Título de la publicación';
   document.getElementById('previewPostDescription').textContent = 'La descripción del post aparecerá aquí mientras escribes.';
+  postLinksRows.replaceChildren();
+  addPostLinkRow();
   document.getElementById('savePostButton').textContent = 'Publicar post';
   document.getElementById('cancelPostEdit').textContent = 'Cancelar';
   document.getElementById('postStatus').innerHTML = message;
@@ -960,6 +979,8 @@ function editPost(post) {
   renderPostPreviewMedia();
   document.getElementById('previewPostTitle').textContent = post.title;
   document.getElementById('previewPostDescription').textContent = post.description;
+  postLinksRows.replaceChildren();
+  (post.etiquetas?.length ? post.etiquetas : [{}]).forEach(addPostLinkRow);
   document.getElementById('postUploadText').textContent = 'Cambiar fotografías (opcional)';
   document.getElementById('savePostButton').textContent = 'Guardar cambios';
   document.getElementById('cancelPostEdit').textContent = 'Cancelar edición';
@@ -998,6 +1019,7 @@ postForm.addEventListener('submit', (event) => {
     id: editId,
     titulo: document.getElementById('postTitle').value.trim(),
     descripcion: document.getElementById('postDescription').value.trim(),
+    etiquetas: postLinksValue(),
     alt: document.getElementById('postAlt').value.trim(),
     formatoMedia: normalizePostMediaFormat(selectedPostMediaFormat()),
     archivos
@@ -1016,6 +1038,7 @@ window.addEventListener('message',(event) => {
         id:post.id,
         title:post.titulo,
         description:post.descripcion || post.contenido || '',
+        etiquetas:Array.isArray(post.etiquetas) ? post.etiquetas : [],
         alt:imagen?.texto_alternativo || post.titulo,
         image:imagen?.url_segura || '',
         images:[...(post.imagenes || [])].sort((a,b) => Number(a.posicion || 0) - Number(b.posicion || 0)).map((item) => ({ url:item.url_segura || '', alt:item.texto_alternativo || post.titulo })),
@@ -1047,6 +1070,8 @@ if (editorialProfileForm) {
   const profileFields = {
     nombre: document.getElementById('editorialProfileName'),
     biografia: document.getElementById('editorialProfileBio'),
+    links: document.getElementById('editorialProfileLinks'),
+    addLink: document.getElementById('addEditorialProfileLink'),
     avatar: document.getElementById('editorialProfileAvatar'),
     portada: document.getElementById('editorialProfileCover'),
     avatarText: document.getElementById('editorialProfileAvatarText'),
@@ -1055,13 +1080,29 @@ if (editorialProfileForm) {
     save: document.getElementById('saveEditorialProfile'),
     previewName: document.getElementById('adminProfilePreviewName'),
     previewBio: document.getElementById('adminProfilePreviewBio'),
+    previewLinks: document.getElementById('adminProfilePreviewLinks'),
     previewAvatar: document.getElementById('adminProfilePreviewAvatar'),
     previewCover: document.getElementById('adminProfilePreviewCover')
   };
   const profileMaxBytes = MAX_IMAGE_SIZE_BYTES;
+  const safeProfileUrl = (value) => {
+    try { const url = new URL(String(value || '').trim()); return ['https:','http:'].includes(url.protocol) ? url.href : ''; }
+    catch { return ''; }
+  };
+  const profileLinksValue = () => [...profileFields.links.querySelectorAll('.admin-profile-link-row')].map((row) => ({ titulo: row.querySelector('[data-profile-link-title]').value.trim(), url: row.querySelector('[data-profile-link-url]').value.trim() }));
+  const addProfileLinkRow = (link={}) => {
+    if (profileFields.links.children.length >= 6) return;
+    const row=document.createElement('div'); row.className='admin-profile-link-row';
+    const title=document.createElement('input'); title.maxLength=48; title.placeholder='Texto de la etiqueta'; title.dataset.profileLinkTitle=''; title.value=link.titulo||'';
+    const url=document.createElement('input'); url.type='url'; url.maxLength=500; url.inputMode='url'; url.placeholder='https://...'; url.dataset.profileLinkUrl=''; url.value=link.url||'';
+    const remove=document.createElement('button'); remove.type='button'; remove.className='admin-remove-profile-link'; remove.setAttribute('aria-label','Quitar etiqueta'); remove.textContent='×';
+    remove.addEventListener('click',()=>{row.remove();refreshProfilePreview();}); title.addEventListener('input',refreshProfilePreview); url.addEventListener('input',refreshProfilePreview);
+    row.append(title,url,remove); profileFields.links.append(row); refreshProfilePreview();
+  };
   const refreshProfilePreview = () => {
     profileFields.previewName.textContent = profileFields.nombre.value || 'SKYBLOCK STUDIO';
     profileFields.previewBio.textContent = profileFields.biografia.value;
+    profileFields.previewLinks.replaceChildren(...profileLinkElements(profileLinksValue().map((link)=>({titulo:link.titulo,url:safeProfileUrl(link.url)})), 'admin-profile-preview-link'));
   };
   const previewProfileImage = (input, preview, isCover) => {
     const file = input.files && input.files[0];
@@ -1089,12 +1130,13 @@ if (editorialProfileForm) {
   profileFields.avatar.addEventListener('change', () => { updateProfileFileName(profileFields.avatar, profileFields.avatarText, 'Cambiar foto de perfil'); previewProfileImage(profileFields.avatar, profileFields.previewAvatar, false); });
   profileFields.portada.addEventListener('change', () => { updateProfileFileName(profileFields.portada, profileFields.portadaText, 'Cambiar portada'); previewProfileImage(profileFields.portada, profileFields.previewCover, true); });
   [profileFields.nombre,profileFields.biografia].forEach((input) => input.addEventListener('input', refreshProfilePreview));
+  profileFields.addLink.addEventListener('click', () => addProfileLinkRow());
   editorialProfileForm.addEventListener('submit', (event) => {
     event.preventDefault();
     profileFields.save.disabled = true;
     profileFields.status.textContent = 'Guardando perfil editorial...';
     parent.postMessage({ tipo:'SKYBLOCK_ADMIN_GUARDAR_PERFIL', datos:{
-      nombre:profileFields.nombre.value.trim(), biografia:profileFields.biografia.value.trim(),
+      nombre:profileFields.nombre.value.trim(), biografia:profileFields.biografia.value.trim(), etiquetas:profileLinksValue(),
       avatarArchivo:profileFields.avatar.files[0] || null, portadaArchivo:profileFields.portada.files[0] || null
     } },location.origin);
   });
@@ -1104,6 +1146,8 @@ if (editorialProfileForm) {
       const profile = event.data.perfil || {};
       profileFields.nombre.value = profile.nombre || 'SKYBLOCK STUDIO';
       profileFields.biografia.value = profile.biografia || '';
+      profileFields.links.replaceChildren();
+      (Array.isArray(profile.etiquetas) && profile.etiquetas.length ? profile.etiquetas : [{}]).forEach((link) => addProfileLinkRow(link));
       refreshProfilePreview();
       if (profile.avatar_url) { profileFields.previewAvatar.style.backgroundImage = `url("${profile.avatar_url}")`; profileFields.previewAvatar.textContent = ''; profileFields.previewAvatar.classList.add('has-image'); }
       if (profile.portada_url) { profileFields.previewCover.style.backgroundImage = `linear-gradient(90deg,rgba(7,8,9,.3),rgba(7,8,9,.08)),url("${profile.portada_url}")`; profileFields.previewCover.classList.add('has-image'); }
