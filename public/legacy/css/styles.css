@@ -3161,7 +3161,7 @@ footer[data-chapter] {
 
 /* Autenticidad */
 .verify-page {
-  background: #08090a;
+  background: #000;
   color: #f3f3ef
 }
 
@@ -3185,19 +3185,12 @@ footer[data-chapter] {
   align-items: center;
   gap: clamp(50px, 8vw, 130px);
   padding: 135px clamp(28px, 8vw, 130px) 80px;
-  background: radial-gradient(circle at 73% 45%, #16305942 0, transparent 24%), linear-gradient(125deg, #08090a 58%, #0d1118);
+  background: #000;
   isolation: isolate
 }
 
 .verify-hero:before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  opacity: .22;
-  background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
-  background-size: 82px 82px;
-  mask-image: linear-gradient(90deg, transparent 28%, #000)
+  display: none
 }
 
 .verify-copy {
