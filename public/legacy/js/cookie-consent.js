@@ -59,8 +59,22 @@
       }
     })
   }
+  const renderWhenReady = () => {
+    const attempt = () => {
+      if (document.body) {
+        render()
+        return
+      }
+      requestAnimationFrame(attempt)
+    }
+    // Este archivo se añade de forma dinámica desde el shell de React. En algunas
+    // navegaciones el DOMContentLoaded ya ocurrió al terminar de descargarlo, por
+    // lo que depender solo de ese evento dejaba el aviso sin mostrarse.
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', attempt, { once: true })
+    attempt()
+  }
   const preferences = read()
-  if (preferences) consent(Boolean(preferences.analytics)); else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render, { once: true }); else render()
+  if (preferences) consent(Boolean(preferences.analytics)); else renderWhenReady()
   document.addEventListener('click', (event) => {
     if (!event.target.closest('[data-cookie-settings]')) return
     event.preventDefault()

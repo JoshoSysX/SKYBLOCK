@@ -10,7 +10,7 @@
     return
   }
   const consent = document.createElement('script')
-  consent.src = 'js/cookie-consent.js?v=20261010'
-  consent.defer = true
+  consent.src = 'js/cookie-consent.js?v=20261010-2'
+  consent.async = false
   document.head.appendChild(consent)
 })()
