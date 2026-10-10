@@ -6434,3 +6434,10 @@ body.catalog-page,
 .site-footer .social{display:none}
 .site-footer .footer-brand>p{margin-bottom:0}
 @media(max-width:620px){.site-footer .footer-col{padding-left:13px}.site-footer .copyright{border-top-color:#343634}.site-footer .footer-brand>p{margin-bottom:0}}
+
+/* Alineación editorial del bloque de marca y de los enlaces. */
+.site-footer .footer-brand{display:flex;flex-direction:column;align-items:flex-start;gap:14px}
+.site-footer .footer-brand:before{margin:0}
+.site-footer .footer-brand .brand{margin:0}
+.site-footer .footer-brand>p{margin:0!important}
+.site-footer .footer-col a:before{display:none}
