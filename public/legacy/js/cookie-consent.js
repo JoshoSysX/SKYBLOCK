@@ -9,19 +9,25 @@
       return String(window.SKYBLOCK_GA_MEASUREMENT_ID || document.documentElement.dataset.gaMeasurementId || '').trim()
     }
   }
+  // El sitio público se renderiza dentro de un iframe. La etiqueta debe vivir en
+  // la ventana principal para que Google Analytics pueda detectarla correctamente.
+  const analyticsScope = () => {
+    try { return window.top && window.top.document ? window.top : window } catch { return window }
+  }
   const consent = (analytics) => {
-    window.dataLayer = window.dataLayer || []
-    window.gtag = window.gtag || function () { window.dataLayer.push(arguments) }
-    window.gtag('consent', 'update', { analytics_storage: analytics ? 'granted' : 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' })
+    const scope = analyticsScope()
+    scope.dataLayer = scope.dataLayer || []
+    scope.gtag = scope.gtag || function () { scope.dataLayer.push(arguments) }
+    scope.gtag('consent', 'update', { analytics_storage: analytics ? 'granted' : 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' })
     if (!analytics) return
     const id = getMeasurementId()
-    if (!id || document.querySelector(`script[data-skb-ga="${id}"]`)) return
-    const script = document.createElement('script')
+    if (!id || scope.document.querySelector(`script[data-skb-ga="${id}"]`)) return
+    const script = scope.document.createElement('script')
     script.async = true
     script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`
     script.dataset.skbGa = id
-    script.onload = () => window.gtag('config', id, { anonymize_ip: true })
-    document.head.appendChild(script)
+    script.onload = () => scope.gtag('config', id, { anonymize_ip: true })
+    scope.document.head.appendChild(script)
   }
   const read = () => {
     try { return JSON.parse(localStorage.getItem(storageKey) || 'null') } catch { return null }
@@ -32,9 +38,10 @@
     consent(value.analytics)
     return value
   }
-  window.dataLayer = window.dataLayer || []
-  window.gtag = window.gtag || function () { window.dataLayer.push(arguments) }
-  window.gtag('consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', functionality_storage: 'granted', security_storage: 'granted', wait_for_update: 500 })
+  const scope = analyticsScope()
+  scope.dataLayer = scope.dataLayer || []
+  scope.gtag = scope.gtag || function () { scope.dataLayer.push(arguments) }
+  scope.gtag('consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', functionality_storage: 'granted', security_storage: 'granted', wait_for_update: 500 })
 
   const style = `
     .skb-cookie{position:fixed;z-index:10000;right:20px;bottom:20px;width:min(470px,calc(100vw - 32px));padding:23px;background:#111214;color:#fff;box-shadow:0 18px 55px #0006;font-family:var(--body,Arial,sans-serif)}
