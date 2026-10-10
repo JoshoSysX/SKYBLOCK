@@ -1706,28 +1706,19 @@ footer[data-chapter] {
 
 .restock-section {
   margin-top: 25px;
-  min-height: clamp(660px, 63vw, 980px);
   position: relative;
   overflow: hidden;
   color: #f4f4f1;
-  background:
-    linear-gradient(180deg, rgba(6, 7, 8, .32) 0%, rgba(12, 13, 14, .9) 52%, #111214 72%),
-    url('https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=2200&q=92') center top/100% 56% no-repeat,
-    #111214;
 }
 
 .restock-main {
-  min-height: clamp(320px, 32vw, 520px);
-  padding: clamp(48px, 7vw, 110px);
-  background:linear-gradient(90deg,#090a0be8 0%,#090a0b9e 58%,#090a0b38),url('../assets/image/PORTADA RESTOCK.jpg') center/cover no-repeat;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
 }
 
-.restock-main>span,
-.story-title>span {
+.restock-main>span {
   font: 600 11px var(--display);
   letter-spacing: .18em;
   text-transform: uppercase;
@@ -1745,72 +1736,6 @@ footer[data-chapter] {
   font-size: 12px;
   color: #ccc;
   margin: 0 0 25px
-}
-
-.restock-main .light-button {
-  background: transparent;
-  color: #fff;
-  border: 1px solid #aaa
-}
-
-.restock-main .light-button:hover {
-  background: #fff;
-  color: #111
-}
-
-.restock-reason {
-  display: grid;
-  grid-template-columns: .55fr 1.15fr 1fr;
-  gap: clamp(30px, 5vw, 90px);
-  align-items: center;
-  padding: clamp(60px, 8vw, 130px) clamp(45px, 6vw, 110px);
-  border-top: 1px solid #292a2c;
-}
-
-.restock-reason .story-number {
-  align-self: start
-}
-
-.restock-reason .story-title h3 {
-  font: 600 clamp(50px, 5.4vw, 92px)/.88 var(--display);
-  text-transform: uppercase;
-  margin: 18px 0 0;
-}
-
-@media(max-width:900px) {
-  .restock-section {
-    background-size: auto 48%
-  }
-
-  .restock-reason {
-    grid-template-columns: 1fr 1.4fr
-  }
-
-  .restock-reason .story-number {
-    grid-column: 1/-1
-  }
-}
-
-@media(max-width:600px) {
-  .restock-section {
-    margin-left: -14px;
-    margin-right: -14px;
-    background-size: auto 42%
-  }
-
-  .restock-main {
-    padding: 55px 24px;
-    min-height: 390px
-  }
-
-  .restock-reason {
-    grid-template-columns: 1fr;
-    padding: 60px 24px
-  }
-
-  .restock-reason .story-number {
-    grid-column: 1
-  }
 }
 
 /* No Restock: un único cuadro, un único título */
@@ -1861,6 +1786,7 @@ footer[data-chapter] {
 .restock-main .light-button {
   min-width:205px;
   background:#f5f5f1;
+  border:1px solid #f5f5f1;
   border-color:#f5f5f1;
   color:#101112;
 }
