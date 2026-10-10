@@ -6427,7 +6427,9 @@ body.catalog-page,
 .site-footer:after{display:none}
 .site-footer .footer-brand{border:0}
 .site-footer .footer-col{padding-left:20px;border-left:1px solid #353735}
+.site-footer .footer-col{border-top:0!important}
 .site-footer .footer-col:before{display:none}
+.site-footer .footer-col:after{display:none!important}
 .site-footer .copyright{border-top:1px solid #343634}
 .site-footer .social{display:none}
 .site-footer .footer-brand>p{margin-bottom:0}
