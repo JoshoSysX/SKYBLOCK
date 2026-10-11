@@ -1956,21 +1956,24 @@ footer[data-chapter] {
 @media(max-width:600px) {
   .home-page .restock-section {
     min-height:100svh;
-    grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);
+    grid-template-columns:minmax(0,.96fr) minmax(0,1.04fr);
     grid-template-rows:1fr;
   }
   .home-page .restock-content {
     order:1;
     min-height:100%;
-    padding:46px 20px 52px;
+    padding:40px 16px 46px;
   }
   .home-page .restock-image-slot {
     order:2;
     min-height:100%;
-    background-position:right bottom;
-    background-size:auto 92%;
+    background-position:85% bottom;
+    background-size:auto 78%;
   }
-  .home-page .restock-content h2 { font-size:clamp(48px,13vw,70px); }
+  .home-page .restock-content h2 { font-size:clamp(44px,12vw,62px); }
+  .home-page .restock-copy { margin-top:30px; }
+  .home-page .restock-copy p { font-size:10px;line-height:1.6; }
+  .home-page .restock-content .light-button { min-width:0;font-size:8px; }
 }
 
 /* Texto del hero arriba en móviles */
