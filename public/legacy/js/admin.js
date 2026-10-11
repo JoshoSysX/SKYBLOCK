@@ -1441,7 +1441,7 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
   const modal=document.createElement('div');
   modal.className='post-inline-crop';
   modal.hidden=true;
-  modal.innerHTML='<section class="image-crop-card" role="dialog" aria-modal="true" aria-labelledby="postCropTitle"><h2 id="postCropTitle">Ajustar fotografía</h2><p>Elige la medida y acomoda la imagen dentro del marco. El primer botón avanza; el segundo se queda en fotos para que puedas añadir más.</p><div class="post-crop-formats" aria-label="Medida de la publicación"><button type="button" data-post-crop-format="portrait"><b>Vertical</b><small>4:5</small></button><button type="button" data-post-crop-format="square"><b>Cuadrado</b><small>1:1</small></button><button type="button" data-post-crop-format="landscape"><b>Horizontal</b><small>16:9</small></button></div><div class="image-crop-stage"><img draggable="false" alt="Vista previa del encuadre de la fotografía"><span class="image-crop-frame" aria-hidden="true"></span></div><div class="image-crop-actions"><button type="button" class="admin-secondary" data-post-crop-cancel>Guardar y continuar</button><button type="button" class="admin-primary" data-post-crop-apply>Guardar y añadir otra foto</button></div></section>';
+  modal.innerHTML='<section class="image-crop-card" role="dialog" aria-modal="true" aria-labelledby="postCropTitle"><h2 id="postCropTitle">Ajustar fotografía</h2><p>Arrastra con un dedo para mover. Usa dos dedos para ampliar o reducir. El primer botón avanza; el segundo se queda en fotos para que puedas añadir más.</p><div class="post-crop-formats" aria-label="Medida de la publicación"><button type="button" data-post-crop-format="portrait"><b>Vertical</b><small>4:5</small></button><button type="button" data-post-crop-format="square"><b>Cuadrado</b><small>1:1</small></button><button type="button" data-post-crop-format="landscape"><b>Horizontal</b><small>16:9</small></button></div><div class="image-crop-stage"><img draggable="false" alt="Vista previa del encuadre de la fotografía"><span class="image-crop-frame" aria-hidden="true"></span></div><div class="image-crop-actions"><button type="button" class="admin-secondary" data-post-crop-cancel>Guardar y continuar</button><button type="button" class="admin-primary" data-post-crop-apply>Guardar y añadir otra foto</button></div></section>';
   document.querySelector('[data-post-step="media"]').append(modal);
   const stage=modal.querySelector('.image-crop-stage');
   const image=stage.querySelector('img');
@@ -1449,7 +1449,9 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
   const cancel=modal.querySelector('[data-post-crop-cancel]');
   const cropFormatButtons=[...modal.querySelectorAll('[data-post-crop-format]')];
   const cropFormats={portrait:.8,square:1,landscape:16/9};
-  let state=null,drag=null,postCropBatchFormat='portrait';
+  let state=null,drag=null,pinch=null,postCropBatchFormat='portrait';
+  const pointers=new Map();
+  const pointerDistance=()=>{const [first,second]=[...pointers.values()];return Math.hypot(first.x-second.x,first.y-second.y)};
   const setCropFormat=(format)=>{
     const selected=normalizePostMediaFormat(format);
     if(!state)return;
@@ -1482,6 +1484,7 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
   const openCrop=(file,aspect,index,total,lockFormat=false)=>new Promise((resolve)=>{
     const reader=new FileReader();
     reader.onload=()=>{
+      pointers.clear(); drag=null; pinch=null;
       state={file,url:reader.result,aspect,x:50,y:50,zoom:1};
       image.src=state.url; setCropFormat(postCropBatchFormat);
       cropFormatButtons.forEach((button)=>button.disabled=lockFormat||index>1);
@@ -1514,17 +1517,27 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
     if(!state)return;
     event.preventDefault();
     stage.setPointerCapture(event.pointerId);
-    drag={pointerId:event.pointerId,x:event.clientX,y:event.clientY,baseX:state.x,baseY:state.y};
+    pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(pointers.size===1)drag={pointerId:event.pointerId,x:event.clientX,y:event.clientY,baseX:state.x,baseY:state.y};
+    if(pointers.size===2){pinch={distance:pointerDistance(),zoom:state.zoom};drag=null;}
     stage.classList.add('is-dragging');
   });
   stage.addEventListener('pointermove',(event)=>{
+    if(!pointers.has(event.pointerId)||!state)return;
+    pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(pointers.size===2&&pinch){state.zoom=Math.max(1,Math.min(3,pinch.zoom*(pointerDistance()/pinch.distance)));draw();return;}
     if(!drag||event.pointerId!==drag.pointerId)return;
     const rect=stage.getBoundingClientRect();
     state.x=Math.max(0,Math.min(100,drag.baseX-((event.clientX-drag.x)/rect.width)*100));
     state.y=Math.max(0,Math.min(100,drag.baseY-((event.clientY-drag.y)/rect.height)*100));
     draw();
   });
-  const stopDrag=()=>{ drag=null; stage.classList.remove('is-dragging'); };
+  const stopDrag=(event)=>{
+    pointers.delete(event.pointerId);
+    if(pointers.size<2)pinch=null;
+    if(pointers.size===1){const [id,point]=[...pointers.entries()][0];drag={pointerId:id,x:point.x,y:point.y,baseX:state.x,baseY:state.y};return;}
+    drag=null; stage.classList.remove('is-dragging');
+  };
   stage.addEventListener('pointerup',stopDrag); stage.addEventListener('pointercancel',stopDrag);
   stage.addEventListener('wheel',(event)=>{
     if(!state)return;
