@@ -1877,13 +1877,13 @@ footer[data-chapter] {
 }
 
 .home-page .restock-image-slot {
-  order:2;
+  order:1;
   min-height:100%;
   background:#fff
 }
 
 .home-page .restock-content {
-  order:1;
+  order:2;
   display:flex;
   min-height:100%;
   padding:clamp(54px,7vw,125px);
