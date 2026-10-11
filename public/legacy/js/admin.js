@@ -912,8 +912,15 @@ function renderPostPreviewMedia() {
   const format = normalizePostMediaFormat(selectedPostMediaFormat());
   postPreview.dataset.mediaFormat = format;
   postPreview.innerHTML = postImageData.length
-    ? `<div class="post-carousel-track">${postImageData.map((image) => `<figure class="post-carousel-slide is-loaded"><img src="${image}" alt="Vista previa del post"></figure>`).join('')}</div>${postImageData.length > 1 ? `<div class="post-carousel-count">1 / ${postImageData.length}</div>` : ''}`
+    ? `<div class="post-carousel-track">${postImageData.map((image,index) => `<figure class="post-carousel-slide is-loaded"><img src="${image}" alt="Vista previa de la foto ${index+1} de ${postImageData.length}"></figure>`).join('')}</div>${postImageData.length > 1 ? `<button class="post-carousel-arrow previous" type="button" aria-label="Foto anterior" data-post-preview-previous>‹</button><button class="post-carousel-arrow next" type="button" aria-label="Foto siguiente" data-post-preview-next>›</button><div class="post-carousel-count">1 / ${postImageData.length}</div>` : ''}`
     : '<div class="post-preview-empty">Vista previa de las fotografías</div>';
+  const track=postPreview.querySelector('.post-carousel-track');
+  const count=postPreview.querySelector('.post-carousel-count');
+  if(!track||!count)return;
+  const updateCount=()=>{ const index=Math.max(0,Math.min(postImageData.length-1,Math.round(track.scrollLeft/Math.max(track.clientWidth,1)))); count.textContent=`${index+1} / ${postImageData.length}`; };
+  postPreview.querySelector('[data-post-preview-previous]')?.addEventListener('click',()=>track.scrollBy({left:-track.clientWidth,behavior:'smooth'}));
+  postPreview.querySelector('[data-post-preview-next]')?.addEventListener('click',()=>track.scrollBy({left:track.clientWidth,behavior:'smooth'}));
+  track.addEventListener('scroll',updateCount,{passive:true});
 }
 
 function renderAdminFeedProfile() {
@@ -955,6 +962,43 @@ const refreshPostLinksPreview=()=>previewPostTags.replaceChildren(...profileLink
 const addPostLinkRow=(link={})=>{if(postLinksRows.children.length>=6)return;const row=document.createElement('div');row.className='admin-profile-link-row';const title=document.createElement('input');title.maxLength=48;title.placeholder='Texto de la etiqueta';title.dataset.postLinkTitle='';title.value=link.titulo||'';const url=document.createElement('input');url.type='url';url.maxLength=500;url.placeholder='https://...';url.dataset.postLinkUrl='';url.value=link.url||'';const remove=document.createElement('button');remove.type='button';remove.className='admin-remove-profile-link';remove.textContent='×';remove.addEventListener('click',()=>{row.remove();refreshPostLinksPreview()});title.addEventListener('input',refreshPostLinksPreview);url.addEventListener('input',refreshPostLinksPreview);row.append(title,url,remove);postLinksRows.append(row);refreshPostLinksPreview();};
 addPostLink.addEventListener('click',()=>addPostLinkRow());
 
+// Crear una publicación sucede en dos pasos: primero las imágenes y su encuadre,
+// luego el texto. Así las diez fotos mantienen una sola medida.
+let showPostStep=()=>{};
+{
+  const fields=postForm.querySelector('.admin-post-fields');
+  const titleField=document.getElementById('postTitle').closest('label');
+  const descriptionField=document.getElementById('postDescription').closest('label');
+  const altField=document.getElementById('postAlt').closest('label');
+  const formatField=document.querySelector('.admin-post-format');
+  const uploadField=document.getElementById('postImage').closest('label');
+  const actions=fields.querySelector('.admin-post-actions');
+  const status=document.getElementById('postStatus');
+  const mediaStep=document.createElement('section');
+  mediaStep.className='admin-post-step is-active'; mediaStep.dataset.postStep='media';
+  mediaStep.innerHTML='<div class="admin-post-step-head"><span>Paso 1 de 2</span><h3>Fotos y encuadre</h3><p>Selecciona hasta 10 fotografías. Todas usarán la misma medida.</p></div>';
+  const dataStep=document.createElement('section');
+  dataStep.className='admin-post-step'; dataStep.dataset.postStep='data';
+  const dataHead=document.createElement('div');
+  dataHead.className='admin-post-step-head'; dataHead.innerHTML='<span>Paso 2 de 2</span><h3>Información del post</h3><p>Completa los datos y revisa las fotografías una por una antes de publicar.</p>';
+  const previous=document.createElement('button'); previous.type='button'; previous.className='admin-secondary admin-post-step-back'; previous.textContent='← Cambiar fotos';
+  const continueButton=document.createElement('button'); continueButton.type='button'; continueButton.className='admin-primary admin-post-step-next'; continueButton.textContent='Continuar con los datos →';
+  const mediaStatus=document.createElement('p'); mediaStatus.className='admin-post-status'; mediaStatus.id='postMediaStatus';
+  mediaStep.append(formatField,uploadField,continueButton,mediaStatus);
+  dataStep.append(dataHead,previous,titleField,descriptionField,postLinks,altField,actions,status);
+  fields.append(mediaStep,dataStep);
+  showPostStep=(step)=>{
+    const media=step==='media';
+    mediaStep.classList.toggle('is-active',media); dataStep.classList.toggle('is-active',!media);
+    postModal.querySelector('.admin-post-preview')?.classList.toggle('is-waiting-images',media&&!postImageData.length);
+  };
+  continueButton.addEventListener('click',()=>{
+    if(!postImageData.length){ mediaStatus.textContent='Primero selecciona y ajusta al menos una fotografía.'; return; }
+    mediaStatus.textContent=''; showPostStep('data');
+  });
+  previous.addEventListener('click',()=>showPostStep('media'));
+}
+
 postImageInput.addEventListener('change', () => {
   const files = [...postImageInput.files];
   const status = document.getElementById('postStatus');
@@ -983,6 +1027,7 @@ function resetPostEditor(message = '') {
   document.getElementById('savePostButton').textContent = 'Publicar post';
   document.getElementById('cancelPostEdit').textContent = 'Cancelar';
   document.getElementById('postStatus').innerHTML = message;
+  showPostStep('media');
 }
 
 function editPost(post) {
@@ -1002,6 +1047,7 @@ function editPost(post) {
   document.getElementById('savePostButton').textContent = 'Guardar cambios';
   document.getElementById('cancelPostEdit').textContent = 'Cancelar edición';
   document.getElementById('postStatus').textContent = 'Editando publicación.';
+  showPostStep('data');
   setPostModal(true);
 }
 
@@ -1398,7 +1444,7 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
   const cancel=modal.querySelector('[data-post-crop-cancel]');
   const cropFormatButtons=[...modal.querySelectorAll('[data-post-crop-format]')];
   const cropFormats={portrait:.8,square:1,landscape:16/9};
-  let state=null,drag=null;
+  let state=null,drag=null,postCropBatchFormat='portrait';
   const setCropFormat=(format)=>{
     const selected=normalizePostMediaFormat(format);
     if(!state)return;
@@ -1432,7 +1478,8 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
     const reader=new FileReader();
     reader.onload=()=>{
       state={file,url:reader.result,aspect,x:50,y:50,zoom:1};
-      image.src=state.url; setCropFormat(normalizePostMediaFormat(selectedPostMediaFormat()));
+      image.src=state.url; setCropFormat(postCropBatchFormat);
+      cropFormatButtons.forEach((button)=>button.disabled=index>1);
       modal.querySelector('#postCropTitle').textContent=`Ajustar foto ${index} de ${total}`;
       modal.hidden=false;
     };
@@ -1441,7 +1488,7 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
     cancel.onclick=()=>close(file);
     apply.onclick=async()=>{ try { close(await exportCrop()); } catch { close(file); } };
   });
-  cropFormatButtons.forEach((button)=>button.addEventListener('click',()=>setCropFormat(button.dataset.postCropFormat)));
+  cropFormatButtons.forEach((button)=>button.addEventListener('click',()=>{postCropBatchFormat=button.dataset.postCropFormat;setCropFormat(postCropBatchFormat)}));
   stage.addEventListener('pointerdown',(event)=>{
     if(!state)return;
     stage.setPointerCapture(event.pointerId);
@@ -1473,7 +1520,8 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
       status.textContent=files.length>10?'Puedes seleccionar como máximo 10 fotografías.':`Cada fotografía debe pesar como máximo ${MAX_IMAGE_SIZE_MB} MB.`;
       renderPostPreviewMedia(); return;
     }
-    const aspect={square:1,landscape:1.91,portrait:.8}[normalizePostMediaFormat(selectedPostMediaFormat())]||.8;
+    postCropBatchFormat=normalizePostMediaFormat(selectedPostMediaFormat());
+    const aspect={square:1,landscape:1.91,portrait:.8}[postCropBatchFormat]||.8;
     const adjusted=[];
     for(let index=0;index<files.length;index++) adjusted.push(await openCrop(files[index],aspect,index+1,files.length));
     const transfer=new DataTransfer(); adjusted.forEach((file)=>transfer.items.add(file)); postImageInput.files=transfer.files;
@@ -1481,6 +1529,7 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
     document.getElementById('postUploadText').textContent=`${adjusted.length} fotografía${adjusted.length===1?'':'s'} lista${adjusted.length===1?'':'s'}`;
     status.textContent='Encuadre aplicado. Estas son las fotos que se publicarán.';
     renderPostPreviewMedia();
+    showPostStep('data');
   },true);
 }
 
