@@ -1877,13 +1877,13 @@ footer[data-chapter] {
 }
 
 .home-page .restock-image-slot {
-  order:1;
+  order:2;
   min-height:100%;
   background:#fafafa url('../assets/image/prductos.jpg') right center/auto 100% no-repeat
 }
 
 .home-page .restock-content {
-  order:2;
+  order:1;
   display:flex;
   min-height:100%;
   padding:clamp(54px,7vw,125px);
