@@ -6477,8 +6477,12 @@ body.catalog-page,
 
 /* El cierre de sesión nunca debe quedar fuera de la pantalla del panel. */
 .admin-sidebar{box-sizing:border-box}
-.admin-menu{min-height:0;flex:1;overflow-y:auto;scrollbar-width:thin}
+.admin-sidebar{height:100dvh;overflow:hidden}
+.admin-brand{flex:0 0 auto}
+.admin-menu{min-height:0;flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
 .admin-sidebar-foot{flex:0 0 auto;margin-top:14px;background:#0b0c0d}
+@media(max-height:720px) and (min-width:761px){.admin-sidebar{padding-top:20px;padding-bottom:16px}.admin-brand{padding-bottom:16px}.admin-menu{padding-top:14px}.admin-menu button{height:45px;font-size:13px}.admin-sidebar-foot{padding-top:13px;gap:10px}}
+@media(max-height:560px) and (max-width:760px){.admin-sidebar{padding-top:14px;padding-bottom:10px}.admin-brand{padding-bottom:12px}.admin-brand span{display:none}.admin-menu{padding-top:8px}.admin-menu button{min-height:39px;padding-block:7px;font-size:12px}.admin-sidebar-foot{margin-top:8px;padding-top:9px;gap:5px}.admin-sidebar-foot a,.admin-sidebar-foot button{min-height:27px}}
 
 /* Última prioridad para los enlaces de cada publicación: solamente texto. */
 .posts-page .post-tags{display:grid!important;justify-items:start!important;gap:7px!important;margin-top:14px!important}

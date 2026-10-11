@@ -14,7 +14,7 @@ const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
 const GOOGLE_ANALYTICS_MEASUREMENT_ID = String(import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-Z59ZXX8QDH').trim()
-const LEGACY_BUILD = 'post-tags-clean-20261010'
+const LEGACY_BUILD = 'analytics-consent-20261010'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const enlacePerfilSeguro = (valor: unknown) => {
   const enlace = String(valor || '').trim()

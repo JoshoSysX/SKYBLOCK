@@ -1,6 +1,4 @@
 ;(() => {
-  // Nueva versión del aviso: pedimos la elección de nuevo tras corregir su carga.
-  // Después de esta primera vez la decisión continúa guardada normalmente.
   const storageKey = 'skb_cookie_preferences_v2'
   const getMeasurementId = () => {
     try {
@@ -21,7 +19,11 @@
     scope.gtag('consent', 'update', { analytics_storage: analytics ? 'granted' : 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' })
     if (!analytics) return
     const id = getMeasurementId()
-    if (!id || scope.document.querySelector(`script[data-skb-ga="${id}"]`)) return
+    if (!id) return
+    if (scope.document.querySelector(`script[data-skb-ga="${id}"]`)) {
+      scope.gtag('config', id, { anonymize_ip: true })
+      return
+    }
     const script = scope.document.createElement('script')
     script.async = true
     script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`
@@ -29,12 +31,23 @@
     script.onload = () => scope.gtag('config', id, { anonymize_ip: true })
     scope.document.head.appendChild(script)
   }
+  const storages = () => {
+    const all = [window.localStorage]
+    try { if (analyticsScope().localStorage !== window.localStorage) all.push(analyticsScope().localStorage) } catch {}
+    return all
+  }
   const read = () => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || 'null') } catch { return null }
+    for (const storage of storages()) {
+      try {
+        const value = JSON.parse(storage.getItem(storageKey) || 'null')
+        if (value && typeof value.analytics === 'boolean') return value
+      } catch {}
+    }
+    return null
   }
   const save = (analytics) => {
     const value = { necessary: true, analytics: Boolean(analytics), updatedAt: new Date().toISOString() }
-    localStorage.setItem(storageKey, JSON.stringify(value))
+    storages().forEach((storage) => { try { storage.setItem(storageKey, JSON.stringify(value)) } catch {} })
     consent(value.analytics)
     return value
   }
@@ -83,7 +96,7 @@
   document.addEventListener('click', (event) => {
     if (!event.target.closest('[data-cookie-settings]')) return
     event.preventDefault()
-    localStorage.removeItem(storageKey)
+    storages().forEach((storage) => { try { storage.removeItem(storageKey) } catch {} })
     render()
   })
 })()
