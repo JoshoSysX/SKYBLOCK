@@ -68,11 +68,6 @@ const initialAdminView = location.hash.slice(1);
 showView(initialAdminView || 'resumen', { updateHistory:false, scroll:false });
 addEventListener('hashchange', () => showView(location.hash.slice(1) || 'resumen', { updateHistory:false }));
 
-const productStorageKey = 'skyblockStudioProducts';
-const productTypeStorageKey = 'skyblockStudioProductTypes';
-const defaultProductTypes = [];
-const seedProducts = [];
-
 function loadProducts() {
   return [];
 }
@@ -418,7 +413,7 @@ document.getElementById('stockAdjustmentForm').addEventListener('submit', (event
   setTimeout(() => toast.classList.remove('show'), 2600);
   closeStockAdjustment();
 });
-document.getElementById('productLimited').addEventListener('change',(event) => {
+document.getElementById('productLimited').addEventListener('change',() => {
   syncLimitedStockFields();
 });
 document.getElementById('productDiscountActive').addEventListener('change', () => syncProductDiscount());
@@ -534,8 +529,6 @@ document.getElementById('adminProductForm').addEventListener('submit', (event) =
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2600);
 });
-const collectionStorageKey = 'skyblockStudioCollections';
-const seedCollections = [];
 let collections = [];
 let collectionCoverData = '';
 let verificationCodes = [];
@@ -636,9 +629,6 @@ document.getElementById('adminCollectionForm').addEventListener('submit',(event)
   toast.textContent = existingIndex >= 0 ? 'Colección actualizada.' : 'Colección creada.';toast.classList.add('show');setTimeout(() => toast.classList.remove('show'),2600);
 });
 renderCollections();
-
-const verificationStorageKey = 'skyblockStudioVerificationCodes';
-const seedVerificationCodes = [];
 
 const verificationModal = document.getElementById('verificationModal');
 const verificationCodeInput = document.getElementById('verificationCode');

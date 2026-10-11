@@ -74,7 +74,6 @@ document.querySelectorAll('.featured-grid .product').forEach((product, index) =>
 });
 
 const hologramSection = document.querySelector('.hologram-section');
-const hologramStage = document.querySelector('.hologram-stage');
 
 const introHero = document.querySelector('.home-page .hero');
 const featuredCollection = document.querySelector('.home-page #shop');
