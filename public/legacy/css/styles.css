@@ -5700,6 +5700,17 @@ footer .footer-brand>.brand small {
     display:none!important
   }
 
+  .home-page .hero-photo::before {
+    content:'';
+    position:absolute;
+    z-index:1;
+    top:calc(34% - 2px);
+    right:0;
+    left:0;
+    height:4px;
+    background:#fcfcfc
+  }
+
   .home-page .hero-photo {
     background:#fcfcfc url('../assets/image/PORTADA PRINCIPAL 2.jpg') center bottom/auto 66% no-repeat
   }
