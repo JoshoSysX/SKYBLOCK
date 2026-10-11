@@ -1966,7 +1966,9 @@ footer[data-chapter] {
   .home-page .restock-image-slot {
     order:2;
     min-height:420px;
-    background-position:center center;
+    /* La foto es panorámica y los modelos están a la derecha: 84% los centra
+       dentro del marco sin dejar un bloque blanco vacío. */
+    background-position:84% center;
     background-size:auto 100%;
   }
   .home-page .restock-content h2 { font-size:clamp(50px,14vw,72px); }
