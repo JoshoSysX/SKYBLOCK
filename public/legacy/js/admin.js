@@ -1022,6 +1022,9 @@ postFormatOptions.forEach((option) => option.addEventListener('click', () => { s
 
 function resetPostEditor(message = '') {
   postForm.reset();
+  postForm.classList.remove('is-editing-post');
+  postImageInput.disabled=false;
+  document.querySelector('.admin-post-step-back').hidden=false;
   setPostMediaFormat('portrait');
   document.getElementById('postEditId').value = '';
   postImageData = [];
@@ -1039,11 +1042,15 @@ function resetPostEditor(message = '') {
 }
 
 function editPost(post) {
+  postForm.classList.add('is-editing-post');
+  postImageInput.disabled=true;
+  document.querySelector('.admin-post-step-back').hidden=true;
   document.getElementById('postEditId').value = post.id;
   document.getElementById('postTitle').value = post.title;
   document.getElementById('postDescription').value = post.description;
   document.getElementById('postAlt').value = post.alt;
   postImageData = post.images.map((image) => image.url);
+  postAdjustedFiles = [];
   const format = normalizePostMediaFormat(post.mediaFormat);
   setPostMediaFormat(format);
   renderPostPreviewMedia();
