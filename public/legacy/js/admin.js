@@ -886,6 +886,7 @@ const postModal = document.getElementById('postModal');
 const postMediaFormatInput = document.getElementById('postMediaFormat');
 const postFormatOptions = [...document.querySelectorAll('[data-post-format-option]')];
 let postImageData = [];
+let postAdjustedFiles = [];
 let adminPosts = [];
 const adminFeedProfile = { nombre:'SKYBLOCK STUDIO', biografia:'', avatar_url:'', portada_url:'', etiquetas:[] };
 const postMediaFormats = new Set(['square','landscape','portrait']);
@@ -1019,6 +1020,7 @@ function resetPostEditor(message = '') {
   setPostMediaFormat('portrait');
   document.getElementById('postEditId').value = '';
   postImageData = [];
+  postAdjustedFiles = [];
   renderPostPreviewMedia();
   document.getElementById('postUploadText').textContent = 'Seleccionar fotografías';
   document.getElementById('previewPostTitle').textContent = 'Título de la publicación';
@@ -1437,7 +1439,7 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
   const modal=document.createElement('div');
   modal.className='post-inline-crop';
   modal.hidden=true;
-  modal.innerHTML='<section class="image-crop-card" role="dialog" aria-modal="true" aria-labelledby="postCropTitle"><h2 id="postCropTitle">Ajustar fotografía</h2><p>Elige la medida y acomoda la imagen dentro del marco. Solo se guardará lo que queda dentro.</p><div class="post-crop-formats" aria-label="Medida de la publicación"><button type="button" data-post-crop-format="portrait"><b>Vertical</b><small>4:5</small></button><button type="button" data-post-crop-format="square"><b>Cuadrado</b><small>1:1</small></button><button type="button" data-post-crop-format="landscape"><b>Horizontal</b><small>16:9</small></button></div><div class="image-crop-stage"><img alt="Vista previa del encuadre de la fotografía"><span class="image-crop-frame" aria-hidden="true"></span></div><div class="image-crop-actions"><button type="button" class="admin-secondary" data-post-crop-cancel>Omitir ajuste</button><button type="button" class="admin-primary" data-post-crop-apply>Usar encuadre</button></div></section>';
+  modal.innerHTML='<section class="image-crop-card" role="dialog" aria-modal="true" aria-labelledby="postCropTitle"><h2 id="postCropTitle">Ajustar fotografía</h2><p>Elige la medida y acomoda la imagen dentro del marco. Solo se guardará lo que queda dentro.</p><div class="post-crop-formats" aria-label="Medida de la publicación"><button type="button" data-post-crop-format="portrait"><b>Vertical</b><small>4:5</small></button><button type="button" data-post-crop-format="square"><b>Cuadrado</b><small>1:1</small></button><button type="button" data-post-crop-format="landscape"><b>Horizontal</b><small>16:9</small></button></div><div class="image-crop-stage"><img draggable="false" alt="Vista previa del encuadre de la fotografía"><span class="image-crop-frame" aria-hidden="true"></span></div><div class="image-crop-actions"><button type="button" class="admin-secondary" data-post-crop-cancel>Omitir ajuste</button><button type="button" class="admin-primary" data-post-crop-apply>Usar encuadre</button></div></section>';
   document.querySelector('[data-post-step="media"]').append(modal);
   const stage=modal.querySelector('.image-crop-stage');
   const image=stage.querySelector('img');
@@ -1492,6 +1494,7 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
   cropFormatButtons.forEach((button)=>button.addEventListener('click',()=>{postCropBatchFormat=button.dataset.postCropFormat;setCropFormat(postCropBatchFormat)}));
   stage.addEventListener('pointerdown',(event)=>{
     if(!state)return;
+    event.preventDefault();
     stage.setPointerCapture(event.pointerId);
     drag={pointerId:event.pointerId,x:event.clientX,y:event.clientY,baseX:state.x,baseY:state.y};
     stage.classList.add('is-dragging');
@@ -1514,21 +1517,23 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
     if(event.target!==postImageInput||document.getElementById('postEditId').value)return;
     event.stopImmediatePropagation();
     const files=[...postImageInput.files];
+    const total=postAdjustedFiles.length+files.length;
     const status=document.getElementById('postStatus');
     if(!files.length)return;
-    if(files.length>10||files.some((file)=>file.size>MAX_IMAGE_SIZE_BYTES)){
-      postImageInput.value=''; postImageData=[];
-      status.textContent=files.length>10?'Puedes seleccionar como máximo 10 fotografías.':`Cada fotografía debe pesar como máximo ${MAX_IMAGE_SIZE_MB} MB.`;
+    if(total>10||files.some((file)=>file.size>MAX_IMAGE_SIZE_BYTES)){
+      const transfer=new DataTransfer(); postAdjustedFiles.forEach((file)=>transfer.items.add(file)); postImageInput.files=transfer.files;
+      status.textContent=total>10?'Puedes tener como máximo 10 fotografías en el post.':`Cada fotografía debe pesar como máximo ${MAX_IMAGE_SIZE_MB} MB.`;
       renderPostPreviewMedia(); return;
     }
     postCropBatchFormat=normalizePostMediaFormat(selectedPostMediaFormat());
     const aspect={square:1,landscape:1.91,portrait:.8}[postCropBatchFormat]||.8;
     const adjusted=[];
     for(let index=0;index<files.length;index++) adjusted.push(await openCrop(files[index],aspect,index+1,files.length));
-    const transfer=new DataTransfer(); adjusted.forEach((file)=>transfer.items.add(file)); postImageInput.files=transfer.files;
-    postImageData=await Promise.all(adjusted.map(readImage));
-    document.getElementById('postUploadText').textContent=`${adjusted.length} fotografía${adjusted.length===1?'':'s'} lista${adjusted.length===1?'':'s'}`;
-    status.textContent='Encuadre aplicado. Estas son las fotos que se publicarán.';
+    postAdjustedFiles=[...postAdjustedFiles,...adjusted];
+    const transfer=new DataTransfer(); postAdjustedFiles.forEach((file)=>transfer.items.add(file)); postImageInput.files=transfer.files;
+    postImageData=await Promise.all(postAdjustedFiles.map(readImage));
+    document.getElementById('postUploadText').textContent=`Añadir más fotografías · ${postAdjustedFiles.length}/10 listas`;
+    status.textContent=`Encuadre aplicado. ${postAdjustedFiles.length} de 10 fotografías listas.`;
     renderPostPreviewMedia();
     showPostStep('data');
   },true);

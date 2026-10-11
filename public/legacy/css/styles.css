@@ -6384,7 +6384,7 @@ body.catalog-page,
 .post-inline-crop .image-crop-actions { position:sticky;bottom:0;margin:12px -2px -2px;padding:10px 2px 2px;background:#fff; }
 .image-crop-stage { position:relative;aspect-ratio:16/9;overflow:hidden;background:#d9d9d4;cursor:grab;touch-action:none; }
 .image-crop-stage.is-dragging { cursor:grabbing; }
-.image-crop-stage img { width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none;transform:translate(var(--crop-x,0),var(--crop-y,0)) scale(var(--crop-zoom,1)); }
+.image-crop-stage img { width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none;-webkit-user-drag:none;transform:translate(var(--crop-x,0),var(--crop-y,0)) scale(var(--crop-zoom,1)); }
 .image-crop-frame { position:absolute;inset:0;border:2px solid #fff;box-shadow:inset 0 0 0 1px #1118;pointer-events:none; }
 .image-crop-actions { display:flex;justify-content:flex-end;gap:10px;margin-top:17px; }
 .collaboration-logo-preview.is-locked { pointer-events:none; }
