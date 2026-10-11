@@ -1951,29 +1951,25 @@ footer[data-chapter] {
   .home-page .restock-content .light-button { width:100%; }
 }
 
-/* En móvil, texto e imagen siguen uno al lado del otro con proporciones
-   contenidas para que la fotografía no invada la lectura. */
+/* En móvil el contenido se lee mejor apilado: texto arriba e imagen debajo. */
 @media(max-width:600px) {
   .home-page .restock-section {
-    min-height:100svh;
-    grid-template-columns:minmax(0,.96fr) minmax(0,1.04fr);
-    grid-template-rows:1fr;
+    min-height:0;
+    grid-template-columns:1fr;
+    grid-template-rows:auto minmax(420px,72svh);
   }
   .home-page .restock-content {
     order:1;
-    min-height:100%;
-    padding:40px 16px 46px;
+    min-height:0;
+    padding:52px 28px 64px;
   }
   .home-page .restock-image-slot {
     order:2;
-    min-height:100%;
-    background-position:85% bottom;
-    background-size:auto 78%;
+    min-height:420px;
+    background-position:right center;
+    background-size:auto 100%;
   }
-  .home-page .restock-content h2 { font-size:clamp(44px,12vw,62px); }
-  .home-page .restock-copy { margin-top:30px; }
-  .home-page .restock-copy p { font-size:10px;line-height:1.6; }
-  .home-page .restock-content .light-button { min-width:0;font-size:8px; }
+  .home-page .restock-content h2 { font-size:clamp(50px,14vw,72px); }
 }
 
 /* Texto del hero arriba en móviles */
