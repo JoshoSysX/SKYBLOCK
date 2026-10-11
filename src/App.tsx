@@ -328,7 +328,7 @@ export default function App() {
       const copyright = footer?.querySelector<HTMLElement>('.copyright')
       if (copyright && !copyright.dataset.joshosysxCredit) {
         copyright.dataset.joshosysxCredit = 'true'
-        copyright.innerHTML = `© 2026 ${BRAND_UPPER}<br>Todos los derechos reservados.<br><br>Diseñado y desarrollado por <a href="https://github.com/JoshoSysX" target="_blank" rel="noopener noreferrer">JoshoSysX</a><br>con pasión en Tarapoto.`
+        copyright.innerHTML = `© 2026 ${BRAND_UPPER}<br>Todos los derechos reservados.<br><br>Diseñado y desarrollado por <a href="https://josiasguillermo-psi.vercel.app/" target="_blank" rel="noopener noreferrer">JoshoSysX</a><br>con pasión en Tarapoto.`
       }
       if (documento?.title) document.title = documento.title
       const { user, esRolAdmin, esAdmin } = await obtenerAdmin()
