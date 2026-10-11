@@ -1879,7 +1879,8 @@ footer[data-chapter] {
 .home-page .restock-image-slot {
   order:2;
   min-height:100%;
-  background:#fafafa url('../assets/image/prductos.jpg') right center/auto 100% no-repeat
+  background:#fff url('../assets/image/prductos.jpg') right center/auto 100% no-repeat;
+  filter:brightness(1.02)
 }
 
 .home-page .restock-content {
