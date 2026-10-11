@@ -275,21 +275,48 @@
     if (!orderedSizes.length)
       sizePicker.innerHTML = '<span class="size-empty">Sin tallas configuradas</span>'
   }
-  function detalle(cs, ps) {
+  function detalle(cs, ps, colaboraciones = []) {
     if (!document.getElementById('collectionTitle')) return
-    const c = cs.find((x) => x.slug === new URLSearchParams(location.search).get('id'))
+    const query = new URLSearchParams(location.search), collaborationSlug = query.get('colaboracion')
+    const collaboration = collaborationSlug ? colaboraciones.find((x) => x.slug === collaborationSlug) : null
+    const c = collaboration || cs.find((x) => x.slug === query.get('id'))
     if (!c) return
-    const items = ps.filter((p) => p.coleccion_id === c.id && p.estado === 'publicado')
+    document.body.classList.toggle('is-collaboration-detail', Boolean(collaboration))
+    document.querySelectorAll('.desktop-nav a[href="colecciones.html"],.mobile-nav a[href="colecciones.html"]').forEach((link) => link.classList.toggle('active', !collaboration))
+    document.getElementById('collectionCover')?.classList.toggle('is-collaboration-cover', Boolean(collaboration))
+    const linkedCollections = collaboration
+      ? (c.colaboracion_colecciones || []).map((row) => row.coleccion).filter((item) => item && item.estado === 'publicado')
+      : []
+    const collectionIds = collaboration ? linkedCollections.map((item) => item.id) : [c.id]
+    const items = ps.filter((p) => collectionIds.includes(p.coleccion_id) && p.estado === 'publicado')
     document.title = `${c.nombre} | SKYBLOCK STUDIO`
     collectionHero.src = img(c)
     collectionHero.alt = `Portada de ${c.nombre}`
-    collectionEdition.textContent = `Colección / ${c.numero_edicion}`
-    collectionTitle.textContent = `SKB — ${c.nombre}`
+    const backLink = document.getElementById('collectionBackLink')
+    if (backLink) {
+      backLink.href = collaboration ? 'inicio.html' : 'colecciones.html'
+      backLink.textContent = collaboration ? '← Volver al inicio' : '← Todas las colecciones'
+    }
+    collectionEdition.textContent = collaboration ? 'Colaboración oficial / SKYBLOCK' : `Colección / ${c.numero_edicion}`
+    collectionTitle.textContent = collaboration ? c.nombre : `SKB — ${c.nombre}`
     collectionTagline.textContent = c.descripcion
     storyHeading.textContent = c.nombre
     storyOne.textContent = c.historia
-    storyTwo.textContent = 'Una colección construida por SKYBLOCK STUDIO en Tarapoto.'
-    productCount.textContent = items.length
+    storyTwo.textContent = collaboration ? 'Una colaboración construida junto a SKYBLOCK STUDIO en Tarapoto.' : 'Una colección construida por SKYBLOCK STUDIO en Tarapoto.'
+    productCount.textContent = collaboration ? linkedCollections.length : items.length
+    const sectionEyebrow = document.getElementById('collectionSectionEyebrow')
+    const sectionTitle = document.getElementById('collectionSectionTitle')
+    const sectionCountLabel = document.getElementById('collectionCountLabel')
+    if (collaboration) {
+      sectionEyebrow.textContent = 'Colaboración SKYBLOCK'
+      sectionTitle.textContent = 'Colecciones participantes.'
+      sectionCountLabel.textContent = linkedCollections.length === 1 ? ' colección' : ' colecciones'
+      collectionProductGrid.innerHTML = linkedCollections.map((item) => `<a class="catalog-card collection-card" href="coleccion.html?id=${encodeURIComponent(item.slug)}"><div class="catalog-image"><span class="tag">${esc(item.numero_edicion || 'Colección')}</span><img src="${esc(img(item))}" alt="${esc(item.nombre)}"></div><div class="catalog-copy"><div><h2>${esc(item.nombre)}</h2><p>${esc(item.descripcion || '')}</p></div><span class="collection-buy">Ver colección <b>→</b></span></div></a>`).join('') || '<p class="collection-empty">Esta colaboración aún no tiene colecciones publicadas.</p>'
+      return
+    }
+    sectionEyebrow.textContent = 'Piezas de la colección'
+    sectionTitle.textContent = 'La colección.'
+    sectionCountLabel.textContent = ' piezas · Edición limitada'
     collectionProductGrid.innerHTML = items
       .map((p) => {
         const agotado = isSoldOut(p)
@@ -442,12 +469,14 @@
   }
   addEventListener('message', (e) => {
     if (e.origin !== location.origin || e.data?.tipo !== 'SKYBLOCK_DATOS_PUBLICOS') return
-    const { productos = [], colecciones: cs = [] } = e.data.datos || {}
+    const { productos = [], colecciones: cs = [], colaboraciones = [] } = e.data.datos || {}
     inicio(productos)
+    window.skyblockCollaborations = colaboraciones
+    document.dispatchEvent(new CustomEvent('SKYBLOCK_COLABORACIONES', { detail: colaboraciones }))
     catalogo(productos)
     producto(productos)
     colecciones(cs)
-    detalle(cs, productos)
+    detalle(cs, productos, colaboraciones)
   })
   parent.postMessage({ tipo: 'SKYBLOCK_SOLICITAR_DATOS' }, location.origin)
 })()

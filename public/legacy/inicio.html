@@ -7,14 +7,14 @@
   <meta name="description" content="SKYBLOCK STUDIO — ropa urbana premium para creadores.">
   <title>SKYBLOCK STUDIO | Construye en grande</title>
   <link rel="canonical" href="https://www.skyblocktpp.com/">
-  <link rel="stylesheet" href="css/styles.css?v=hero-mobile-seam-cover-20261010">
+  <link rel="stylesheet" href="css/styles.css?v=mobile-logo-balance-20261011">
 </head>
 
 <body class="home-page"><script src="js/maintenance-redirect.js?v=cookie-consent-20261010"></script>
   <header class="nav" id="nav">
     <a class="brand" href="inicio.html" aria-label="Ir al inicio de SKYBLOCK STUDIO">SKYBLOCK<small>STUDIO</small></a>
     <nav class="desktop-nav"><a class="active" href="inicio.html">Inicio</a><a href="catalogo.html">Catálogo</a><a
-        href="colecciones.html">Colecciones</a><a href="posts.html">Posts</a><a href="nosotros.html">Nosotros</a><a
+        href="colecciones.html">Colecciones</a><a href="posts.html">Posts</a><a
         href="verificar.html">Autenticidad</a><a href="admin.html">Admin</a></nav>
     <div class="nav-actions"><a class="auth-action" href="login.html" aria-label="Iniciar sesión"><i
           class="auth-icon"></i><span>Login</span></a><a class="auth-action" href="registro.html"
@@ -23,7 +23,7 @@
   </header>
   <nav class="mobile-nav" id="mobileNav"><a class="active" href="inicio.html">Inicio</a><a
       href="catalogo.html">Catálogo</a><a href="colecciones.html">Colecciones</a><a href="posts.html">Posts</a><a
-      href="nosotros.html">Nosotros</a><a href="verificar.html">Autenticidad</a><a href="admin.html">Admin</a><a
+      href="verificar.html">Autenticidad</a><a href="admin.html">Admin</a><a
       href="login.html">Iniciar sesión</a><a href="registro.html">Crear cuenta</a></nav>
   <main>
     <section class="hero" id="inicio" data-chapter="inicio">
@@ -40,11 +40,19 @@
       </div>
     </section>
     <section class="hologram-section reveal" id="logo-3d" aria-label="Emblema holográfico SKYBLOCK STUDIO">
-      <div class="hologram-stage skb-hologram-stage image-logo-stage" id="hologramStage"
-        aria-label="Logotipo oficial SKB de SKYBLOCK STUDIO"><img class="skb-logo-image"
-          src="assets/image/skb-logo-black-3d.png" alt="Logotipo oficial SKB de SKYBLOCK STUDIO" draggable="false"></div>
-      <div class="hologram-caption"><span>Logotipo oficial / 001</span><strong>SKB — SKYBLOCK
-          STUDIO</strong><small>IDENTIDAD PRINCIPAL DE LA MARCA</small></div>
+      <div class="logo-carousel" id="logoCarousel" aria-roledescription="carrusel" aria-label="Logotipos de SKYBLOCK STUDIO">
+        <button class="logo-carousel-button previous" type="button" aria-label="Logo anterior">&lt;</button>
+        <div class="logo-carousel-viewport">
+          <div class="logo-carousel-track">
+            <article class="logo-carousel-slide is-active logo-goat" data-logo-title="SKYBLOCK STUDIO" data-logo-meta="Logotipo principal / 001">
+              <img class="skb-logo-image" src="../cabra-02.png" alt="Logotipo principal de SKYBLOCK STUDIO" draggable="false">
+            </article>
+            <article class="logo-carousel-slide logo-tpp" data-logo-title="SKYBLOCK TPP" data-logo-meta="Emblema SKB / 002" data-about-link="true"><img class="skb-logo-image" src="assets/image/skb-logo-black-3d.png" alt="Emblema SKB de SKYBLOCK TPP" draggable="false"></article>
+          </div>
+        </div>
+        <button class="logo-carousel-button next" type="button" aria-label="Siguiente logo">&gt;</button>
+      </div>
+      <div class="hologram-caption"><span id="logoCarouselMeta">Logotipo principal / 001</span><strong id="logoCarouselTitle">SKYBLOCK STUDIO</strong><small id="logoCarouselFooter">IDENTIDAD PRINCIPAL DE LA MARCA</small><a class="logo-carousel-about" id="logoCarouselAbout" href="nosotros.html" hidden>Conoce más</a></div>
     </section>
     <div class="light-page">
       <section class="section reveal" id="shop" data-chapter="shop">
@@ -56,19 +64,18 @@
         </div>
       </section>
       <section class="restock-section reveal" id="collections" data-chapter="shop">
-        <div class="restock-main"><span>Lanzamiento limitado</span>
+        <div class="restock-image-slot" role="img" aria-label="Espacio reservado para imagen de la colección"></div>
+        <div class="restock-content" id="filosofia">
+          <span>Lanzamiento limitado</span>
           <h2>No Restock.</h2>
-          <p>Cuando se agote, no volverá.</p><a class="light-button compact" href="catalogo.html">Ver todos los
-            productos</a>
-        </div>
-        <div class="restock-reason" id="filosofia">
-          <div class="story-number">Archivo / 001</div>
-          <div class="story-copy"><span>Nuestra filosofía</span>
+          <p class="restock-lead">Cuando se agote, no volverá.</p>
+          <div class="restock-copy"><span>Archivo / 001 · Nuestra filosofía</span>
             <p>Creamos cada prenda en cantidades limitadas para proteger su identidad y evitar la producción excesiva.
               Cuando una edición termina, dejamos espacio para una nueva idea.</p>
             <p>Esto significa mayor atención a cada detalle y piezas que conservan su valor exclusivo con el paso del
               tiempo.</p>
           </div>
+          <a class="light-button compact" href="catalogo.html">Ver todos los productos</a>
         </div>
       </section>
     </div>
@@ -93,7 +100,7 @@
     </div>
     <p class="copyright">© 2026 SKYBLOCK STUDIO<br>Todos los derechos reservados.<br><br>Diseñado y desarrollado por <a href="https://josiasguillermo-psi.vercel.app/" target="_blank" rel="noopener noreferrer">JoshoSysX</a><br>con pasión en Tarapoto.</p>
   </footer>
-  <script src="js/script.js"></script><script src="js/supabase-bridge.js?v=manual-sold-out-20261010"></script>
+  <script src="js/script.js?v=collaboration-carousel-20261010"></script><script src="js/supabase-bridge.js?v=collaboration-carousel-20261010"></script>
 </body>
 
 </html>

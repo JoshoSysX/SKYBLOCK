@@ -4,7 +4,7 @@ import profileImage from '../assets/image/PERFIL.jpg'
 
 type EtiquetaPerfil = { titulo: string; url: string }
 type PerfilEditorial = { nombre: string; biografia: string; avatar_url?: string | null; portada_url?: string | null; etiquetas?: EtiquetaPerfil[]; etiqueta_titulo?: string | null; etiqueta_url?: string | null }
-type Datos = { productos: unknown[]; colecciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; reacciones?: unknown[]; error?: string }
+type Datos = { productos: unknown[]; colecciones: unknown[]; colaboraciones: unknown[]; publicaciones: unknown[]; perfil: PerfilEditorial; reacciones?: unknown[]; error?: string }
 type Rol = { rol: string } | null
 type FilaImagen = { id?: string; identificador_publico?: string; url_segura?: string; tipo_recurso?: string; posicion?: number }
 type ModoProteccion = { id?: boolean; activo: boolean; titulo: string; descripcion: string; mostrar_cuenta_regresiva: boolean; finaliza_en?: string | null; fondo_url?: string | null; fondo_identificador_publico?: string | null; color_acento?: string | null; desenfoque_fondo?: number | null; requiere_contrasena?: boolean; actualizado_en?: string }
@@ -90,7 +90,7 @@ const ordenarTallas = <T extends { talla?: string }>(tallas: T[] = []) => [...ta
   const posicionB = ORDEN_TALLAS.indexOf(String(b.talla || ''))
   return (posicionA < 0 ? ORDEN_TALLAS.length : posicionA) - (posicionB < 0 ? ORDEN_TALLAS.length : posicionB)
 })
-const paginas = new Set(['inicio','catalogo','colecciones','coleccion','producto','posts','nosotros','contacto','privacidad','terminos','verificar','login','registro','admin'])
+const paginas = new Set(['inicio','catalogo','colecciones','coleccion','colaboracion','producto','posts','nosotros','contacto','privacidad','terminos','verificar','login','registro','admin'])
 const rutaInicial = paginas.has(location.pathname.split('/').filter(Boolean)[0] || '') ? location.pathname.split('/').filter(Boolean)[0] : 'inicio'
 const urlLegacy = (pagina:string, search = '', hash = '') => {
   const parametros = new URLSearchParams(search)
@@ -111,6 +111,7 @@ const SEO:Record<string,{title:string;description:string;path:string;index?:bool
   catalogo:{title:`Catálogo de ropa urbana | ${BRAND}`,description:`Descubre prendas urbanas, diseños exclusivos y ediciones limitadas de ${BRAND_UPPER}.`,path:'/catalogo'},
   colecciones:{title:`Colecciones limitadas | ${BRAND}`,description:`Conoce las colecciones y colaboraciones de ropa urbana creadas por ${BRAND_UPPER}.`,path:'/colecciones'},
   coleccion:{title:`Colección | ${BRAND}`,description:`Historia, concepto y prendas de una colección limitada de ${BRAND_UPPER}.`,path:'/coleccion'},
+  colaboracion:{title:`Colaboración | ${BRAND}`,description:`Conoce una colaboración y sus colecciones de ${BRAND_UPPER}.`,path:'/colaboracion'},
   producto:{title:`Producto | ${BRAND}`,description:`Consulta el diseño, tallas, disponibilidad y autenticidad de esta prenda ${BRAND_UPPER}.`,path:'/producto'},
   posts:{title:`Novedades y procesos | ${BRAND}`,description:`Publicaciones, procesos creativos, lanzamientos y novedades de ${BRAND_UPPER}.`,path:'/posts'},
   nosotros:{title:`Nuestra historia | ${BRAND}`,description:`Conoce el origen de SKYBLOCK, su historia en Tarapoto y el movimiento Del bloque para el cielo.`,path:'/nosotros'},
@@ -144,7 +145,7 @@ const actualizarSeo = (pagina:string) => {
 
 export default function App() {
   const frame = useRef<HTMLIFrameElement>(null)
-  const [datos, setDatos] = useState<Datos>({ productos: [], colecciones: [], publicaciones: [], perfil: PERFIL_EDITORIAL_INICIAL })
+  const [datos, setDatos] = useState<Datos>({ productos: [], colecciones: [], colaboraciones: [], publicaciones: [], perfil: PERFIL_EDITORIAL_INICIAL })
   const [proteccion, setProteccion] = useState<ModoProteccion | null>(null)
   const [ruta, setRuta] = useState(rutaInicial)
   const [proteccionDesbloqueada, setProteccionDesbloqueada] = useState(false)
@@ -193,15 +194,18 @@ export default function App() {
   }, [])
 
   const cargarPublicos = useCallback(async () => {
-    const [p, c, posts, perfil] = await Promise.all([
+    const [p, c, colaboraciones, posts, perfil] = await Promise.all([
       supabase.from('productos').select('*,tipo:tipos_producto(*),coleccion:colecciones!inner(*),tallas:tallas_producto(*),imagenes(*)').in('estado', ['publicado', 'archivado']).eq('coleccion.estado', 'publicado').order('creado_en', { ascending: false }),
       supabase.from('colecciones').select('*,imagenes(*)').eq('estado', 'publicado').order('publicado_en', { ascending: false }),
+      supabase.from('colaboraciones').select('*,imagenes(*),colaboracion_colecciones(coleccion:colecciones(*,imagenes(*)))').eq('estado','publicado').order('publicado_en',{ascending:false}),
       supabase.from('publicaciones').select('*,imagenes(*)').eq('estado', 'publicado').lte('publicado_en', new Date().toISOString()).order('publicado_en', { ascending: false }),
       supabase.from('perfil_editorial').select('*').eq('id', true).maybeSingle(),
     ])
-    const next = p.error || c.error || posts.error
-      ? { productos: [], colecciones: [], publicaciones: [], perfil: PERFIL_EDITORIAL_INICIAL, error: 'No se pudieron cargar los datos.' }
-      : { productos: (p.data ?? []).map((producto: any) => ({ ...producto, tallas: ordenarTallas(producto.tallas || []) })), colecciones: c.data ?? [], publicaciones: posts.data ?? [], perfil: { ...(perfil.data ? { ...PERFIL_EDITORIAL_INICIAL, ...perfil.data } : PERFIL_EDITORIAL_INICIAL), ...leerEtiquetaLocal() } }
+    // Colaboraciones es una mejora progresiva: una base ya publicada sigue funcionando mientras se aplica su migración.
+    const colaboracionesNoDisponibles = colaboraciones.error?.code === 'PGRST205'
+    const next = p.error || c.error || (!colaboracionesNoDisponibles && colaboraciones.error) || posts.error
+      ? { productos: [], colecciones: [], colaboraciones: [], publicaciones: [], perfil: PERFIL_EDITORIAL_INICIAL, error: 'No se pudieron cargar los datos.' }
+      : { productos: (p.data ?? []).map((producto: any) => ({ ...producto, tallas: ordenarTallas(producto.tallas || []) })), colecciones: c.data ?? [], colaboraciones: colaboraciones.data ?? [], publicaciones: posts.data ?? [], perfil: { ...(perfil.data ? { ...PERFIL_EDITORIAL_INICIAL, ...perfil.data } : PERFIL_EDITORIAL_INICIAL), ...leerEtiquetaLocal() } }
     setDatos(next)
     return next
   }, [])
@@ -400,7 +404,7 @@ export default function App() {
     return new File([blob], nombre, { type: blob.type || 'image/jpeg' })
   }
 
-  const guardarImagen = async (dataUrl: string, relacion: { producto_id?: string; coleccion_id?: string }, posicion: number, userId: string, alt: string) => {
+  const guardarImagen = async (dataUrl: string, relacion: { producto_id?: string; coleccion_id?: string; colaboracion_id?: string }, posicion: number, userId: string, alt: string) => {
     if (!dataUrl.startsWith('data:')) return
     const cloud = await subirCloudinary(await archivoDesdeDataUrl(dataUrl, `${relacion.producto_id || relacion.coleccion_id}-${posicion}.jpg`))
     const { error } = await supabase.from('imagenes').insert({ ...relacion, identificador_publico: cloud.public_id, url_segura: cloud.secure_url, tipo_recurso: cloud.resource_type, formato: cloud.format, ancho: cloud.width, alto: cloud.height, bytes: cloud.bytes, texto_alternativo: alt, posicion, subido_por: userId })
@@ -414,7 +418,7 @@ export default function App() {
     if (error || data?.error) throw new Error(data?.error || error?.message || 'No se pudieron eliminar los archivos de Cloudinary')
   }
 
-  const eliminarImagenesRelacion = async (columna: 'producto_id'|'coleccion_id'|'publicacion_id', id: string) => {
+  const eliminarImagenesRelacion = async (columna: 'producto_id'|'coleccion_id'|'publicacion_id'|'colaboracion_id', id: string) => {
     const { data: imagenes, error } = await supabase.from('imagenes').select('id,identificador_publico,tipo_recurso').eq(columna,id)
     if (error) throw error
     await eliminarArchivosCloudinary(imagenes || [])
@@ -423,17 +427,20 @@ export default function App() {
   }
 
   const cargarAdmin = async () => {
-    const [productos, colecciones, tipos, codigos] = await Promise.all([
+    const [productos, colecciones, colaboraciones, tipos, codigos] = await Promise.all([
       supabase.from('productos').select('*,tipo:tipos_producto(*),coleccion:colecciones(*),tallas:tallas_producto(*),imagenes(*)').order('creado_en', { ascending: false }),
       supabase.from('colecciones').select('*,imagenes(*)').order('creado_en', { ascending: false }),
+      supabase.from('colaboraciones').select('*,imagenes(*),colaboracion_colecciones(coleccion:colecciones(id,nombre))').order('creado_en',{ascending:false}),
       supabase.from('tipos_producto').select('*').order('nombre'),
       supabase.from('codigos_autenticidad').select('*,coleccion:colecciones(id,nombre),producto:productos(id,nombre,unidades_limitadas)').order('creado_en', { ascending: false }),
     ])
-    const error = productos.error || colecciones.error || tipos.error || codigos.error
+    const colaboracionesNoDisponibles = colaboraciones.error?.code === 'PGRST205'
+    const error = productos.error || colecciones.error || (!colaboracionesNoDisponibles && colaboraciones.error) || tipos.error || codigos.error
     const cs = (colecciones.data ?? []).map((c: any) => ({ id:c.id, name:c.nombre, slug:c.slug, edition:c.numero_edicion, status:c.estado === 'publicado' ? 'published' : c.estado === 'archivado' ? 'upcoming' : 'draft', limited:false, description:c.descripcion, story:c.historia, cover:[...(c.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0))[0]?.url_segura || '' }))
     const ps = (productos.data ?? []).map((p: any) => { const images=[...(p.imagenes || [])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0)); const sizes=Object.fromEntries(ordenarTallas(p.tallas || []).map((t:any)=>[t.talla,t.stock])); const stockBySize=p.stock_por_talla === true || p.stock_por_talla === 'true'; const stockUnlimited=p.stock_ilimitado === true || p.stock_ilimitado === 'true'; return { id:p.id, name:p.nombre, type:p.tipo?.nombre || '', collection:p.coleccion?.nombre || '', price:Number(p.precio), regularPrice:Number(p.precio_original ?? p.precio), discountPercent:Number(p.descuento_porcentaje || 0), description:p.descripcion, materials:p.materiales || '', sizes, limited:p.es_limitado, limitedUnits:p.unidades_limitadas, soldOut:Boolean(p.agotado_manual), stockBySize, stockUnlimited, stockAvailable:p.stock_disponible ?? Object.values(sizes).reduce((sum:number,stock:any)=>sum+Number(stock||0),0), blocked:p.estado === 'archivado', image:images[0]?.url_segura || '', gallery:images.slice(1).map((i:FilaImagen)=>i.url_segura) } })
     const codes = (codigos.data ?? []).map((c:any) => ({ id:c.id, hash:String(c.codigo_hmac || '').replace(/^\\x/,''), code:String(c.codigo_admin || ''), codeHint:`•••• ${c.ultimos_cuatro}`, series:c.numero_serie, collection:c.coleccion?.nombre || '', product:c.producto?.nombre || '', owner:c.propietario_nombre || 'Sin registrar', status:c.estado === 'bloqueado' || c.estado === 'anulado' ? 'blocked' : 'active' }))
-    return { productos: ps, colecciones: cs, tipos: (tipos.data ?? []).map((t:any)=>t.nombre), codigos: codes, error: error?.message || '' }
+    const cols = (colaboraciones.data ?? []).map((c:any) => { const images=[...(c.imagenes||[])].sort((a:FilaImagen,b:FilaImagen)=>(a.posicion||0)-(b.posicion||0)); return { id:c.id,name:c.nombre,slug:c.slug,status:c.estado==='publicado'?'published':c.estado==='archivado'?'upcoming':'draft',description:c.descripcion,story:c.historia,cover:images[0]?.url_segura||'',logo:images[1]?.url_segura||'',logoX:c.logo_ajuste_x,logoY:c.logo_ajuste_y,logoZoom:c.logo_zoom,logoMeta:c.logo_meta,logoFooter:c.logo_pie,collectionIds:(c.colaboracion_colecciones||[]).map((r:any)=>r.coleccion?.id).filter(Boolean) } })
+    return { productos: ps, colecciones: cs, colaboraciones:cols, tipos: (tipos.data ?? []).map((t:any)=>t.nombre), codigos: codes, error: error?.message || '' }
   }
 
   const cargarEstadoSistema = async (): Promise<EstadoSistema> => {
@@ -474,7 +481,7 @@ export default function App() {
       }
       if (e.data?.tipo === 'SKYBLOCK_ADMIN_CAMBIAR_VISTA') {
         const vista = String(e.data.vista || '')
-        const vistasValidas = new Set(['resumen','productos','colecciones','verificacion','posts','correos','mensajes','proteccion'])
+        const vistasValidas = new Set(['resumen','productos','colecciones','colaboraciones','verificacion','posts','correos','mensajes','proteccion'])
         if (vista && vistasValidas.has(vista)) history.replaceState(null, '', `/admin${location.search}${`#${vista}`}`)
         return
       }
@@ -598,6 +605,15 @@ export default function App() {
             await eliminarImagenesRelacion('coleccion_id',id)
             const result = await supabase.from('colecciones').delete().eq('id',id).select('id').single()
             if (result.error) throw result.error
+          } else if (e.data.tipo === 'SKYBLOCK_ADMIN_GUARDAR_COLABORACION') {
+            const idValido=UUID_PATTERN.test(String(d.id||'')); const estado=d.status==='published'?'publicado':d.status==='upcoming'?'archivado':'borrador'
+            const payload={nombre:String(d.name||'').trim(),slug:String(d.slug||'').trim(),descripcion:String(d.description||'').trim(),historia:String(d.story||'').trim(),estado,publicado_en:estado==='publicado'?new Date().toISOString():null,logo_ajuste_x:Number(d.logoX??50),logo_ajuste_y:Number(d.logoY??50),logo_zoom:Number(d.logoZoom??1),logo_meta:String(d.logoMeta||'COLABORACIÓN / SKYBLOCK').trim().slice(0,60),logo_pie:String(d.logoFooter||'IDENTIDAD COLABORATIVA').trim().slice(0,80),creado_por:user.id}
+            const saved=idValido?await supabase.from('colaboraciones').update(payload).eq('id',d.id).select('id').single():await supabase.from('colaboraciones').insert(payload).select('id').single(); if(saved.error)throw saved.error
+            const id=saved.data.id; const links=(Array.isArray(d.collectionIds)?d.collectionIds:[]).filter((x:any)=>UUID_PATTERN.test(String(x))).map((coleccion_id:string)=>({colaboracion_id:id,coleccion_id}))
+            const deleted=await supabase.from('colaboracion_colecciones').delete().eq('colaboracion_id',id);if(deleted.error)throw deleted.error;if(links.length){const linked=await supabase.from('colaboracion_colecciones').insert(links);if(linked.error)throw linked.error}
+            if(String(d.cover||'').startsWith('data:')||String(d.logo||'').startsWith('data:')){await eliminarImagenesRelacion('colaboracion_id',id);if(String(d.cover||'').startsWith('data:'))await guardarImagen(d.cover,{colaboracion_id:id},0,user.id,d.name);if(String(d.logo||'').startsWith('data:'))await guardarImagen(d.logo,{colaboracion_id:id},1,user.id,`${d.name} logo`)}
+          } else if (e.data.tipo === 'SKYBLOCK_ADMIN_ELIMINAR_COLABORACION') {
+            const id=String(d.id||'');await eliminarImagenesRelacion('colaboracion_id',id);const result=await supabase.from('colaboraciones').delete().eq('id',id);if(result.error)throw result.error
           } else if (e.data.tipo === 'SKYBLOCK_ADMIN_GUARDAR_PRODUCTO') {
             const idValido = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(d.id || ''))
             if (!String(d.collection || '').trim()) throw new Error('Debes seleccionar una colección para el producto')

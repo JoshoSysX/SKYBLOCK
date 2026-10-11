@@ -313,9 +313,10 @@ document.getElementById('addProductType').addEventListener('click',() => {
 document.getElementById('newProductType').addEventListener('keydown',(event) => {
   if (event.key === 'Enter') { event.preventDefault();document.getElementById('addProductType').click(); }
 });
-document.getElementById('productTypeList').addEventListener('click',(event) => {
+document.getElementById('productTypeList').addEventListener('click',async (event) => {
   const button = event.target.closest('[data-delete-product-type]');
   if (!button || productTypes.length === 1) return;
+  if (!await window.skyblockConfirm({title:'Eliminar tipo de producto',message:`Se eliminará el tipo “${button.dataset.deleteProductType}”. Los productos existentes no se borrarán.`,confirmText:'Eliminar tipo'})) return;
   const currentType = document.getElementById('productType').value;
   productTypes = productTypes.filter((type) => type !== button.dataset.deleteProductType);
   saveProductTypes();
@@ -538,6 +539,20 @@ const seedCollections = [];
 let collections = [];
 let collectionCoverData = '';
 let verificationCodes = [];
+let collaborations = [];
+
+function renderCollaborations(){const grid=document.getElementById('adminCollaborationGrid');if(!grid)return;grid.innerHTML=collaborations.map(c=>`<article><img src="${c.cover||c.logo}" alt="${cleanText(c.name)}"><div><span>${cleanText(c.status||'draft')}</span><h2>${cleanText(c.name)}</h2><p>${(c.collectionIds||[]).length} colecciones a cargo</p><div class="admin-collection-actions"><button type="button" data-edit-collaboration="${c.id}">Editar →</button><button type="button" class="admin-collection-delete" data-delete-collaboration="${c.id}">Eliminar</button></div></div></article>`).join('')||'<p class="admin-empty-products">Aún no hay colaboraciones.</p>'}
+let collaborationCover='',collaborationLogo='';const collaborationModal=document.getElementById('collaborationModal');
+let collaborationLogoReplaced = false;
+function collaborationPreview(){const box=document.getElementById('collaborationPreview'),logo=collaborationLogo;let image=box.querySelector('img'),empty=box.querySelector('span');if(!logo){if(image)image.remove();if(!empty){empty=document.createElement('span');empty.textContent='Vista previa del logo';box.prepend(empty)}return}if(empty)empty.remove();if(!image){image=document.createElement('img');image.alt='Vista previa del logo';box.prepend(image)}image.src=logo;image.style.objectPosition=`${collaborationLogoX.value}% ${collaborationLogoY.value}%`;image.style.transform=`scale(${collaborationLogoZoom.value})`}
+function openCollaboration(c=null){adminCollaborationForm.reset();collaborationId.value=c?.id||'';collaborationModalTitle.textContent=c?'Editar colaboración':'Nueva colaboración';collaborationName.value=c?.name||'';collaborationSlug.value=c?.slug||'';collaborationStatus.value=c?.status||'draft';collaborationDescription.value=c?.description||'';collaborationStory.value=c?.story||'';collaborationCover=c?.cover||'';collaborationLogo=c?.logo||'';collaborationLogoX.value=c?.logoX??50;collaborationLogoY.value=c?.logoY??50;collaborationLogoZoom.value=c?.logoZoom??1;collaborationCollections.innerHTML=collections.map(x=>`<option value="${x.id}" ${(c?.collectionIds||[]).includes(x.id)?'selected':''}>${cleanText(x.name)}</option>`).join('');document.querySelector('.admin-collaboration-collections').open=Boolean((c?.collectionIds||[]).length);collaborationPreview();collaborationModal.classList.add('open')}
+newCollaboration.onclick=()=>openCollaboration();closeCollaborationModal.onclick=cancelCollaborationEdit.onclick=()=>collaborationModal.classList.remove('open');
+collaborationName.oninput=()=>{if(!collaborationId.value)collaborationSlug.value=collaborationName.value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')};
+for(const control of [collaborationLogoZoom,collaborationLogoX,collaborationLogoY])control.oninput=collaborationPreview;
+{const preview=document.getElementById('collaborationPreview'),pointers=new Map();let origin=null,pinch=null;const distance=()=>{const points=[...pointers.values()];return Math.hypot(points[0].x-points[1].x,points[0].y-points[1].y)};preview.addEventListener('pointerdown',event=>{if(!collaborationLogo)return;preview.setPointerCapture(event.pointerId);pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});if(pointers.size===1){origin={x:event.clientX,y:event.clientY,logoX:+collaborationLogoX.value,logoY:+collaborationLogoY.value};preview.classList.add('is-adjusting')}if(pointers.size===2)pinch={distance:distance(),zoom:+collaborationLogoZoom.value};});preview.addEventListener('pointermove',event=>{if(!pointers.has(event.pointerId)||!collaborationLogo)return;pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});const rect=preview.getBoundingClientRect();if(pointers.size===1&&origin){collaborationLogoX.value=Math.max(0,Math.min(100,origin.logoX-((event.clientX-origin.x)/rect.width)*100));collaborationLogoY.value=Math.max(0,Math.min(100,origin.logoY-((event.clientY-origin.y)/rect.height)*100));collaborationPreview()}if(pointers.size===2&&pinch){collaborationLogoZoom.value=Math.max(.5,Math.min(2,pinch.zoom*(distance()/pinch.distance)));collaborationPreview()}});const release=event=>{pointers.delete(event.pointerId);if(pointers.size<2)pinch=null;if(!pointers.size){origin=null;preview.classList.remove('is-adjusting')}};preview.addEventListener('pointerup',release);preview.addEventListener('pointercancel',release);preview.addEventListener('wheel',event=>{if(!collaborationLogo)return;event.preventDefault();collaborationLogoZoom.value=Math.max(.5,Math.min(2,+collaborationLogoZoom.value+(event.deltaY<0?.08:-.08)));collaborationPreview()},{passive:false})}
+collaborationCoverImage.onchange=async e=>{if(e.target.files[0])collaborationCover=await readImage(e.target.files[0])};collaborationLogoImage.onchange=async e=>{if(e.target.files[0]){collaborationLogo=await readImage(e.target.files[0]);collaborationPreview()}};
+adminCollaborationForm.onsubmit=e=>{e.preventDefault();if(!collaborationCover||!collaborationLogo){collaborationFormStatus.textContent='Agrega la imagen de fondo y el logo.';return}const c={id:collaborationId.value||`collaboration-${Date.now()}`,name:collaborationName.value.trim(),slug:collaborationSlug.value.trim(),status:collaborationStatus.value,description:collaborationDescription.value.trim(),story:collaborationStory.value.trim(),cover:collaborationCover,logo:collaborationLogo,logoX:+collaborationLogoX.value,logoY:+collaborationLogoY.value,logoZoom:+collaborationLogoZoom.value,collectionIds:[...collaborationCollections.selectedOptions].map(x=>x.value)};guardarEnSupabase('SKYBLOCK_ADMIN_GUARDAR_COLABORACION',c);collaborationModal.classList.remove('open')};
+document.getElementById('adminCollaborationGrid').onclick=async e=>{const edit=e.target.closest('[data-edit-collaboration]'),remove=e.target.closest('[data-delete-collaboration]'),id=edit?.dataset.editCollaboration||remove?.dataset.deleteCollaboration;if(!id)return;if(edit){openCollaboration(collaborations.find(c=>c.id===id));return}const collaboration=collaborations.find(c=>c.id===id);if(!await window.skyblockConfirm({title:'Eliminar colaboración',message:`“${collaboration?.name||'Esta colaboración'}” y sus imágenes se eliminarán definitivamente. Esta acción no se puede deshacer.`,confirmText:'Eliminar colaboración'}))return;remove.disabled=true;guardarEnSupabase('SKYBLOCK_ADMIN_ELIMINAR_COLABORACION',{id})};
 
 const collectionStatusLabel = { published:'Publicada',draft:'Borrador',upcoming:'Próximamente' };
 function saveCollections() { return; }
@@ -827,11 +842,13 @@ window.addEventListener('message',(event) => {
   if (event.data?.tipo === 'SKYBLOCK_ADMIN_DATOS') {
     products = event.data.productos || [];
     collections = event.data.colecciones || [];
+    collaborations = event.data.colaboraciones || [];
     productTypes = event.data.tipos || [];
     verificationCodes = event.data.codigos || [];
     renderProductTypes();
     renderProducts();
     renderCollections();
+    renderCollaborations();
     renderVerificationCodes();
     if (event.data.error) {
       toast.textContent = `No se pudieron cargar todos los datos: ${event.data.error}`;
@@ -1348,3 +1365,130 @@ window.setInterval(() => { if (protectionCountdown.checked) renderProtectionPrev
 protectionForm.addEventListener('submit',(event) => { event.preventDefault(); if (protectionCountdown.checked && (!protectionEndsAt.value || new Date(protectionEndsAt.value).getTime() <= Date.now())) { protectionStatus.textContent = 'Elige una fecha y hora futura para la cuenta regresiva.'; protectionEndsAt.focus(); return; } protectionStatus.textContent = 'Guardando información…'; parent.postMessage({ tipo:'SKYBLOCK_ADMIN_GUARDAR_PROTECCION', datos:{ titulo:protectionTitle.value, descripcion:protectionDescription.value, mostrarCuentaRegresiva:protectionCountdown.checked, finalizaEn:protectionEndsAt.value, requiereContrasena:protectionPasswordEnabled.checked, contrasena:protectionPassword.value, colorAcento:protectionAccentColor.value, desenfoqueFondo:Number(protectionBackgroundBlur.value), fondoArchivo:protectionBackground.files?.[0] || null, eliminarFondo:protectionRemoveBackground.checked } },location.origin); });
 window.addEventListener('message',(event) => { if (event.origin !== location.origin) return; if (event.data?.tipo === 'SKYBLOCK_ADMIN_PROTECCION') populateProtection(event.data.proteccion || {}); if (event.data?.tipo === 'SKYBLOCK_ADMIN_PROTECCION_RESULTADO') { protectionStatus.textContent = event.data.mensaje || ''; if (event.data.ok) populateProtection(event.data.proteccion || {}); } });
 parent.postMessage({ tipo:'SKYBLOCK_ADMIN_SOLICITAR_PROTECCION' },location.origin);
+
+// El ajuste de la previsualización debe desplazar la imagen, incluso cuando el archivo no tiene márgenes transparentes.
+collaborationPreview = function(){const box=document.getElementById('collaborationPreview'),logo=collaborationLogo;box.style.backgroundImage=collaborationCover?`linear-gradient(#0004,#0004),url("${collaborationCover}")`:'';let image=box.querySelector('img'),empty=box.querySelector('span');if(!logo){if(image)image.remove();if(!empty){empty=document.createElement('span');empty.textContent='Vista previa del logo';box.prepend(empty)}return}if(empty)empty.remove();if(!image){image=document.createElement('img');image.alt='Vista previa del logo';box.prepend(image)}const x=+collaborationLogoX.value,y=+collaborationLogoY.value;image.src=logo;image.style.objectPosition='center';image.style.translate=`${(50-x)*.8}% ${(50-y)*.8}%`;image.style.transform=`scale(${collaborationLogoZoom.value})`};
+collaborationCoverImage.addEventListener('change',async event=>{if(event.target.files[0]){collaborationCover=await readImage(event.target.files[0]);collaborationPreview()}});
+
+{const upload=collaborationCoverImage.closest('label'),coverPreview=document.createElement('div');coverPreview.id='collaborationCoverPreview';coverPreview.className='collaboration-cover-preview';coverPreview.textContent='Vista previa de portada';upload.after(coverPreview);const logoPreview=collaborationPreview;collaborationPreview=function(){coverPreview.style.backgroundImage=collaborationCover?`url("${collaborationCover}")`:'';coverPreview.textContent=collaborationCover?'':'Vista previa de portada';logoPreview();document.getElementById('collaborationPreview').style.backgroundImage=''};}
+
+const recortarLogoColaboracion=(origen,x,y,zoom)=>new Promise((resolve,reject)=>{const imagen=new Image();imagen.onload=()=>{const ancho=1200,alto=700,lienzo=document.createElement('canvas');lienzo.width=ancho;lienzo.height=alto;const contexto=lienzo.getContext('2d'),escala=Math.min(ancho/imagen.naturalWidth,alto/imagen.naturalHeight)*zoom,dibujoAncho=imagen.naturalWidth*escala,dibujoAlto=imagen.naturalHeight*escala,desplazamientoX=((50-x)/100)*ancho*.8,desplazamientoY=((50-y)/100)*alto*.8;contexto.drawImage(imagen,(ancho-dibujoAncho)/2+desplazamientoX,(alto-dibujoAlto)/2+desplazamientoY,dibujoAncho,dibujoAlto);resolve(lienzo.toDataURL('image/png'))};imagen.onerror=()=>reject(new Error('No se pudo preparar el recorte del logo.'));imagen.src=origen});
+adminCollaborationForm.onsubmit=async event=>{event.preventDefault();if(!collaborationCover||!collaborationLogo){collaborationFormStatus.textContent='Agrega la imagen de fondo y el logo.';return}try{collaborationFormStatus.textContent='Preparando el recorte del logo…';const logoRecortado=await recortarLogoColaboracion(collaborationLogo,+collaborationLogoX.value,+collaborationLogoY.value,+collaborationLogoZoom.value);const colaboracion={id:collaborationId.value||`collaboration-${Date.now()}`,name:collaborationName.value.trim(),slug:collaborationSlug.value.trim(),status:collaborationStatus.value,description:collaborationDescription.value.trim(),story:collaborationStory.value.trim(),cover:collaborationCover,logo:logoRecortado,logoX:50,logoY:50,logoZoom:1,collectionIds:[...collaborationCollections.selectedOptions].map(item=>item.value)};guardarEnSupabase('SKYBLOCK_ADMIN_GUARDAR_COLABORACION',colaboracion);collaborationModal.classList.remove('open')}catch(error){collaborationFormStatus.textContent=error.message||'No se pudo preparar el logo.'}};
+{const fields=document.createElement('section');fields.className='admin-logo-copy-fields';fields.innerHTML='<label>Texto superior del carrusel<input id="collaborationLogoMeta" maxlength="60" placeholder="COLABORACIÓN / SKYBLOCK"></label><label>Texto inferior del carrusel<input id="collaborationLogoFooter" maxlength="80" placeholder="IDENTIDAD COLABORATIVA"></label>';document.querySelector('#adminCollaborationForm .admin-collection-editor-grid>section').append(fields);const openBase=openCollaboration;openCollaboration=function(c=null){openBase(c);collaborationLogoMeta.value=c?.logoMeta||'COLABORACIÓN / SKYBLOCK';collaborationLogoFooter.value=c?.logoFooter||'IDENTIDAD COLABORATIVA'};adminCollaborationForm.onsubmit=async event=>{event.preventDefault();if(!collaborationCover||!collaborationLogo){collaborationFormStatus.textContent='Agrega la imagen de fondo y el logo.';return}try{collaborationFormStatus.textContent='Preparando el recorte del logo…';const logoRecortado=await recortarLogoColaboracion(collaborationLogo,+collaborationLogoX.value,+collaborationLogoY.value,+collaborationLogoZoom.value);guardarEnSupabase('SKYBLOCK_ADMIN_GUARDAR_COLABORACION',{id:collaborationId.value||`collaboration-${Date.now()}`,name:collaborationName.value.trim(),slug:collaborationSlug.value.trim(),status:collaborationStatus.value,description:collaborationDescription.value.trim(),story:collaborationStory.value.trim(),cover:collaborationCover,logo:logoRecortado,logoX:50,logoY:50,logoZoom:1,logoMeta:collaborationLogoMeta.value.trim(),logoFooter:collaborationLogoFooter.value.trim(),collectionIds:[...collaborationCollections.selectedOptions].map(item=>item.value)});collaborationModal.classList.remove('open')}catch(error){collaborationFormStatus.textContent=error.message||'No se pudo preparar el logo.'}}}
+
+function renderCollaborationCollectionPicker(){const picker=document.getElementById('collaborationCollectionPicker');if(!picker)return;const selected=new Set([...collaborationCollections.selectedOptions].map(item=>item.value));picker.innerHTML=collections.length?collections.map(collection=>`<button type="button" class="collaboration-collection-option${selected.has(collection.id)?' is-selected':''}" data-collaboration-collection="${collection.id}" aria-pressed="${selected.has(collection.id)}"><b>${cleanText(collection.name)}</b><i>${selected.has(collection.id)?'✓':'+'}</i></button>`).join(''):'<p class="collaboration-collection-empty">Primero crea una colección para poder vincularla.</p>';picker.querySelectorAll('[data-collaboration-collection]').forEach(button=>button.onclick=()=>{const option=[...collaborationCollections.options].find(item=>item.value===button.dataset.collaborationCollection);if(!option)return;option.selected=!option.selected;renderCollaborationCollectionPicker()})}
+{const collaborationOpenBase=openCollaboration;openCollaboration=function(c=null){collaborationOpenBase(c);renderCollaborationCollectionPicker()}}
+
+{const openCollaborationBase=openCollaboration;openCollaboration=function(c=null){collaborationLogoReplaced=false;openCollaborationBase(c);document.getElementById('collaborationPreview').classList.toggle('is-locked',Boolean(c?.logo))};collaborationLogoImage.addEventListener('change',()=>{if(collaborationLogoImage.files?.[0]){collaborationLogoReplaced=true;document.getElementById('collaborationPreview').classList.remove('is-locked')}});adminCollaborationForm.onsubmit=async event=>{event.preventDefault();if(!collaborationCover||!collaborationLogo){collaborationFormStatus.textContent='Agrega la imagen de fondo y el logo.';return}try{const logoFinal=collaborationLogoReplaced?await recortarLogoColaboracion(collaborationLogo,+collaborationLogoX.value,+collaborationLogoY.value,+collaborationLogoZoom.value):collaborationLogo;guardarEnSupabase('SKYBLOCK_ADMIN_GUARDAR_COLABORACION',{id:collaborationId.value||`collaboration-${Date.now()}`,name:collaborationName.value.trim(),slug:collaborationSlug.value.trim(),status:collaborationStatus.value,description:collaborationDescription.value.trim(),story:collaborationStory.value.trim(),cover:collaborationCover,logo:logoFinal,logoX:50,logoY:50,logoZoom:1,logoMeta:collaborationLogoMeta.value.trim(),logoFooter:collaborationLogoFooter.value.trim(),collectionIds:[...collaborationCollections.selectedOptions].map(item=>item.value)});collaborationModal.classList.remove('open')}catch(error){collaborationFormStatus.textContent=error.message||'No se pudo preparar el logo.'}}}
+
+// Editor único de encuadre para imágenes que realmente lo necesitan: portadas, perfil y posts.
+{const cropModal=document.createElement('div');cropModal.className='image-crop-modal';cropModal.hidden=true;cropModal.innerHTML='<section class="image-crop-card" role="dialog" aria-modal="true"><h2 id="imageCropTitle">Ajustar imagen</h2><p>Arrastra para mover. Usa la rueda o pellizca para acercar.</p><div class="image-crop-stage"><img alt="Vista previa del encuadre"></div><div class="image-crop-actions"><button type="button" class="admin-secondary" data-crop-cancel>Cancelar</button><button type="button" class="admin-primary" data-crop-apply>Usar encuadre</button></div></section>';document.body.append(cropModal);const stage=cropModal.querySelector('.image-crop-stage'),cropImage=stage.querySelector('img');let cropState=null;const pintar=()=>{stage.style.setProperty('--crop-x',`${(50-cropState.x)*.8}%`);stage.style.setProperty('--crop-y',`${(50-cropState.y)*.8}%`);stage.style.setProperty('--crop-zoom',cropState.zoom)};const recortar=()=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{const w=1200,h=Math.round(w/cropState.aspect),canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d'),scale=Math.max(w/image.naturalWidth,h/image.naturalHeight)*cropState.zoom,iw=image.naturalWidth*scale,ih=image.naturalHeight*scale,x=(w-iw)/2+((50-cropState.x)/100)*w*.8,y=(h-ih)/2+((50-cropState.y)/100)*h*.8;ctx.drawImage(image,x,y,iw,ih);canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('No se pudo preparar la imagen.')),'image/jpeg',.92)};image.onerror=()=>reject(new Error('No se pudo preparar la imagen.'));image.src=cropState.source});const abrir=(file,aspect,title)=>new Promise((resolve)=>{const reader=new FileReader();reader.onload=()=>{cropState={source:reader.result,aspect,x:50,y:50,zoom:1,file};cropImage.src=cropState.source;stage.style.aspectRatio=String(aspect);pintar();cropModal.hidden=false};reader.readAsDataURL(file);const cerrar=value=>{cropModal.hidden=true;cropModal.querySelector('[data-crop-apply]').onclick=null;cropModal.querySelector('[data-crop-cancel]').onclick=null;resolve(value)};cropModal.querySelector('#imageCropTitle').textContent=title;cropModal.querySelector('[data-crop-cancel]').onclick=()=>cerrar(null);cropModal.querySelector('[data-crop-apply]').onclick=async()=>{try{const blob=await recortar(),output=new File([blob],file.name.replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'});cerrar(output)}catch(error){cerrar(null)}}});let drag=null;stage.addEventListener('pointerdown',event=>{if(!cropState)return;stage.setPointerCapture(event.pointerId);drag={x:event.clientX,y:event.clientY,baseX:cropState.x,baseY:cropState.y};stage.classList.add('is-dragging')});stage.addEventListener('pointermove',event=>{if(!drag)return;const rect=stage.getBoundingClientRect();cropState.x=Math.max(0,Math.min(100,drag.baseX-((event.clientX-drag.x)/rect.width)*100));cropState.y=Math.max(0,Math.min(100,drag.baseY-((event.clientY-drag.y)/rect.height)*100));pintar()});stage.addEventListener('pointerup',()=>{drag=null;stage.classList.remove('is-dragging')});stage.addEventListener('wheel',event=>{if(!cropState)return;event.preventDefault();cropState.zoom=Math.max(1,Math.min(2.5,cropState.zoom+(event.deltaY<0?.08:-.08)));pintar()},{passive:false});const cambiarArchivo=(input,file)=>{const transfer=new DataTransfer();transfer.items.add(file);input.files=transfer.files};const ajustarUno=(input,aspect,title,onReady)=>input.addEventListener('change',async()=>{const file=input.files?.[0];if(!file||file.size>MAX_IMAGE_SIZE_BYTES)return;const resultado=await abrir(file,aspect,title);if(resultado){cambiarArchivo(input,resultado);const url=await readImage(resultado);onReady(resultado,url)}});ajustarUno(document.getElementById('collectionCoverImage'),16/9,'Ajustar portada de colección',(_,url)=>{collectionCoverData=url;document.getElementById('collectionCoverPreview').innerHTML=`<img src="${url}" alt="Vista previa de portada">`});ajustarUno(collaborationCoverImage,16/9,'Ajustar portada de colaboración',(_,url)=>{collaborationCover=url;collaborationPreview()});ajustarUno(document.getElementById('editorialProfileAvatar'),1,'Ajustar foto de perfil',(_,url)=>{document.getElementById('adminProfilePreviewAvatar').style.backgroundImage=`url("${url}")`});ajustarUno(document.getElementById('editorialProfileCover'),3/1,'Ajustar portada de perfil',(_,url)=>{document.getElementById('adminProfilePreviewCover').style.backgroundImage=`url("${url}")`});document.getElementById('postImage').addEventListener('change',async()=>{const files=[...document.getElementById('postImage').files];if(!files.length)return;const ratio={square:1,landscape:1.91,portrait:.8}[normalizePostMediaFormat(selectedPostMediaFormat())]||.8,ajustados=[];for(let index=0;index<files.length;index++){const resultado=await abrir(files[index],ratio,`Ajustar foto ${index+1} de ${files.length}`);ajustados.push(resultado||files[index])}const transfer=new DataTransfer();ajustados.forEach(file=>transfer.items.add(file));postImageInput.files=transfer.files;postImageData=await Promise.all(ajustados.map(readImage));renderPostPreviewMedia()})}
+
+/* El recorte de posts nuevos se captura antes que los listeners anteriores: así
+   siempre se abre el editor y el archivo final que se sube es el encuadre elegido. */
+{
+  const modal=document.createElement('div');
+  modal.className='image-crop-modal post-image-crop-modal';
+  modal.hidden=true;
+  modal.innerHTML='<section class="image-crop-card" role="dialog" aria-modal="true" aria-labelledby="postCropTitle"><h2 id="postCropTitle">Ajustar fotografía</h2><p>Arrastra la imagen para colocarla. Usa la rueda del mouse o dos dedos para acercar.</p><div class="image-crop-stage"><img alt="Vista previa del encuadre de la fotografía"></div><div class="image-crop-actions"><button type="button" class="admin-secondary" data-post-crop-cancel>Omitir ajuste</button><button type="button" class="admin-primary" data-post-crop-apply>Usar encuadre</button></div></section>';
+  document.body.append(modal);
+  const stage=modal.querySelector('.image-crop-stage');
+  const image=stage.querySelector('img');
+  const apply=modal.querySelector('[data-post-crop-apply]');
+  const cancel=modal.querySelector('[data-post-crop-cancel]');
+  let state=null,drag=null;
+  const draw=()=>{
+    stage.style.setProperty('--crop-x',`${(50-state.x)*.8}%`);
+    stage.style.setProperty('--crop-y',`${(50-state.y)*.8}%`);
+    stage.style.setProperty('--crop-zoom',String(state.zoom));
+  };
+  const exportCrop=()=>new Promise((resolve,reject)=>{
+    const source=new Image();
+    source.onload=()=>{
+      const width=1440,height=Math.round(width/state.aspect);
+      const canvas=document.createElement('canvas'); canvas.width=width; canvas.height=height;
+      const scale=Math.max(width/source.naturalWidth,height/source.naturalHeight)*state.zoom;
+      const renderedWidth=source.naturalWidth*scale,renderedHeight=source.naturalHeight*scale;
+      const x=(width-renderedWidth)/2+((50-state.x)/100)*width*.8;
+      const y=(height-renderedHeight)/2+((50-state.y)/100)*height*.8;
+      canvas.getContext('2d').drawImage(source,x,y,renderedWidth,renderedHeight);
+      canvas.toBlob((blob)=>blob?resolve(new File([blob],state.file.name.replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'})):reject(new Error('No se pudo guardar el encuadre.')),'image/jpeg',.92);
+    };
+    source.onerror=()=>reject(new Error('No se pudo leer la fotografía.'));
+    source.src=state.url;
+  });
+  const openCrop=(file,aspect,index,total)=>new Promise((resolve)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      state={file,url:reader.result,aspect,x:50,y:50,zoom:1};
+      image.src=state.url; stage.style.aspectRatio=String(aspect); draw();
+      modal.querySelector('#postCropTitle').textContent=`Ajustar foto ${index} de ${total}`;
+      modal.hidden=false;
+    };
+    reader.readAsDataURL(file);
+    const close=(output)=>{ modal.hidden=true; apply.onclick=null; cancel.onclick=null; resolve(output); };
+    cancel.onclick=()=>close(file);
+    apply.onclick=async()=>{ try { close(await exportCrop()); } catch { close(file); } };
+  });
+  stage.addEventListener('pointerdown',(event)=>{
+    if(!state)return;
+    stage.setPointerCapture(event.pointerId);
+    drag={pointerId:event.pointerId,x:event.clientX,y:event.clientY,baseX:state.x,baseY:state.y};
+    stage.classList.add('is-dragging');
+  });
+  stage.addEventListener('pointermove',(event)=>{
+    if(!drag||event.pointerId!==drag.pointerId)return;
+    const rect=stage.getBoundingClientRect();
+    state.x=Math.max(0,Math.min(100,drag.baseX-((event.clientX-drag.x)/rect.width)*100));
+    state.y=Math.max(0,Math.min(100,drag.baseY-((event.clientY-drag.y)/rect.height)*100));
+    draw();
+  });
+  const stopDrag=()=>{ drag=null; stage.classList.remove('is-dragging'); };
+  stage.addEventListener('pointerup',stopDrag); stage.addEventListener('pointercancel',stopDrag);
+  stage.addEventListener('wheel',(event)=>{
+    if(!state)return;
+    event.preventDefault();
+    state.zoom=Math.max(1,Math.min(3,state.zoom+(event.deltaY<0?.1:-.1))); draw();
+  },{passive:false});
+  document.addEventListener('change',async(event)=>{
+    if(event.target!==postImageInput||document.getElementById('postEditId').value)return;
+    event.stopImmediatePropagation();
+    const files=[...postImageInput.files];
+    const status=document.getElementById('postStatus');
+    if(!files.length)return;
+    if(files.length>10||files.some((file)=>file.size>MAX_IMAGE_SIZE_BYTES)){
+      postImageInput.value=''; postImageData=[];
+      status.textContent=files.length>10?'Puedes seleccionar como máximo 10 fotografías.':`Cada fotografía debe pesar como máximo ${MAX_IMAGE_SIZE_MB} MB.`;
+      renderPostPreviewMedia(); return;
+    }
+    const aspect={square:1,landscape:1.91,portrait:.8}[normalizePostMediaFormat(selectedPostMediaFormat())]||.8;
+    const adjusted=[];
+    for(let index=0;index<files.length;index++) adjusted.push(await openCrop(files[index],aspect,index+1,files.length));
+    const transfer=new DataTransfer(); adjusted.forEach((file)=>transfer.items.add(file)); postImageInput.files=transfer.files;
+    postImageData=await Promise.all(adjusted.map(readImage));
+    document.getElementById('postUploadText').textContent=`${adjusted.length} fotografía${adjusted.length===1?'':'s'} lista${adjusted.length===1?'':'s'}`;
+    status.textContent='Encuadre aplicado. Estas son las fotos que se publicarán.';
+    renderPostPreviewMedia();
+  },true);
+}
+
+/* Por ahora el encuadre interactivo queda reservado a fotos de posts nuevos
+   y al logo de colaboración. Las demás cargas mantienen su comportamiento normal. */
+document.addEventListener('change',async(event)=>{
+  const input=event.target;
+  if(!['collectionCoverImage','collaborationCoverImage','editorialProfileAvatar','editorialProfileCover'].includes(input?.id))return;
+  event.stopImmediatePropagation();
+  const file=input.files?.[0];
+  if(!file||file.size>MAX_IMAGE_SIZE_BYTES)return;
+  const url=await readImage(file);
+  if(input.id==='collectionCoverImage'){
+    collectionCoverData=url;
+    document.getElementById('collectionCoverPreview').innerHTML=`<img src="${url}" alt="Vista previa de portada">`;
+  }
+  if(input.id==='collaborationCoverImage'){
+    collaborationCover=url;
+    collaborationPreview();
+  }
+  if(input.id==='editorialProfileAvatar') document.getElementById('adminProfilePreviewAvatar').style.backgroundImage=`url("${url}")`;
+  if(input.id==='editorialProfileCover') document.getElementById('adminProfilePreviewCover').style.backgroundImage=`url("${url}")`;
+},true);
