@@ -887,6 +887,8 @@ const postMediaFormatInput = document.getElementById('postMediaFormat');
 const postFormatOptions = [...document.querySelectorAll('[data-post-format-option]')];
 let postImageData = [];
 let postAdjustedFiles = [];
+let postPreviewIndex = 0;
+let recropPostPhoto = async () => {};
 let adminPosts = [];
 const adminFeedProfile = { nombre:'SKYBLOCK STUDIO', biografia:'', avatar_url:'', portada_url:'', etiquetas:[] };
 const postMediaFormats = new Set(['square','landscape','portrait']);
@@ -913,14 +915,17 @@ function renderPostPreviewMedia() {
   const format = normalizePostMediaFormat(selectedPostMediaFormat());
   postPreview.dataset.mediaFormat = format;
   postPreview.innerHTML = postImageData.length
-    ? `<div class="post-carousel-track">${postImageData.map((image,index) => `<figure class="post-carousel-slide is-loaded"><img src="${image}" alt="Vista previa de la foto ${index+1} de ${postImageData.length}"></figure>`).join('')}</div>${postImageData.length > 1 ? `<button class="post-carousel-arrow previous" type="button" aria-label="Foto anterior" data-post-preview-previous>‹</button><button class="post-carousel-arrow next" type="button" aria-label="Foto siguiente" data-post-preview-next>›</button><div class="post-carousel-count">1 / ${postImageData.length}</div>` : ''}`
+    ? `<div class="post-carousel-track">${postImageData.map((image,index) => `<figure class="post-carousel-slide is-loaded"><img src="${image}" alt="Vista previa de la foto ${index+1} de ${postImageData.length}"></figure>`).join('')}</div>${postImageData.length > 1 ? `<button class="post-carousel-arrow previous" type="button" aria-label="Foto anterior" data-post-preview-previous>‹</button><button class="post-carousel-arrow next" type="button" aria-label="Foto siguiente" data-post-preview-next>›</button><div class="post-carousel-count">1 / ${postImageData.length}</div>` : ''}${postAdjustedFiles.length ? '<button class="post-preview-adjust" type="button" data-post-preview-adjust>Reajustar esta foto</button>' : ''}`
     : '<div class="post-preview-empty">Vista previa de las fotografías</div>';
   const track=postPreview.querySelector('.post-carousel-track');
   const count=postPreview.querySelector('.post-carousel-count');
-  if(!track||!count)return;
-  const updateCount=()=>{ const index=Math.max(0,Math.min(postImageData.length-1,Math.round(track.scrollLeft/Math.max(track.clientWidth,1)))); count.textContent=`${index+1} / ${postImageData.length}`; };
+  const adjustButton=postPreview.querySelector('[data-post-preview-adjust]');
+  if(!track)return;
+  postPreviewIndex=0;
+  const updateCount=()=>{ const index=Math.max(0,Math.min(postImageData.length-1,Math.round(track.scrollLeft/Math.max(track.clientWidth,1)))); postPreviewIndex=index; if(count)count.textContent=`${index+1} / ${postImageData.length}`; };
   postPreview.querySelector('[data-post-preview-previous]')?.addEventListener('click',()=>track.scrollBy({left:-track.clientWidth,behavior:'smooth'}));
   postPreview.querySelector('[data-post-preview-next]')?.addEventListener('click',()=>track.scrollBy({left:track.clientWidth,behavior:'smooth'}));
+  adjustButton?.addEventListener('click',()=>recropPostPhoto(postPreviewIndex));
   track.addEventListener('scroll',updateCount,{passive:true});
 }
 
@@ -1477,12 +1482,12 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
     source.onerror=()=>reject(new Error('No se pudo leer la fotografía.'));
     source.src=state.url;
   });
-  const openCrop=(file,aspect,index,total)=>new Promise((resolve)=>{
+  const openCrop=(file,aspect,index,total,lockFormat=false)=>new Promise((resolve)=>{
     const reader=new FileReader();
     reader.onload=()=>{
       state={file,url:reader.result,aspect,x:50,y:50,zoom:1};
       image.src=state.url; setCropFormat(postCropBatchFormat);
-      cropFormatButtons.forEach((button)=>button.disabled=index>1);
+      cropFormatButtons.forEach((button)=>button.disabled=lockFormat||index>1);
       modal.querySelector('#postCropTitle').textContent=`Ajustar foto ${index} de ${total}`;
       modal.hidden=false;
     };
@@ -1492,6 +1497,21 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
     apply.onclick=async()=>{ try { close(await exportCrop()); } catch { close(file); } };
   });
   cropFormatButtons.forEach((button)=>button.addEventListener('click',()=>{postCropBatchFormat=button.dataset.postCropFormat;setCropFormat(postCropBatchFormat)}));
+  recropPostPhoto=async(index)=>{
+    const file=postAdjustedFiles[index];
+    if(!file)return;
+    showPostStep('media');
+    const aspect={square:1,landscape:1.91,portrait:.8}[normalizePostMediaFormat(selectedPostMediaFormat())]||.8;
+    const adjusted=await openCrop(file,aspect,index+1,postAdjustedFiles.length,true);
+    postAdjustedFiles[index]=adjusted;
+    const transfer=new DataTransfer(); postAdjustedFiles.forEach((item)=>transfer.items.add(item)); postImageInput.files=transfer.files;
+    postImageData=await Promise.all(postAdjustedFiles.map(readImage));
+    document.getElementById('postStatus').textContent=`Foto ${index+1} reajustada.`;
+    renderPostPreviewMedia();
+    showPostStep('data');
+    const refreshedTrack=postPreview.querySelector('.post-carousel-track');
+    if(refreshedTrack)refreshedTrack.scrollLeft=refreshedTrack.clientWidth*index;
+  };
   stage.addEventListener('pointerdown',(event)=>{
     if(!state)return;
     event.preventDefault();
