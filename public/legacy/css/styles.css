@@ -1966,7 +1966,7 @@ footer[data-chapter] {
   .home-page .restock-image-slot {
     order:2;
     min-height:420px;
-    background-position:right center;
+    background-position:center center;
     background-size:auto 100%;
   }
   .home-page .restock-content h2 { font-size:clamp(50px,14vw,72px); }
