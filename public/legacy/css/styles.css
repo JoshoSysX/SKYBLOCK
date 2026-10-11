@@ -2579,9 +2579,10 @@ footer[data-chapter] {
   font-size: 17px;
   margin: 0 0 28px
 }
-.product-price-stack { display:flex;flex-wrap:wrap;align-items:baseline;gap:6px; }
+.product-price-stack { display:flex;flex-wrap:wrap;align-items:baseline;gap:10px; }
 .price-previous { color:#81827e;font-size:.8em;text-decoration:line-through; }
 .price-current { color:#171819;font:600 1em var(--display); }
+.product-price .price-current { margin-left:10px; }
 .price-discount,.discount-tag { display:inline-flex;align-items:center;justify-content:center;background:#1d5a38!important;color:#fff!important;font:600 9px var(--display)!important;letter-spacing:.08em; }
 .price-discount { padding:3px 5px; }
 .discount-tag { top:auto!important; left:auto!important; right:14px!important; bottom:14px!important; padding:7px 9px!important; }
@@ -5699,10 +5700,7 @@ footer .footer-brand>.brand small {
   }
 
   .home-page .hero:after {
-    inset:auto 0 calc(66% - 3px);
-    width:100%;
-    height:6px;
-    background:#fcfcfc
+    display:none
   }
 
   .home-page .hero-editorial {
