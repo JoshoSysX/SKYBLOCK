@@ -1390,13 +1390,24 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
   const modal=document.createElement('div');
   modal.className='image-crop-modal post-image-crop-modal';
   modal.hidden=true;
-  modal.innerHTML='<section class="image-crop-card" role="dialog" aria-modal="true" aria-labelledby="postCropTitle"><h2 id="postCropTitle">Ajustar fotografía</h2><p>Arrastra la imagen para colocarla. Usa la rueda del mouse o dos dedos para acercar.</p><div class="image-crop-stage"><img alt="Vista previa del encuadre de la fotografía"></div><div class="image-crop-actions"><button type="button" class="admin-secondary" data-post-crop-cancel>Omitir ajuste</button><button type="button" class="admin-primary" data-post-crop-apply>Usar encuadre</button></div></section>';
+  modal.innerHTML='<section class="image-crop-card" role="dialog" aria-modal="true" aria-labelledby="postCropTitle"><h2 id="postCropTitle">Ajustar fotografía</h2><p>Elige la medida y acomoda la imagen dentro del marco. Solo se guardará lo que queda dentro.</p><div class="post-crop-formats" aria-label="Medida de la publicación"><button type="button" data-post-crop-format="portrait"><b>Vertical</b><small>4:5</small></button><button type="button" data-post-crop-format="square"><b>Cuadrado</b><small>1:1</small></button><button type="button" data-post-crop-format="landscape"><b>Horizontal</b><small>16:9</small></button></div><div class="image-crop-stage"><img alt="Vista previa del encuadre de la fotografía"><span class="image-crop-frame" aria-hidden="true"></span></div><div class="image-crop-actions"><button type="button" class="admin-secondary" data-post-crop-cancel>Omitir ajuste</button><button type="button" class="admin-primary" data-post-crop-apply>Usar encuadre</button></div></section>';
   document.body.append(modal);
   const stage=modal.querySelector('.image-crop-stage');
   const image=stage.querySelector('img');
   const apply=modal.querySelector('[data-post-crop-apply]');
   const cancel=modal.querySelector('[data-post-crop-cancel]');
+  const cropFormatButtons=[...modal.querySelectorAll('[data-post-crop-format]')];
+  const cropFormats={portrait:.8,square:1,landscape:16/9};
   let state=null,drag=null;
+  const setCropFormat=(format)=>{
+    const selected=normalizePostMediaFormat(format);
+    if(!state)return;
+    state.aspect=cropFormats[selected];
+    stage.style.aspectRatio=String(state.aspect);
+    cropFormatButtons.forEach((button)=>button.classList.toggle('active',button.dataset.postCropFormat===selected));
+    setPostMediaFormat(selected);
+    draw();
+  };
   const draw=()=>{
     stage.style.setProperty('--crop-x',`${(50-state.x)*.8}%`);
     stage.style.setProperty('--crop-y',`${(50-state.y)*.8}%`);
@@ -1421,7 +1432,7 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
     const reader=new FileReader();
     reader.onload=()=>{
       state={file,url:reader.result,aspect,x:50,y:50,zoom:1};
-      image.src=state.url; stage.style.aspectRatio=String(aspect); draw();
+      image.src=state.url; setCropFormat(normalizePostMediaFormat(selectedPostMediaFormat()));
       modal.querySelector('#postCropTitle').textContent=`Ajustar foto ${index} de ${total}`;
       modal.hidden=false;
     };
@@ -1430,6 +1441,7 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
     cancel.onclick=()=>close(file);
     apply.onclick=async()=>{ try { close(await exportCrop()); } catch { close(file); } };
   });
+  cropFormatButtons.forEach((button)=>button.addEventListener('click',()=>setCropFormat(button.dataset.postCropFormat)));
   stage.addEventListener('pointerdown',(event)=>{
     if(!state)return;
     stage.setPointerCapture(event.pointerId);
