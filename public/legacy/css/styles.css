@@ -5695,8 +5695,11 @@ footer .footer-brand>.brand small {
 
 @media (max-width:700px), (orientation:portrait) {
   .home-page .hero-photo {
-    background-position:center bottom;
-    background-size:auto 66%
+    background-color:#fcfcfc;
+    background-image:linear-gradient(to bottom,#fcfcfc 0 30%,#fcfcfcd9 33%,transparent 38%),url('../assets/image/PORTADA PRINCIPAL 2.jpg');
+    background-position:center center,center bottom;
+    background-size:100% 100%,auto 66%;
+    background-repeat:no-repeat
   }
 
   .home-page .hero:after {
