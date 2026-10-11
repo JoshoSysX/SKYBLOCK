@@ -1451,7 +1451,7 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
   const modal=document.createElement('div');
   modal.className='post-inline-crop';
   modal.hidden=true;
-  modal.innerHTML='<section class="image-crop-card" role="dialog" aria-modal="true" aria-labelledby="postCropTitle"><h2 id="postCropTitle">Ajustar fotografía</h2><p>Elige la medida y acomoda la imagen dentro del marco. Cualquiera de los dos botones guardará exactamente este encuadre.</p><div class="post-crop-formats" aria-label="Medida de la publicación"><button type="button" data-post-crop-format="portrait"><b>Vertical</b><small>4:5</small></button><button type="button" data-post-crop-format="square"><b>Cuadrado</b><small>1:1</small></button><button type="button" data-post-crop-format="landscape"><b>Horizontal</b><small>16:9</small></button></div><div class="image-crop-stage"><img draggable="false" alt="Vista previa del encuadre de la fotografía"><span class="image-crop-frame" aria-hidden="true"></span></div><div class="image-crop-actions"><button type="button" class="admin-secondary" data-post-crop-cancel>Guardar y continuar</button><button type="button" class="admin-primary" data-post-crop-apply>Guardar encuadre</button></div></section>';
+  modal.innerHTML='<section class="image-crop-card" role="dialog" aria-modal="true" aria-labelledby="postCropTitle"><h2 id="postCropTitle">Ajustar fotografía</h2><p>Elige la medida y acomoda la imagen dentro del marco. El primer botón avanza; el segundo se queda en fotos para que puedas añadir más.</p><div class="post-crop-formats" aria-label="Medida de la publicación"><button type="button" data-post-crop-format="portrait"><b>Vertical</b><small>4:5</small></button><button type="button" data-post-crop-format="square"><b>Cuadrado</b><small>1:1</small></button><button type="button" data-post-crop-format="landscape"><b>Horizontal</b><small>16:9</small></button></div><div class="image-crop-stage"><img draggable="false" alt="Vista previa del encuadre de la fotografía"><span class="image-crop-frame" aria-hidden="true"></span></div><div class="image-crop-actions"><button type="button" class="admin-secondary" data-post-crop-cancel>Guardar y continuar</button><button type="button" class="admin-primary" data-post-crop-apply>Guardar y añadir otra foto</button></div></section>';
   document.querySelector('[data-post-step="media"]').append(modal);
   const stage=modal.querySelector('.image-crop-stage');
   const image=stage.querySelector('img');
@@ -1499,9 +1499,9 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
       modal.hidden=false;
     };
     reader.readAsDataURL(file);
-    const close=(output)=>{ modal.hidden=true; apply.onclick=null; cancel.onclick=null; resolve(output); };
-    cancel.onclick=async()=>{ try { close(await exportCrop()); } catch { close(file); } };
-    apply.onclick=async()=>{ try { close(await exportCrop()); } catch { close(file); } };
+    const close=(output,continueToData)=>{ modal.hidden=true; apply.onclick=null; cancel.onclick=null; resolve({file:output,continueToData}); };
+    cancel.onclick=async()=>{ try { close(await exportCrop(),true); } catch { close(file,true); } };
+    apply.onclick=async()=>{ try { close(await exportCrop(),false); } catch { close(file,false); } };
   });
   cropFormatButtons.forEach((button)=>button.addEventListener('click',()=>{postCropBatchFormat=button.dataset.postCropFormat;setCropFormat(postCropBatchFormat)}));
   recropPostPhoto=async(index)=>{
@@ -1509,7 +1509,8 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
     if(!file)return;
     showPostStep('media');
     const aspect={square:1,landscape:1.91,portrait:.8}[normalizePostMediaFormat(selectedPostMediaFormat())]||.8;
-    const adjusted=await openCrop(file,aspect,index+1,postAdjustedFiles.length,true);
+    const cropResult=await openCrop(file,aspect,index+1,postAdjustedFiles.length,true);
+    const adjusted=cropResult.file;
     postAdjustedFiles[index]=adjusted;
     const transfer=new DataTransfer(); postAdjustedFiles.forEach((item)=>transfer.items.add(item)); postImageInput.files=transfer.files;
     postImageData=await Promise.all(postAdjustedFiles.map(readImage));
@@ -1554,15 +1555,16 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
     }
     postCropBatchFormat=normalizePostMediaFormat(selectedPostMediaFormat());
     const aspect={square:1,landscape:1.91,portrait:.8}[postCropBatchFormat]||.8;
-    const adjusted=[];
-    for(let index=0;index<files.length;index++) adjusted.push(await openCrop(files[index],aspect,index+1,files.length));
+    const adjusted=[]; let continueToData=true;
+    for(let index=0;index<files.length;index++){const cropResult=await openCrop(files[index],aspect,index+1,files.length);adjusted.push(cropResult.file);continueToData=continueToData&&cropResult.continueToData}
     postAdjustedFiles=[...postAdjustedFiles,...adjusted];
     const transfer=new DataTransfer(); postAdjustedFiles.forEach((file)=>transfer.items.add(file)); postImageInput.files=transfer.files;
     postImageData=await Promise.all(postAdjustedFiles.map(readImage));
     document.getElementById('postUploadText').textContent=`Añadir más fotografías · ${postAdjustedFiles.length}/10 listas`;
     status.textContent=`Encuadre aplicado. ${postAdjustedFiles.length} de 10 fotografías listas.`;
     renderPostPreviewMedia();
-    showPostStep('data');
+    if(continueToData)showPostStep('data');
+    else document.getElementById('postMediaStatus').textContent='Foto guardada. Puedes añadir otra o continuar cuando quieras.';
   },true);
 }
 
