@@ -2082,7 +2082,9 @@ footer[data-chapter] {
   color: #111214;
   font: 600 9px var(--display);
   letter-spacing: .15em;
-  text-transform: uppercase
+  text-transform: uppercase;
+  cursor:pointer;
+  pointer-events:auto
 }
 
 .catalog-scroll b {

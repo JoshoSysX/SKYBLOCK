@@ -10,6 +10,12 @@ const count = document.getElementById('resultCount');
 const emptyState = document.getElementById('emptyState');
 let category = 'all';
 
+const catalogScrollButton = document.querySelector('.catalog-scroll');
+catalogScrollButton?.addEventListener('click', (event) => {
+  event.preventDefault();
+  document.getElementById('catalogContent')?.scrollIntoView({ behavior:'smooth', block:'start' });
+});
+
 const catalogProductIds = {
   'Camiseta Void':'void',
   'Sudadera Skyblock':'skyblock',
