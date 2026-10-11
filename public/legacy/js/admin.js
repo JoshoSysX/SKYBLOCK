@@ -987,7 +987,7 @@ let showPostStep=()=>{};
   dataStep.className='admin-post-step'; dataStep.dataset.postStep='data';
   const dataHead=document.createElement('div');
   dataHead.className='admin-post-step-head'; dataHead.innerHTML='<span>Paso 2 de 2</span><h3>Información del post</h3><p>Completa los datos y revisa las fotografías una por una antes de publicar.</p>';
-  const previous=document.createElement('button'); previous.type='button'; previous.className='admin-secondary admin-post-step-back'; previous.textContent='← Cambiar fotos';
+  const previous=document.createElement('button'); previous.type='button'; previous.className='admin-secondary admin-post-step-back'; previous.textContent='← Añadir o cambiar fotos';
   const continueButton=document.createElement('button'); continueButton.type='button'; continueButton.className='admin-primary admin-post-step-next'; continueButton.textContent='Continuar con los datos →';
   const mediaStatus=document.createElement('p'); mediaStatus.className='admin-post-status'; mediaStatus.id='postMediaStatus';
   formatField.remove();
@@ -1444,7 +1444,7 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
   const modal=document.createElement('div');
   modal.className='post-inline-crop';
   modal.hidden=true;
-  modal.innerHTML='<section class="image-crop-card" role="dialog" aria-modal="true" aria-labelledby="postCropTitle"><h2 id="postCropTitle">Ajustar fotografía</h2><p>Elige la medida y acomoda la imagen dentro del marco. Solo se guardará lo que queda dentro.</p><div class="post-crop-formats" aria-label="Medida de la publicación"><button type="button" data-post-crop-format="portrait"><b>Vertical</b><small>4:5</small></button><button type="button" data-post-crop-format="square"><b>Cuadrado</b><small>1:1</small></button><button type="button" data-post-crop-format="landscape"><b>Horizontal</b><small>16:9</small></button></div><div class="image-crop-stage"><img draggable="false" alt="Vista previa del encuadre de la fotografía"><span class="image-crop-frame" aria-hidden="true"></span></div><div class="image-crop-actions"><button type="button" class="admin-secondary" data-post-crop-cancel>Omitir ajuste</button><button type="button" class="admin-primary" data-post-crop-apply>Usar encuadre</button></div></section>';
+  modal.innerHTML='<section class="image-crop-card" role="dialog" aria-modal="true" aria-labelledby="postCropTitle"><h2 id="postCropTitle">Ajustar fotografía</h2><p>Elige la medida y acomoda la imagen dentro del marco. Si no quieres recortarla, usa la foto tal como está y luego podrás añadir más.</p><div class="post-crop-formats" aria-label="Medida de la publicación"><button type="button" data-post-crop-format="portrait"><b>Vertical</b><small>4:5</small></button><button type="button" data-post-crop-format="square"><b>Cuadrado</b><small>1:1</small></button><button type="button" data-post-crop-format="landscape"><b>Horizontal</b><small>16:9</small></button></div><div class="image-crop-stage"><img draggable="false" alt="Vista previa del encuadre de la fotografía"><span class="image-crop-frame" aria-hidden="true"></span></div><div class="image-crop-actions"><button type="button" class="admin-secondary" data-post-crop-cancel>Usar sin ajustar</button><button type="button" class="admin-primary" data-post-crop-apply>Usar encuadre</button></div></section>';
   document.querySelector('[data-post-step="media"]').append(modal);
   const stage=modal.querySelector('.image-crop-stage');
   const image=stage.querySelector('img');
