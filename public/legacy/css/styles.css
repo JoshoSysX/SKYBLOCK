@@ -1951,6 +1951,27 @@ footer[data-chapter] {
   .home-page .restock-content .light-button { width:100%; }
 }
 
+/* En móvil el texto necesita todo el ancho: la fotografía continúa debajo,
+   sin recortar al modelo ni cruzarse con el contenido. */
+@media(max-width:600px) {
+  .home-page .restock-section {
+    min-height:0;
+    grid-template-columns:1fr;
+    grid-template-rows:auto minmax(420px,72svh);
+  }
+  .home-page .restock-content {
+    order:1;
+    min-height:0;
+    padding:52px 28px 64px;
+  }
+  .home-page .restock-image-slot {
+    order:2;
+    min-height:420px;
+    background-position:right center;
+    background-size:auto 100%;
+  }
+}
+
 /* Texto del hero arriba en móviles */
 @media(max-width:600px) {
   .hero-copy {
