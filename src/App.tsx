@@ -13,6 +13,8 @@ const MAX_IMAGE_SIZE_BYTES = 150 * 1024 * 1024
 const CLOUDINARY_CHUNK_SIZE_BYTES = 20 * 1024 * 1024
 const BRAND = 'Skyblock Studio'
 const BRAND_UPPER = 'SKYBLOCK STUDIO'
+// Interruptor temporal solicitado: se mantiene hasta que se indique retirarlo.
+const MOSTRAR_404_GLOBAL = true
 const GOOGLE_ANALYTICS_MEASUREMENT_ID = String(import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-Z59ZXX8QDH').trim()
 const LEGACY_BUILD = 'analytics-consent-20261010'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -81,6 +83,18 @@ function PantallaProteccion({ configuracion, alDesbloquear, alVencer }: { config
       {configuracion.requiere_contrasena && <form className="proteccion-clave" onSubmit={async (evento) => { evento.preventDefault(); setValidando(true); setErrorContrasena(''); const { data, error } = await supabase.rpc('verificar_contrasena_modo_proteccion', { p_contrasena: contrasena }); setValidando(false); if (error || !data) { setErrorContrasena('Contraseña incorrecta.'); return } sessionStorage.setItem(`skb-proteccion-${configuracion.actualizado_en || ''}`, 'ok'); alDesbloquear() }}><label>Contraseña de acceso<span className="proteccion-input-clave"><input type={mostrarContrasena ? 'text' : 'password'} value={contrasena} onChange={(evento) => setContrasena(evento.target.value)} autoComplete="current-password" required /><button className="proteccion-ver-clave" type="button" onClick={() => setMostrarContrasena((visible) => !visible)} aria-label={mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={mostrarContrasena}>{mostrarContrasena ? 'Ocultar' : 'Ver'}<span aria-hidden="true">◉</span></button></span></label><button type="submit" disabled={validando}>{validando ? 'Verificando…' : 'Ingresar'}</button>{errorContrasena && <small role="alert">{errorContrasena}</small>}</form>}
       {configuracion.descripcion && <p>{configuracion.descripcion}</p>}
       {terminada && <small className="proteccion-finalizada">La cuenta regresiva terminó. Estamos abriendo el sitio…</small>}
+    </section>
+  </main>
+}
+function Pantalla404() {
+  return <main className="error-404-pantalla">
+    <div className="error-404-fondo" aria-hidden="true" />
+    <a className="proteccion-login" href="/login?proteccion=1" aria-label="Inicio de sesión para administradores"><span aria-hidden="true">⌑</span> Inicio de sesión</a>
+    <section className="error-404-contenido">
+      <span>SKYBLOCK STUDIO / ACCESO NO DISPONIBLE</span>
+      <b aria-hidden="true">404</b>
+      <h1>Página no encontrada</h1>
+      <p>El sitio está temporalmente fuera de acceso. Vuelve a intentarlo más tarde.</p>
     </section>
   </main>
 }
@@ -825,6 +839,7 @@ export default function App() {
     addEventListener('message', recibir); void enviar(); return () => removeEventListener('message', recibir)
   }, [cargarPublicos, enviar])
 
+  if (MOSTRAR_404_GLOBAL && !['admin','login'].includes(ruta)) return <Pantalla404 />
   if (proteccion === null || (proteccion.activo && adminConAcceso === null && !['admin','login'].includes(ruta))) return <main className="proteccion-cargando" aria-label="Cargando" />
   if (proteccion.activo && !adminConAcceso && !proteccionDesbloqueada && !['admin','login'].includes(ruta)) return <PantallaProteccion configuracion={proteccion} alDesbloquear={() => setProteccionDesbloqueada(true)} alVencer={desactivarProteccionVencida} />
   return <iframe ref={frame} className="legacy-frontend" src={urlLegacy(ruta, location.search, ruta === 'admin' ? location.hash : '')} title={BRAND} allow="web-share" onLoad={() => void enviar()} />
