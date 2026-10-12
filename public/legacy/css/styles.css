@@ -6378,6 +6378,14 @@ body.catalog-page,
   display: none !important;
 }
 
+/* La portada de Nosotros no debe crear una barra lateral horizontal. */
+html:has(.about-page),
+body.about-page,
+.about-main {
+  max-width:100%;
+  overflow-x:clip;
+}
+
 .is-collaboration-detail .collection-cover.is-collaboration-cover {
   min-height: 92svh;
 }
