@@ -89,7 +89,6 @@ function PantallaProteccion({ configuracion, alDesbloquear, alVencer }: { config
 function Pantalla404() {
   return <main className="error-404-pantalla">
     <div className="error-404-fondo" aria-hidden="true" />
-    <a className="proteccion-login" href="/login?proteccion=1" aria-label="Inicio de sesión para administradores"><span aria-hidden="true">⌑</span> Inicio de sesión</a>
     <section className="error-404-contenido">
       <span>SKYBLOCK STUDIO / ACCESO NO DISPONIBLE</span>
       <b aria-hidden="true">404</b>
