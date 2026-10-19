@@ -530,6 +530,8 @@ document.getElementById('adminProductForm').addEventListener('submit', (event) =
   setTimeout(() => toast.classList.remove('show'), 2600);
 });
 let collections = [];
+const UPCOMING_COLLECTION_SLUG = '__proximamente__';
+const UPCOMING_FALLBACK_COVER = 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=90';
 let collectionCoverData = '';
 let verificationCodes = [];
 let collaborations = [];
@@ -550,7 +552,8 @@ document.getElementById('adminCollaborationGrid').onclick=async e=>{const edit=e
 const collectionStatusLabel = { published:'Publicada',draft:'Borrador',upcoming:'Próximamente' };
 function saveCollections() { return; }
 function renderCollections() {
-  document.getElementById('adminCollectionGrid').innerHTML = collections.map((collection) => {
+  const visibleCollections = collections.filter((collection) => collection.slug !== UPCOMING_COLLECTION_SLUG);
+  document.getElementById('adminCollectionGrid').innerHTML = visibleCollections.map((collection) => {
     const productCount = products.filter((product) => product.collection === collection.name).length;
     const codeCount = verificationCodes.filter((code) => code.collection === collection.name).length;
     return `<article><img src="${collection.cover}" alt="${collection.name}"><div><span>${collection.edition} · ${collectionStatusLabel[collection.status] || collection.status}</span><h2>${collection.name}</h2><p>${productCount} productos · ${codeCount} códigos${collection.limited ? ' · Edición limitada' : ''}</p><div class="admin-collection-actions"><button type="button" data-edit-collection="${collection.id}">Editar colección →</button><button type="button" class="admin-collection-delete" data-delete-collection="${collection.id}">Eliminar</button></div></div></article>`;
@@ -566,6 +569,7 @@ function renderCollections() {
 
 const collectionModal = document.getElementById('collectionModal');
 function openCollectionEditor(collection = null) {
+  delete collectionModal.dataset.editingUpcoming;
   document.getElementById('adminCollectionForm').reset();
   document.getElementById('collectionId').value = collection?.id || '';
   document.getElementById('collectionModalTitle').textContent = collection ? 'Editar colección' : 'Nueva colección';
@@ -582,8 +586,22 @@ function openCollectionEditor(collection = null) {
   collectionModal.classList.add('open');
   collectionModal.setAttribute('aria-hidden','false');
 }
-function closeCollectionEditor() { collectionModal.classList.remove('open');collectionModal.setAttribute('aria-hidden','true'); }
+function openUpcomingEditor() {
+  const configured = collections.find((collection) => collection.slug === UPCOMING_COLLECTION_SLUG);
+  openCollectionEditor(configured || { name:'Próximamente',slug:UPCOMING_COLLECTION_SLUG,edition:'PRÓXIMO',status:'upcoming',cover:UPCOMING_FALLBACK_COVER });
+  collectionModal.dataset.editingUpcoming = 'true';
+  document.getElementById('collectionModalTitle').textContent = 'Editar Próximamente';
+  document.getElementById('collectionSlug').value = UPCOMING_COLLECTION_SLUG;
+  document.getElementById('collectionSlug').readOnly = true;
+  document.getElementById('collectionEdition').value = 'PRÓXIMO';
+  document.getElementById('collectionEdition').readOnly = true;
+  document.getElementById('collectionStatus').value = 'upcoming';
+  document.getElementById('collectionStatus').disabled = true;
+  document.getElementById('collectionLimited').checked = false;
+}
+function closeCollectionEditor() { collectionModal.classList.remove('open');collectionModal.setAttribute('aria-hidden','true');delete collectionModal.dataset.editingUpcoming;document.getElementById('collectionSlug').readOnly=false;document.getElementById('collectionEdition').readOnly=false;document.getElementById('collectionStatus').disabled=false; }
 document.getElementById('newCollection').addEventListener('click',() => openCollectionEditor());
+document.getElementById('editUpcomingCollection').addEventListener('click',openUpcomingEditor);
 document.getElementById('closeCollectionModal').addEventListener('click',closeCollectionEditor);
 document.getElementById('cancelCollectionEdit').addEventListener('click',closeCollectionEditor);
 collectionModal.addEventListener('click',(event) => { if (event.target === collectionModal) closeCollectionEditor(); });
@@ -619,7 +637,8 @@ document.getElementById('adminCollectionForm').addEventListener('submit',(event)
   const status = document.getElementById('collectionFormStatus');
   if (!collectionCoverData) { status.textContent = 'Selecciona una imagen de portada.';return; }
   const id = document.getElementById('collectionId').value || `collection-${Date.now()}`;
-  const collection = { id,name:document.getElementById('collectionName').value.trim(),slug:document.getElementById('collectionSlug').value.trim(),edition:document.getElementById('collectionEdition').value.trim(),status:document.getElementById('collectionStatus').value,limited:document.getElementById('collectionLimited').checked,description:document.getElementById('collectionDescription').value.trim(),story:document.getElementById('collectionStory').value.trim(),cover:collectionCoverData };
+  const isUpcomingEditor = collectionModal.dataset.editingUpcoming === 'true';
+  const collection = { id,name:document.getElementById('collectionName').value.trim() || 'Próximamente',slug:isUpcomingEditor ? UPCOMING_COLLECTION_SLUG : document.getElementById('collectionSlug').value.trim(),edition:isUpcomingEditor ? 'PRÓXIMO' : document.getElementById('collectionEdition').value.trim(),status:isUpcomingEditor ? 'upcoming' : document.getElementById('collectionStatus').value,limited:isUpcomingEditor ? false : document.getElementById('collectionLimited').checked,description:document.getElementById('collectionDescription').value.trim(),story:document.getElementById('collectionStory').value.trim(),cover:collectionCoverData };
   const existingIndex = collections.findIndex((item) => item.id === id);
   if (existingIndex >= 0) collections[existingIndex] = collection; else collections.unshift(collection);
   try { saveCollections(); }
@@ -633,6 +652,7 @@ renderCollections();
 const verificationModal = document.getElementById('verificationModal');
 const verificationCodeInput = document.getElementById('verificationCode');
 let verificationSavePending = false;
+let activeVerificationBlock = '__all__';
 const cleanText = (value) => String(value ?? '').replace(/[&<>'"]/g,(character) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
 const sha256 = async (text) => {
   const bytes = new TextEncoder().encode(text);
@@ -643,11 +663,26 @@ function saveVerificationCodes() { return; }
 function renderVerificationCodes() {
   const query = document.getElementById('adminCodeSearch').value.trim().toLowerCase();
   const filter = document.getElementById('adminCodeFilter').value;
-  const visible = verificationCodes.filter((item) => {
+  const filtered = verificationCodes.filter((item) => {
     const matchesQuery = `${item.series} ${item.collection} ${item.product} ${item.owner} ${item.codeHint}`.toLowerCase().includes(query);
     return matchesQuery && (filter === 'all' || item.status === filter);
   });
-  document.getElementById('adminCodeList').innerHTML = visible.map((item) => `<article><div><b>${cleanText(item.series)}</b><span>${cleanText(item.codeHint || 'Código protegido')}</span></div><strong>${cleanText(item.collection || 'Sin colección')} · ${cleanText(item.product || 'Diseño pendiente')}</strong><span>${cleanText(item.owner || 'Sin registrar')}</span><em class="${item.status === 'blocked' ? 'blocked' : ''}">${item.status === 'blocked' ? 'Bloqueado' : 'Activo'}</em><div><button type="button" data-edit-verification="${item.id}">Editar</button><button type="button" data-delete-verification="${item.id}">Eliminar</button></div></article>`).join('') || '<p class="admin-empty-products">No hay códigos que coincidan con la búsqueda.</p>';
+  const blocks = new Map();
+  filtered.forEach((item) => {
+    const collection = item.collection || 'Sin colección';
+    const product = item.product || 'Diseño pendiente';
+    const key = `${collection}|||${product}`;
+    if (!blocks.has(key)) blocks.set(key, { key, collection, product, items: [] });
+    blocks.get(key).items.push(item);
+  });
+  if (activeVerificationBlock !== '__all__' && !blocks.has(activeVerificationBlock)) activeVerificationBlock = '__all__';
+  const selected = activeVerificationBlock === '__all__' ? filtered : (blocks.get(activeVerificationBlock)?.items || []);
+  const sortedBlocks = [...blocks.values()].sort((a, b) => `${a.collection} ${a.product}`.localeCompare(`${b.collection} ${b.product}`, 'es'));
+  const activeLabel = activeVerificationBlock === '__all__' ? 'Todos los códigos' : `${blocks.get(activeVerificationBlock)?.collection || ''} · ${blocks.get(activeVerificationBlock)?.product || ''}`;
+  const allBlock = `<button type="button" class="verification-code-block verification-code-block--all${activeVerificationBlock === '__all__' ? ' is-active' : ''}" data-verification-block="__all__" aria-pressed="${String(activeVerificationBlock === '__all__')}"><span>Vista general</span><b>Todos los códigos</b><small>${filtered.length} código${filtered.length === 1 ? '' : 's'} · ${blocks.size} bloque${blocks.size === 1 ? '' : 's'}</small></button>`;
+  const blockButtons = allBlock + sortedBlocks.map((block) => `<button type="button" class="verification-code-block${block.key === activeVerificationBlock ? ' is-active' : ''}" data-verification-block="${encodeURIComponent(block.key)}" aria-pressed="${String(block.key === activeVerificationBlock)}"><span>${cleanText(block.collection)}</span><b>${cleanText(block.product)}</b><small>${block.items.length} código${block.items.length === 1 ? '' : 's'}</small></button>`).join('');
+  const rows = selected.map((item) => `<article><div><b>${cleanText(item.series)}</b><span>${cleanText(item.codeHint || 'Código protegido')}</span></div><strong>${cleanText(item.collection || 'Sin colección')} · ${cleanText(item.product || 'Diseño pendiente')}</strong><span>${cleanText(item.owner || 'Sin registrar')}</span><em class="${item.status === 'blocked' ? 'blocked' : ''}">${item.status === 'blocked' ? 'Bloqueado' : 'Activo'}</em><div><button type="button" data-edit-verification="${item.id}">Editar</button><button type="button" data-delete-verification="${item.id}">Eliminar</button></div></article>`).join('');
+  document.getElementById('adminCodeList').innerHTML = blocks.size ? `<p class="verification-code-help">Elige un bloque para ver solo sus códigos. Los nuevos productos o colecciones crean un bloque automáticamente.</p><div class="verification-block-menu"><div class="verification-block-menu-bar"><div><span>Bloque activo</span><b>${cleanText(activeLabel)}</b></div><button type="button" class="verification-block-menu-trigger" data-verification-menu-toggle aria-expanded="false" aria-label="Abrir menú de bloques de códigos" title="Ver todos los bloques"><i class="verification-menu-icon" aria-hidden="true"><span></span><span></span><span></span></i></button></div><div class="verification-code-blocks" role="tablist" aria-label="Bloques de códigos" hidden>${blockButtons}</div></div><div class="verification-code-rows">${rows}</div>` : '<p class="admin-empty-products">No hay códigos que coincidan con la búsqueda.</p>';
   document.getElementById('adminCodeCount').textContent = verificationCodes.length;
 }
 function openVerificationEditor(item = null) {
@@ -695,6 +730,21 @@ verificationModal.addEventListener('click',(event) => { if (event.target === ver
 document.getElementById('adminCodeSearch').addEventListener('input',renderVerificationCodes);
 document.getElementById('adminCodeFilter').addEventListener('change',renderVerificationCodes);
 document.getElementById('adminCodeList').addEventListener('click',async (event) => {
+  const menuToggle = event.target.closest('[data-verification-menu-toggle]');
+  if (menuToggle) {
+    const menu = menuToggle.closest('.verification-block-menu')?.querySelector('.verification-code-blocks');
+    if (!menu) return;
+    const opening = menu.hidden;
+    menu.hidden = !opening;
+    menuToggle.setAttribute('aria-expanded', String(opening));
+    return;
+  }
+  const blockButton = event.target.closest('[data-verification-block]');
+  if (blockButton) {
+    activeVerificationBlock = decodeURIComponent(blockButton.dataset.verificationBlock);
+    renderVerificationCodes();
+    return;
+  }
   const editButton = event.target.closest('[data-edit-verification]');
   const deleteButton = event.target.closest('[data-delete-verification]');
   if (editButton) openVerificationEditor(verificationCodes.find((item) => item.id === editButton.dataset.editVerification));
@@ -935,7 +985,29 @@ function renderAdminPosts() {
   const posts = storedPosts();
   document.getElementById('adminPostCount').textContent = posts.length;
   renderAdminFeedProfile();
-  document.getElementById('adminPostList').innerHTML = posts.map((post) => { const format=normalizePostMediaFormat(post.mediaFormat); return `<article class="admin-feed-post"><header><div class="admin-feed-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>${cleanText(post.date)}</span></div><button class="admin-post-more" type="button" data-post-menu="${post.id}" aria-label="Opciones de ${cleanText(post.title)}" aria-expanded="false">•••</button><div class="admin-post-menu" id="post-menu-${post.id}" hidden><button type="button" data-edit-post="${post.id}">Editar</button><button type="button" data-delete-post="${post.id}">Eliminar</button></div></header><div class="admin-feed-copy"><h3>${cleanText(post.title)}</h3>${post.description ? `<p>${cleanText(post.description)}</p>` : ''}</div>${post.images.length ? `<div class="admin-feed-media ${post.images.length === 1 ? 'is-single' : ''}" data-media-format="${format}">${post.images.slice(0,3).map((item) => `<img src="${item.url}" alt="${cleanText(item.alt || post.title)}">`).join('')}${post.images.length > 3 ? `<b>+${post.images.length - 3}</b>` : ''}</div>` : ''}</article>`; }).join('') || '<p class="admin-empty-products">Aún no hay posts. Crea la primera publicación.</p>';
+  const list = document.getElementById('adminPostList');
+  list.innerHTML = posts.map((post) => {
+    const format = normalizePostMediaFormat(post.mediaFormat);
+    const images = post.images || [];
+    const media = images.length ? `<div class="admin-feed-media ${images.length === 1 ? 'is-single' : ''}" data-media-format="${format}">
+      <div class="admin-feed-media-track">${images.map((item, index) => `<figure class="admin-feed-media-slide"><img src="${item.url}" alt="${cleanText(item.alt || `${post.title} · foto ${index + 1}`)}"></figure>`).join('')}</div>
+      ${images.length > 1 ? `<button class="admin-feed-media-arrow previous" type="button" aria-label="Foto anterior">‹</button><button class="admin-feed-media-arrow next" type="button" aria-label="Foto siguiente">›</button><span class="admin-feed-media-count">1 / ${images.length}</span>` : ''}
+    </div>` : '';
+    return `<article class="admin-feed-post"><header><div class="admin-feed-avatar">SB</div><div><b>SKYBLOCK STUDIO</b><span>${cleanText(post.date)}</span></div><button class="admin-post-more" type="button" data-post-menu="${post.id}" aria-label="Opciones de ${cleanText(post.title)}" aria-expanded="false">•••</button><div class="admin-post-menu" id="post-menu-${post.id}" hidden><button type="button" data-edit-post="${post.id}">Editar</button><button type="button" data-delete-post="${post.id}">Eliminar</button></div></header><div class="admin-feed-copy"><h3>${cleanText(post.title)}</h3>${post.description ? `<p>${cleanText(post.description)}</p>` : ''}</div>${media}</article>`;
+  }).join('') || '<p class="admin-empty-products">Aún no hay posts. Crea la primera publicación.</p>';
+
+  list.querySelectorAll('.admin-feed-media').forEach((carousel) => {
+    const track = carousel.querySelector('.admin-feed-media-track');
+    const count = carousel.querySelector('.admin-feed-media-count');
+    if (!track || !count) return;
+    const updateCount = () => {
+      const position = Math.round(track.scrollLeft / Math.max(track.clientWidth, 1));
+      count.textContent = `${Math.min(track.children.length, position + 1)} / ${track.children.length}`;
+    };
+    carousel.querySelector('.previous')?.addEventListener('click', () => track.scrollBy({ left: -track.clientWidth, behavior: 'smooth' }));
+    carousel.querySelector('.next')?.addEventListener('click', () => track.scrollBy({ left: track.clientWidth, behavior: 'smooth' }));
+    track.addEventListener('scroll', updateCount, { passive: true });
+  });
 }
 renderAdminPosts();
 
@@ -1431,6 +1503,8 @@ function renderCollaborationCollectionPicker(){const picker=document.getElementB
 {const collaborationOpenBase=openCollaboration;openCollaboration=function(c=null){collaborationOpenBase(c);renderCollaborationCollectionPicker()}}
 
 {const openCollaborationBase=openCollaboration;openCollaboration=function(c=null){collaborationLogoReplaced=false;openCollaborationBase(c);document.getElementById('collaborationPreview').classList.toggle('is-locked',Boolean(c?.logo))};collaborationLogoImage.addEventListener('change',()=>{if(collaborationLogoImage.files?.[0]){collaborationLogoReplaced=true;document.getElementById('collaborationPreview').classList.remove('is-locked')}});adminCollaborationForm.onsubmit=async event=>{event.preventDefault();if(!collaborationCover||!collaborationLogo){collaborationFormStatus.textContent='Agrega la imagen de fondo y el logo.';return}try{const logoFinal=collaborationLogoReplaced?await recortarLogoColaboracion(collaborationLogo,+collaborationLogoX.value,+collaborationLogoY.value,+collaborationLogoZoom.value):collaborationLogo;guardarEnSupabase('SKYBLOCK_ADMIN_GUARDAR_COLABORACION',{id:collaborationId.value||`collaboration-${Date.now()}`,name:collaborationName.value.trim(),slug:collaborationSlug.value.trim(),status:collaborationStatus.value,description:collaborationDescription.value.trim(),story:collaborationStory.value.trim(),cover:collaborationCover,logo:logoFinal,logoX:50,logoY:50,logoZoom:1,logoMeta:collaborationLogoMeta.value.trim(),logoFooter:collaborationLogoFooter.value.trim(),collectionIds:[...collaborationCollections.selectedOptions].map(item=>item.value)});collaborationModal.classList.remove('open')}catch(error){collaborationFormStatus.textContent=error.message||'No se pudo preparar el logo.'}}}
+
+{const logoInput=document.getElementById('collaborationLogoImage'),logoUpload=logoInput?.closest('label');if(logoUpload){const input=logoInput;logoUpload.childNodes[0].nodeValue='Logo para pasarela';const help=document.createElement('small');help.textContent='Se mostrará en los logos oficiales de Inicio. Usa un logo centrado para que se vea completo dentro del círculo.';logoUpload.insertBefore(help,input)}}
 
 // Editor único de encuadre para imágenes que realmente lo necesitan: portadas, perfil y posts.
 {const cropModal=document.createElement('div');cropModal.className='image-crop-modal';cropModal.hidden=true;cropModal.innerHTML='<section class="image-crop-card" role="dialog" aria-modal="true"><h2 id="imageCropTitle">Ajustar imagen</h2><p>Arrastra para mover. Usa la rueda o pellizca para acercar.</p><div class="image-crop-stage"><img alt="Vista previa del encuadre"></div><div class="image-crop-actions"><button type="button" class="admin-secondary" data-crop-cancel>Cancelar</button><button type="button" class="admin-primary" data-crop-apply>Usar encuadre</button></div></section>';document.body.append(cropModal);const stage=cropModal.querySelector('.image-crop-stage'),cropImage=stage.querySelector('img');let cropState=null;const pintar=()=>{stage.style.setProperty('--crop-x',`${(50-cropState.x)*.8}%`);stage.style.setProperty('--crop-y',`${(50-cropState.y)*.8}%`);stage.style.setProperty('--crop-zoom',cropState.zoom)};const recortar=()=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{const w=1200,h=Math.round(w/cropState.aspect),canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d'),scale=Math.max(w/image.naturalWidth,h/image.naturalHeight)*cropState.zoom,iw=image.naturalWidth*scale,ih=image.naturalHeight*scale,x=(w-iw)/2+((50-cropState.x)/100)*w*.8,y=(h-ih)/2+((50-cropState.y)/100)*h*.8;ctx.drawImage(image,x,y,iw,ih);canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('No se pudo preparar la imagen.')),'image/jpeg',.92)};image.onerror=()=>reject(new Error('No se pudo preparar la imagen.'));image.src=cropState.source});const abrir=(file,aspect,title)=>new Promise((resolve)=>{const reader=new FileReader();reader.onload=()=>{cropState={source:reader.result,aspect,x:50,y:50,zoom:1,file};cropImage.src=cropState.source;stage.style.aspectRatio=String(aspect);pintar();cropModal.hidden=false};reader.readAsDataURL(file);const cerrar=value=>{cropModal.hidden=true;cropModal.querySelector('[data-crop-apply]').onclick=null;cropModal.querySelector('[data-crop-cancel]').onclick=null;resolve(value)};cropModal.querySelector('#imageCropTitle').textContent=title;cropModal.querySelector('[data-crop-cancel]').onclick=()=>cerrar(null);cropModal.querySelector('[data-crop-apply]').onclick=async()=>{try{const blob=await recortar(),output=new File([blob],file.name.replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'});cerrar(output)}catch(error){cerrar(null)}}});let drag=null;stage.addEventListener('pointerdown',event=>{if(!cropState)return;stage.setPointerCapture(event.pointerId);drag={x:event.clientX,y:event.clientY,baseX:cropState.x,baseY:cropState.y};stage.classList.add('is-dragging')});stage.addEventListener('pointermove',event=>{if(!drag)return;const rect=stage.getBoundingClientRect();cropState.x=Math.max(0,Math.min(100,drag.baseX-((event.clientX-drag.x)/rect.width)*100));cropState.y=Math.max(0,Math.min(100,drag.baseY-((event.clientY-drag.y)/rect.height)*100));pintar()});stage.addEventListener('pointerup',()=>{drag=null;stage.classList.remove('is-dragging')});stage.addEventListener('wheel',event=>{if(!cropState)return;event.preventDefault();cropState.zoom=Math.max(1,Math.min(2.5,cropState.zoom+(event.deltaY<0?.08:-.08)));pintar()},{passive:false});const cambiarArchivo=(input,file)=>{const transfer=new DataTransfer();transfer.items.add(file);input.files=transfer.files};const ajustarUno=(input,aspect,title,onReady)=>input.addEventListener('change',async()=>{const file=input.files?.[0];if(!file||file.size>MAX_IMAGE_SIZE_BYTES)return;const resultado=await abrir(file,aspect,title);if(resultado){cambiarArchivo(input,resultado);const url=await readImage(resultado);onReady(resultado,url)}});ajustarUno(document.getElementById('collectionCoverImage'),16/9,'Ajustar portada de colección',(_,url)=>{collectionCoverData=url;document.getElementById('collectionCoverPreview').innerHTML=`<img src="${url}" alt="Vista previa de portada">`});ajustarUno(collaborationCoverImage,16/9,'Ajustar portada de colaboración',(_,url)=>{collaborationCover=url;collaborationPreview()});ajustarUno(document.getElementById('editorialProfileAvatar'),1,'Ajustar foto de perfil',(_,url)=>{document.getElementById('adminProfilePreviewAvatar').style.backgroundImage=`url("${url}")`});ajustarUno(document.getElementById('editorialProfileCover'),3/1,'Ajustar portada de perfil',(_,url)=>{document.getElementById('adminProfilePreviewCover').style.backgroundImage=`url("${url}")`});document.getElementById('postImage').addEventListener('change',async()=>{const files=[...document.getElementById('postImage').files];if(!files.length)return;const ratio={square:1,landscape:1.91,portrait:.8}[normalizePostMediaFormat(selectedPostMediaFormat())]||.8,ajustados=[];for(let index=0;index<files.length;index++){const resultado=await abrir(files[index],ratio,`Ajustar foto ${index+1} de ${files.length}`);ajustados.push(resultado||files[index])}const transfer=new DataTransfer();ajustados.forEach(file=>transfer.items.add(file));postImageInput.files=transfer.files;postImageData=await Promise.all(ajustados.map(readImage));renderPostPreviewMedia()})}

@@ -327,7 +327,8 @@
   function colecciones(cs) {
     const tr = document.getElementById('collectionTrack')
     if (!tr) return
-    const upcoming = {
+    const configuredUpcoming = cs.find((collection) => collection.slug === '__proximamente__')
+    const upcoming = configuredUpcoming || {
       nombre: 'Próximamente',
       slug: '',
       imagenes: [
@@ -338,12 +339,13 @@
         },
       ],
     }
-    cs = [...cs, upcoming]
+    cs = [...cs.filter((collection) => collection.slug !== '__proximamente__'), upcoming]
     document.body.classList.remove('is-empty')
     tr.innerHTML = cs
       .map((c, i) => {
         const source = img(c)
-        return `<article class="collection-slide ${c.slug ? '' : 'collection-slide--soon'}" data-index="${i}" data-name="${esc(c.nombre)}" data-href="${c.slug ? `coleccion.html?id=${encodeURIComponent(c.slug)}` : '#'}" data-image="${esc(source)}"><img src="${esc(carouselImage(source, 768))}" srcset="${esc(carouselSrcSet(source))}" sizes="(max-width:600px) 72vw, (max-width:900px) 270px, 330px" loading="${i === 0 ? 'eager' : 'lazy'}" fetchpriority="${i === 0 ? 'high' : 'low'}" decoding="async" alt="${esc(c.nombre)}"></article>`
+        const isUpcoming = !c.slug || c.slug === '__proximamente__'
+        return `<article class="collection-slide ${isUpcoming ? 'collection-slide--soon' : ''}" data-index="${i}" data-name="${esc(c.nombre)}" data-href="${isUpcoming ? '#' : `coleccion.html?id=${encodeURIComponent(c.slug)}`}" data-image="${esc(source)}"><img src="${esc(carouselImage(source, 768))}" srcset="${esc(carouselSrcSet(source))}" sizes="(max-width:600px) 72vw, (max-width:900px) 270px, 330px" loading="${i === 0 ? 'eager' : 'lazy'}" fetchpriority="${i === 0 ? 'high' : 'low'}" decoding="async" alt="${esc(c.nombre)}"${isUpcoming ? ' style="filter:grayscale(1)!important;-webkit-filter:grayscale(1)!important"' : ''}></article>`
       })
       .join('')
     const ss = [...tr.children],
@@ -394,7 +396,7 @@
       n.textContent = s.dataset.name
       l.href = s.dataset.href
       const soon = s.dataset.href === '#'
-      l.innerHTML = soon ? 'Próximamente' : 'Ver colección <b>→</b>'
+      l.textContent = soon ? 'Próximamente' : 'Ver colección'
       l.classList.toggle('is-disabled', soon)
       l.setAttribute('aria-disabled', String(soon))
       l.onclick = soon ? (e) => e.preventDefault() : null

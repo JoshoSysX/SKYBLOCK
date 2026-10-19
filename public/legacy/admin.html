@@ -6,12 +6,12 @@
   <meta name="description" content="Panel administrativo de SKYBLOCK STUDIO.">
   <meta name="robots" content="noindex,nofollow">
   <title>Panel administrativo | SKYBLOCK STUDIO</title>
-  <link rel="stylesheet" href="css/styles.css?v=collaboration-picker-compact-20261011">
+    <link rel="stylesheet" href="css/styles.css?v=admin-modal-windows-20261018">
   <script>if(window.top===window.self)window.location.replace('/')</script>
 </head>
 <body class="admin-page">
   <aside class="admin-sidebar" id="adminSidebar">
-    <div class="admin-brand"><a href="inicio.html">SKYBLOCK<small>STUDIO</small></a><span>Administración</span></div>
+    <div class="admin-brand"><a class="admin-brand-wordmark" href="inicio.html" aria-label="Ir al inicio de Skyblock"><img src="assets/image/skyblock-wordmark.png" alt="Skyblock"></a><span>Administración</span></div>
     <nav class="admin-menu" aria-label="Navegación administrativa">
       <button class="active" data-admin-view="resumen"><i>01</i>Resumen</button>
       <button data-admin-view="productos"><i>02</i>Productos <span id="adminProductCount">4</span></button>
@@ -28,7 +28,7 @@
   <button class="admin-menu-backdrop" id="adminMenuBackdrop" type="button" aria-label="Cerrar menú" aria-hidden="true" tabindex="-1"></button>
 
   <main class="admin-main">
-    <header class="admin-topbar"><button class="admin-menu-toggle" id="adminMenuToggle" aria-label="Abrir menú" aria-controls="adminSidebar" aria-expanded="false">☰</button><div><span>Panel de control</span><strong id="adminDate"></strong></div><div class="admin-user"><span>Administrador</span><b>JS</b></div></header>
+    <header class="admin-topbar"><button class="admin-menu-toggle" id="adminMenuToggle" aria-label="Abrir menú" aria-controls="adminSidebar" aria-expanded="false">☰</button><div><span>Panel de control</span><strong id="adminDate"></strong></div><div class="admin-user"><span>Administrador</span></div></header>
 
     <section class="admin-view active" data-view="resumen">
       <div class="admin-title admin-dashboard-title"><div><span>Centro de operaciones</span><h1 id="adminGreeting">Inventario.</h1><p id="adminDashboardSubtitle">Alertas y disponibilidad de tus prendas. Las ventas se mostrarán cuando registres pedidos.</p></div></div>
@@ -83,7 +83,7 @@
     </section>
 
     <section class="admin-view" data-view="colecciones">
-      <div class="admin-title"><div><span>Archivo editorial</span><h1>Colecciones.</h1><p>Crea y edita cada colección, su historia, portada, estado y productos asociados.</p></div><button class="admin-primary" id="newCollection">+ Nueva colección</button></div>
+      <div class="admin-title"><div><span>Archivo editorial</span><h1>Colecciones.</h1><p>Crea y edita cada colección, su historia, portada, estado y productos asociados.</p></div><div class="admin-title-actions"><button class="admin-secondary" id="editUpcomingCollection" type="button">Editar Próximamente</button><button class="admin-primary" id="newCollection">+ Nueva colección</button></div></div>
       <div class="admin-collection-grid" id="adminCollectionGrid"></div>
     </section>
     <section class="admin-view" data-view="colaboraciones"><div class="admin-title"><div><span>Alianzas editoriales</span><h1>Colaboraciones.</h1><p>Crea una colaboración, añade su portada, logo y las colecciones que tendrá a su cargo.</p></div><button class="admin-primary" id="newCollaboration">+ Nueva colaboración</button></div><div class="admin-collection-grid" id="adminCollaborationGrid"></div></section>
@@ -224,6 +224,6 @@
   <div class="admin-confirm" id="adminConfirm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="adminConfirmTitle" aria-describedby="adminConfirmMessage"><section class="admin-confirm-card"><div class="admin-confirm-mark" aria-hidden="true">!</div><span>Confirmar acción</span><h2 id="adminConfirmTitle">¿Estás seguro?</h2><p id="adminConfirmMessage"></p><div class="admin-confirm-actions"><button class="admin-secondary" id="adminConfirmCancel" type="button">Cancelar</button><button class="admin-confirm-danger" id="adminConfirmAccept" type="button">Eliminar</button></div></section></div>
   <div class="admin-modal admin-collection-modal" id="collaborationModal" aria-hidden="true"><form class="admin-modal-card admin-collection-editor" id="adminCollaborationForm"><button class="admin-modal-close" id="closeCollaborationModal" type="button">×</button><span>Alianza editorial</span><h2 id="collaborationModalTitle">Nueva colaboración</h2><input id="collaborationId" type="hidden"><div class="admin-collection-editor-grid"><section><label>Nombre<input id="collaborationName" required maxlength="80"></label><label>Identificador / URL<input id="collaborationSlug" required maxlength="50"></label><label>Estado<select id="collaborationStatus"><option value="published">Publicada</option><option value="draft">Borrador</option></select></label><label>Descripción<textarea id="collaborationDescription" required rows="3"></textarea></label><label>Historia<textarea id="collaborationStory" required rows="6"></textarea></label><details class="admin-collaboration-collections"><summary>Vincular colecciones <small>(opcional)</small></summary><p>Elige las colecciones que forman parte de esta colaboración.</p><div id="collaborationCollectionPicker" class="collaboration-collection-picker"></div><select id="collaborationCollections" multiple hidden aria-hidden="true"></select></details></section><section class="admin-collection-media"><label class="admin-product-upload">Imagen de fondo<input id="collaborationCoverImage" type="file" accept="image/jpeg,image/png,image/webp"></label><label class="admin-product-upload">Logo<input id="collaborationLogoImage" type="file" accept="image/png,image/jpeg,image/webp"></label><div class="admin-collection-cover-preview collaboration-logo-preview" id="collaborationPreview"><span>Vista previa del logo</span><div class="collaboration-logo-controls"><label>Zoom<input id="collaborationLogoZoom" type="range" min=".5" max="2" step=".05" value="1"></label><label>Horizontal<input id="collaborationLogoX" type="range" min="0" max="100" value="50"></label><label>Vertical<input id="collaborationLogoY" type="range" min="0" max="100" value="50"></label></div></div></section></div><div class="admin-product-editor-actions"><button class="admin-secondary" id="cancelCollaborationEdit" type="button">Cancelar</button><button class="admin-primary" type="submit">Guardar colaboración</button></div><p id="collaborationFormStatus"></p></form></div>
   <div class="toast" id="adminToast" role="status"></div>
-  <script src="js/admin.js?v=image-crop-new-files-20261011"></script>
+  <script src="js/admin.js?v=verification-hamburger-menu-20261018"></script>
 </body>
 </html>

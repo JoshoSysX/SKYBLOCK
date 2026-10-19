@@ -114,7 +114,34 @@ if (hologramSection && logoCarousel) {
   let currentLogo = 0;
   let timer;
   let dragStartX = null;
+  let pressedLogoLink = null;
   let switchTimer;
+  let pendingLogoNavigation = null;
+
+  const activateLogoLink = (slide) => {
+    if (slide.dataset.aboutLink !== 'true') return;
+    const open = () => { location.href = slide.dataset.aboutUrl || 'nosotros.html'; };
+    slide.tabIndex = 0;
+    slide.setAttribute('role', 'link');
+    slide.setAttribute('aria-label', `Ver más sobre ${slide.dataset.logoTitle || 'este logo'}`);
+    slide.addEventListener('click', (clickEvent) => {
+      clickEvent.preventDefault();
+      // Si el pointerup ya dejó una navegación programada, este es su clic
+      // correspondiente: la cancelamos y solo navegamos una vez.
+      if (pendingLogoNavigation) {
+        window.clearTimeout(pendingLogoNavigation.timer);
+        pendingLogoNavigation = null;
+      }
+      open();
+    });
+    slide.addEventListener('keydown', (keyboardEvent) => {
+      if (keyboardEvent.key === ' ') {
+        keyboardEvent.preventDefault();
+        slide.click();
+      }
+    });
+  };
+  slides.forEach(activateLogoLink);
 
   const showLogo = (index) => {
     currentLogo = (index + slides.length) % slides.length;
@@ -143,6 +170,7 @@ if (hologramSection && logoCarousel) {
   dots.forEach((dot, index) => dot.addEventListener('click', () => { showLogo(index); restart(); }));
   viewport.addEventListener('pointerdown', (event) => {
     dragStartX = event.clientX;
+    pressedLogoLink = event.target.closest('[data-about-link="true"]');
     viewport.classList.add('dragging');
     viewport.setPointerCapture(event.pointerId);
     window.clearInterval(timer);
@@ -150,8 +178,22 @@ if (hologramSection && logoCarousel) {
   const finishDrag = (event) => {
     if (dragStartX === null) return;
     const distance = event.clientX - dragStartX;
-    if (Math.abs(distance) > 35) showLogo(currentLogo + (distance < 0 ? 1 : -1));
+    if (event.type !== 'pointercancel' && Math.abs(distance) > 35) {
+      showLogo(currentLogo + (distance < 0 ? 1 : -1));
+    } else if (event.type !== 'pointercancel' && pressedLogoLink) {
+      const url = pressedLogoLink.dataset.aboutUrl || pressedLogoLink.getAttribute('href') || 'nosotros.html';
+      // El navegador emite click después de pointerup. Esperarlo evita crear
+      // dos entradas de historial; el respaldo cubre el caso de un click que
+      // el puntero capturado no entregue al enlace.
+      pendingLogoNavigation = {
+        timer: window.setTimeout(() => {
+          pendingLogoNavigation = null;
+          location.href = url;
+        }, 80)
+      };
+    }
     dragStartX = null;
+    pressedLogoLink = null;
     viewport.classList.remove('dragging');
     if (viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId);
     restart();
@@ -168,15 +210,18 @@ if (hologramSection && logoCarousel) {
   document.addEventListener('SKYBLOCK_COLABORACIONES', (event) => {
     track.querySelectorAll('.logo-collaboration').forEach((node) => node.remove());
     (event.detail || []).forEach((item) => {
-      const logo = (item.imagenes || []).slice().sort((a,b) => (a.posicion || 0) - (b.posicion || 0))[1]?.url_segura;
+      const images = (item.imagenes || []).slice().sort((a,b) => (a.posicion || 0) - (b.posicion || 0));
+      const logo = images.find((image) => Number(image.posicion) === 1)?.url_segura || images[1]?.url_segura;
       if (!logo || !item.slug) return;
-      const slide = document.createElement('article');
+      const slide = document.createElement('a');
       slide.className = 'logo-carousel-slide logo-collaboration';
+      slide.href = `coleccion.html?colaboracion=${encodeURIComponent(item.slug)}`;
       slide.dataset.logoTitle = item.nombre || 'Colaboración';
       slide.dataset.logoMeta = item.logo_meta || 'COLABORACIÓN / SKYBLOCK';
       slide.dataset.logoFooter = item.logo_pie || 'IDENTIDAD COLABORATIVA';
       slide.dataset.aboutLink = 'true';
       slide.dataset.aboutUrl = `coleccion.html?colaboracion=${encodeURIComponent(item.slug)}`;
+      activateLogoLink(slide);
       const image = document.createElement('img'); image.className = 'skb-logo-image'; image.src = logo; image.alt = `Logo de ${item.nombre || 'colaboración'}`; image.draggable = false;
       image.style.objectPosition = `${Number(item.logo_ajuste_x ?? 50)}% ${Number(item.logo_ajuste_y ?? 50)}%`;
       // El encuadre ya se hornea al guardar; no se debe mover otra vez dentro del carrusel.

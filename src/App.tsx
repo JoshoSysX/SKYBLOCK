@@ -337,6 +337,7 @@ export default function App() {
       if (documento?.title) document.title = documento.title
       const { user, esRolAdmin, esAdmin } = await obtenerAdmin()
       documento?.body.classList.toggle('skyblock-admin-auth', esAdmin)
+      documento?.body.classList.toggle('skyblock-signed-in', Boolean(user))
       documento?.body.classList.toggle('skyblock-signed-out', !user)
       ventana?.postMessage({ tipo: 'SKYBLOCK_ESTADO_AUTH', conectado: Boolean(user), esAdmin }, location.origin)
       const ruta = ventana.location.pathname || ''
@@ -587,7 +588,9 @@ export default function App() {
           const d = e.data.datos || {}
           if (e.data.tipo === 'SKYBLOCK_ADMIN_GUARDAR_COLECCION') {
             const idValido = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(d.id || ''))
-            const payload = { nombre:String(d.name||'').trim(), slug:String(d.slug||'').trim(), numero_edicion:String(d.edition||'').trim(), descripcion:String(d.description||'').trim(), historia:String(d.story||'').trim(), estado:d.status === 'published' ? 'publicado' : d.status === 'upcoming' ? 'archivado' : 'borrador', publicado_en:d.status === 'published' ? new Date().toISOString() : null, creado_por:user.id }
+            const esProximamente = String(d.slug || '') === '__proximamente__'
+            const estadoColeccion = esProximamente ? 'publicado' : d.status === 'published' ? 'publicado' : d.status === 'upcoming' ? 'archivado' : 'borrador'
+            const payload = { nombre:String(d.name||'').trim(), slug:String(d.slug||'').trim(), numero_edicion:String(d.edition||'').trim(), descripcion:String(d.description||'').trim(), historia:String(d.story||'').trim(), estado:estadoColeccion, publicado_en:estadoColeccion === 'publicado' ? new Date().toISOString() : null, creado_por:user.id }
             const saved = idValido ? await supabase.from('colecciones').update(payload).eq('id',d.id).select('id').single() : await supabase.from('colecciones').insert(payload).select('id').single()
             if (saved.error) throw saved.error
             if (String(d.cover||'').startsWith('data:')) { if (idValido) await eliminarImagenesRelacion('coleccion_id',saved.data.id); await guardarImagen(d.cover,{coleccion_id:saved.data.id},0,user.id,d.name) }
