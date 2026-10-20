@@ -38,7 +38,7 @@ Deno.serve(async (request) => {
     const turnstileToken=String(body?.turnstileToken||'')
     const validEmail=/^\S+@\S+\.\S+$/.test(correo)&&correo.length<=254
     const validPhone=/^\+?[0-9][0-9\s().-]{6,19}$/.test(telefono)
-    if(nombre.length<2||nombre.length>120||(canalContacto==='correo'?!validEmail:!validPhone)||asunto.length<2||asunto.length>160||mensaje.length<10||mensaje.length>4000)
+    if(nombre.length<2||nombre.length>120||(canalContacto==='correo'?!validEmail:!validPhone)||asunto.length<2||asunto.length>160||mensaje.length<3||mensaje.length>4000)
       return respond(origin,{ok:false,mensaje:'Revisa los datos y completa correctamente todos los campos.'},400)
     if(!turnstileToken||turnstileToken.length>2048)
       return respond(origin,{ok:false,mensaje:'Completa la verificación de seguridad.'},400)
