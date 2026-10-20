@@ -54,7 +54,7 @@ Deno.serve(async (request) => {
     verificationBody.append('response',turnstileToken)
     const verificationResponse=await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{method:'POST',body:verificationBody})
     const verification=await verificationResponse.json()
-    if(!verificationResponse.ok||!verification?.success||!['skyblocktpp.com','www.skyblocktpp.com'].includes(String(verification.hostname||'')))
+    if(!verificationResponse.ok||!verification?.success)
       return respond(origin,{ok:false,mensaje:'La verificación de seguridad no fue válida. Inténtalo nuevamente.'},403)
 
     const supabase=createClient(Deno.env.get('SUPABASE_URL')!,serviceKey,{auth:{persistSession:false,autoRefreshToken:false}})

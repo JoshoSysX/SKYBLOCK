@@ -788,7 +788,13 @@ export default function App() {
       if (e.data?.tipo === 'SKYBLOCK_CONTACTO') {
         const d = e.data.datos || {}
         const { data, error } = await supabase.functions.invoke('contact-submit',{body:d})
-        e.source?.postMessage({ tipo:'SKYBLOCK_CONTACTO_RESULTADO',ok:!error&&Boolean(data?.ok),mensaje:data?.mensaje||(error?'No se pudo validar el envío. Inténtalo nuevamente.':'Mensaje procesado.') },{targetOrigin:e.origin});return
+        let mensaje=data?.mensaje as string|undefined
+        if(error){
+          const response=(error as { context?: Response }).context
+          const detalle=response instanceof Response ? await response.clone().json().catch(()=>null) as { mensaje?: unknown }|null : null
+          mensaje=typeof detalle?.mensaje==='string' ? detalle.mensaje : 'No se pudo procesar el envío. Inténtalo nuevamente.'
+        }
+        e.source?.postMessage({ tipo:'SKYBLOCK_CONTACTO_RESULTADO',ok:!error&&Boolean(data?.ok),mensaje:mensaje||'Mensaje procesado.' },{targetOrigin:e.origin});return
       }
       if(e.data?.tipo==='SKYBLOCK_SOLICITAR_CONFIGURACION_PUBLICA'){
         e.source?.postMessage({tipo:'SKYBLOCK_CONFIGURACION_PUBLICA',turnstileSiteKey:import.meta.env.VITE_TURNSTILE_SITE_KEY||''},{targetOrigin:e.origin});return
