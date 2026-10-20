@@ -1,0 +1,2 @@
+[functions.contact-submit]
+verify_jwt = true

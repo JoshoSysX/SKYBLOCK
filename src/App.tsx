@@ -354,7 +354,7 @@ export default function App() {
           cargarEstadoSistema(),
           supabase.from('modo_proteccion').select('*').eq('id', true).maybeSingle(),
         ])
-        ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_MENSAJES', mensajes: mensajes ?? [], error: Boolean(error) }, location.origin)
+        ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_MENSAJES', mensajes: mensajes ?? [], error: error?.message || '' }, location.origin)
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_POSTS', publicaciones: publicaciones ?? [], error: Boolean(errorPosts) }, location.origin)
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_PERFIL', perfil: perfil ? { ...PERFIL_EDITORIAL_INICIAL, ...perfil } : PERFIL_EDITORIAL_INICIAL }, location.origin)
         ventana?.postMessage({ tipo: 'SKYBLOCK_ADMIN_DATOS', ...adminData }, location.origin)
@@ -363,6 +363,20 @@ export default function App() {
       }
     } catch { /* iframe del mismo origen */ }
   }, [datos])
+
+  // Las consultas pueden llegar desde otro teléfono o computadora mientras el
+  // administrador ya tiene el panel abierto. Actualizamos la bandeja y al volver
+  // a enfocar la ventana, sin requerir recargar toda la aplicación.
+  useEffect(() => {
+    if (ruta !== 'admin') return
+    const actualizar = () => { void enviar() }
+    const intervalo = window.setInterval(actualizar, 15000)
+    window.addEventListener('focus', actualizar)
+    return () => {
+      window.clearInterval(intervalo)
+      window.removeEventListener('focus', actualizar)
+    }
+  }, [ruta, enviar])
 
   const subirCloudinary = async (archivo: File) => {
     if (archivo.size > MAX_IMAGE_SIZE_BYTES) throw new Error('Cada imagen debe pesar como máximo 150 MB')

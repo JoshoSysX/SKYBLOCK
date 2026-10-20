@@ -794,14 +794,34 @@ renderVerificationCodes();
 
 let inboxMessages = [];
 let selectedInboxMessageId = '';
+let inboxLoadError = '';
 const inboxList = document.getElementById('adminMessageList');
 const inboxDetail = document.getElementById('adminMessageDetail');
 const initials = (name = '') => String(name).trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'SK';
 const messageDate = (value) => value ? new Intl.DateTimeFormat('es-PE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }).format(new Date(value)) : '';
+const gmailReplyUrl = (message) => {
+  const email = String(message?.correo || '').trim();
+  if (!email) return '';
+  const subject = `Re: ${String(message?.asunto || 'Tu consulta a SKYBLOCK').trim()}`;
+  const body = `Hola ${String(message?.nombre || '').trim() || '🙂'},\n\nGracias por escribir a SKYBLOCK.\n\n`;
+  return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+};
+const whatsappReplyUrl = (message) => {
+  let phone = String(message?.telefono || '').replace(/\D/g, '');
+  if (phone.length === 9 && phone.startsWith('9')) phone = `51${phone}`;
+  if (phone.length < 8) return '';
+  const text = `Hola ${String(message?.nombre || '').trim() || '🙂'}, te escribimos desde SKYBLOCK por tu consulta: ${String(message?.asunto || 'Consulta').trim()}.`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+};
 
 function renderInboxMessages() {
   const counter = document.getElementById('adminMessageCount');
   if (counter) counter.textContent = String(inboxMessages.length);
+  if (inboxLoadError) {
+    inboxList.innerHTML = '<p class="admin-empty-products">No se pudieron cargar los mensajes.</p>';
+    inboxDetail.innerHTML = `<span>Bandeja de entrada</span><h2>Error al cargar</h2><p>${cleanText(inboxLoadError)}</p>`;
+    return;
+  }
   if (!inboxMessages.length) {
     inboxList.innerHTML = '<p class="admin-empty-products">No hay mensajes recibidos.</p>';
     inboxDetail.innerHTML = '<span>Bandeja de entrada</span><h2>Sin mensajes</h2><p>Las consultas enviadas desde el formulario de contacto aparecerán aquí.</p>';
@@ -813,7 +833,10 @@ function renderInboxMessages() {
   const isPhoneContact = selected.canal_contacto === 'telefono';
   const contactValue = isPhoneContact ? selected.telefono : selected.correo;
   const contactLabel = isPhoneContact ? 'Teléfono' : 'Correo';
-  inboxDetail.innerHTML = `<span>Contacto / ${cleanText(selected.estado || 'Nuevo')}</span><h2>${cleanText(selected.asunto || 'Consulta')}</h2><div><b>${cleanText(selected.nombre || 'Sin nombre')}</b><small>${cleanText(contactLabel)}: ${cleanText(contactValue || 'Sin dato')} · ${cleanText(messageDate(selected.creado_en))}</small></div><p>${cleanText(selected.mensaje || '')}</p>`;
+  const gmailUrl = gmailReplyUrl(selected);
+  const whatsappUrl = whatsappReplyUrl(selected);
+  const replyActions = gmailUrl || whatsappUrl ? `<div class="admin-message-actions">${gmailUrl ? `<a class="admin-secondary admin-message-gmail" href="${cleanText(gmailUrl)}" target="_blank" rel="noopener noreferrer">Responder por Gmail</a>` : ''}${whatsappUrl ? `<a class="admin-secondary admin-message-whatsapp" href="${cleanText(whatsappUrl)}" target="_blank" rel="noopener noreferrer">Responder por WhatsApp</a>` : ''}</div>` : '';
+  inboxDetail.innerHTML = `<span>Contacto / ${cleanText(selected.estado || 'Nuevo')}</span><h2>${cleanText(selected.asunto || 'Consulta')}</h2><div><b>${cleanText(selected.nombre || 'Sin nombre')}</b><small>${cleanText(contactLabel)}: ${cleanText(contactValue || 'Sin dato')} · ${cleanText(messageDate(selected.creado_en))}</small></div><p>${cleanText(selected.mensaje || '')}</p>${replyActions}`;
 }
 
 inboxList.addEventListener('click', (event) => {
@@ -909,6 +932,7 @@ window.addEventListener('message',(event) => {
   }
   if (event.data?.tipo === 'SKYBLOCK_ADMIN_MENSAJES') {
     inboxMessages = event.data.mensajes || [];
+    inboxLoadError = String(event.data.error || '');
     renderInboxMessages();
   }
   if (event.data?.tipo === 'SKYBLOCK_ADMIN_SISTEMA') renderSystemStatus(event.data.sistema || {});

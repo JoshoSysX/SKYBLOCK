@@ -172,6 +172,22 @@ a[href="registro.html"] {
   .collections-page .collection-arrow--next { right:10px; }
 }
 
+/* Colecciones en escritorio: conserva la escala editorial anterior sobre
+   blanco y deja dentro de la primera vista la tarjeta, título y acción. */
+@media (min-width:701px) {
+  .collections-page .collection-showcase {
+    height: calc(100dvh - 64px) !important;
+  }
+
+  .collections-page .collection-slide {
+    top: 46% !important;
+  }
+
+  .collections-page .collection-active-copy {
+    top: calc(46% + clamp(220px, 22vw, 300px)) !important;
+  }
+}
+
 @media (min-width:701px) and (max-width:1000px) {
   .collections-page .collection-showcase { height:calc(100svh - 64px) !important; min-height:680px !important; }
   .collections-page .collection-slide { top:52% !important; width:clamp(220px,31vw,300px) !important; height:clamp(280px,39vw,380px) !important; }
@@ -6285,6 +6301,16 @@ html body.verify-page .nav.catalog-nav .nav-actions > button span { border-color
   cursor: pointer
 }
 
+.admin-message-actions .admin-message-gmail,
+.admin-message-actions .admin-message-whatsapp {
+  font: 600 10px var(--display);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.admin-message-actions .admin-message-gmail:hover { border-color: #d94a3a; color: #b93326; }
+.admin-message-actions .admin-message-whatsapp:hover { border-color: #168a52; color: #0d7441; }
+
 .system-health-grid,
 .system-metric-grid,
 .system-detail-grid,
@@ -10994,7 +11020,7 @@ footer .footer-brand>.brand small {
 
 .home-page .hero-editorial-skyblock {
   justify-self: start;
-  color: #080808
+  color: #aaa
 }
 
 .home-page .hero-editorial-risk {
@@ -16335,10 +16361,9 @@ body.about-page,
   .official-logo-strip .logo-carousel-track { gap: 16px; }
 }
 
-/* Inicio compacto: portada editorial seguida de los logos oficiales. */
 .home-page .hero {
-  height: clamp(520px, 66svh, 680px);
-  min-height: clamp(520px, 66svh, 680px);
+  height: 100svh;
+  min-height: 100svh;
   /* El lienzo de la portada es blanco, incluso durante el zoom inicial. */
   background: #fff !important;
   scroll-snap-stop: normal;
@@ -16421,8 +16446,8 @@ body.about-page,
     --mobile-logo-band: 190px;
   }
   .home-page .hero {
-    height: clamp(400px, calc(100svh - var(--mobile-logo-band)), 720px);
-    min-height: clamp(400px, calc(100svh - var(--mobile-logo-band)), 720px);
+    height: 100svh;
+    min-height: 100svh;
   }
   .home-page .hero::before,
   .home-page .hero::after,
@@ -16580,6 +16605,227 @@ body.about-page,
     padding: 9px 0;
     color: #111214;
     font: 600 clamp(24px, 7vw, 32px)/1 var(--display);
+  }
+}
+
+/* Ajuste final de Inicio para teléfonos: portada compacta y pasarela 3D
+   legible, sin perder los logos secundarios fuera de la pantalla. */
+@media (max-width:700px) {
+  .home-snap {
+    /* Cada bloque principal termina completo antes de mostrar el siguiente. */
+    scroll-snap-type: y mandatory;
+  }
+
+  .home-page .hero {
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    scroll-snap-stop: always;
+  }
+
+  .home-page .hero-photo > img {
+    /* El alto se adapta al viewport: los personajes se acercan al mensaje sin
+       invadirlo en móviles anchos ni
+       deja las piernas salir de la portada en pantallas bajas. */
+    height: min(68dvh, calc(100vw * 1.36));
+    max-height: calc(100dvh - 220px);
+    object-position: center bottom;
+  }
+
+  .home-page #logo-3d.hologram-section {
+    /* La pasarela es una pantalla propia: la colección empieza recién al
+       deslizar hacia abajo. */
+    min-height: 100svh;
+    height: 100svh;
+    padding: 80px 12px 82px;
+    align-content: center;
+    overflow: hidden;
+  }
+
+  .home-page #logo-3d .logo-carousel { width: 100%; }
+  .home-page #logo-3d .logo-carousel-viewport { height: min(280px, 42svh); }
+  .home-page #logo-3d .logo-carousel-slide { padding: 8px; }
+
+  .home-page #logo-3d .logo-carousel-slide.is-prev {
+    transform: translateX(-43%) scale(.35) rotateY(30deg);
+    opacity: .34;
+  }
+
+  .home-page #logo-3d .logo-carousel-slide.is-next {
+    transform: translateX(43%) scale(.35) rotateY(-30deg);
+    opacity: .34;
+  }
+
+  .home-page #logo-3d .logo-carousel-slide.logo-goat .skb-logo-image,
+  .home-page #logo-3d .logo-carousel-slide.logo-tpp .skb-logo-image {
+    transform: translateY(-8px) scale(.9) !important;
+  }
+
+  .home-page #logo-3d .hologram-caption {
+    bottom: 20px;
+    gap: 5px;
+  }
+}
+
+/* Colecciones: misma composición de la versión oscura, con el título y la
+   acción centrados sobre la lámina activa; únicamente el fondo queda blanco. */
+@media (min-width:701px) {
+  .collections-page .collection-showcase {
+    min-height: 720px !important;
+    height: 100dvh !important;
+  }
+
+  .collections-page .collection-slide {
+    top: 54% !important;
+    width: clamp(210px, 22vw, 330px) !important;
+    height: clamp(390px, 42vw, 610px) !important;
+    overflow: hidden !important;
+  }
+
+  .collections-page .collection-slide.is-active {
+    transform: translate(-50%, -50%) translateZ(110px) scale(1) !important;
+  }
+
+  .collections-page .collection-slide[data-position="-1"] {
+    transform: translate(-50%, -50%) translateX(clamp(-315px, -22vw, -230px)) translateZ(-30px) rotateY(24deg) scale(.82) !important;
+    opacity: .9 !important;
+  }
+
+  .collections-page .collection-slide[data-position="1"] {
+    transform: translate(-50%, -50%) translateX(clamp(230px, 22vw, 315px)) translateZ(-30px) rotateY(-24deg) scale(.82) !important;
+    opacity: .9 !important;
+  }
+
+  .collections-page .collection-active-copy {
+    top: 54% !important;
+    width: min(520px, 90%) !important;
+    text-shadow: 0 3px 22px #fff !important;
+  }
+
+  .collections-page .collection-active-copy h2 {
+    margin: 18px 0 13px !important;
+    font-size: clamp(48px, 5.7vw, 86px) !important;
+  }
+
+  .collections-page .collection-active-copy .light-button {
+    min-width: 190px !important;
+    height: 48px !important;
+  }
+}
+
+/* En teléfonos la lámina inicia cerca del rótulo del archivo; así no queda
+   un vacío excesivo en pantallas altas. El título y el botón la acompañan. */
+@media (max-width:700px) {
+  .collections-page .collection-slide {
+    top: 45% !important;
+    height: min(80vw, 370px) !important;
+  }
+
+  .collections-page .collection-active-copy {
+    top: calc(45% + min(59vw, 260px)) !important;
+  }
+
+  .collections-page .collection-arrow {
+    top: 45% !important;
+  }
+}
+
+/* Colecciones recupera el fondo oscuro editorial original: imagen difuminada,
+   velo y trama. Las tarjetas conservan su composición actual. */
+.collections-page .collection-showcase {
+  --carousel-border: #ffffff38;
+  background: #0a0b0c !important;
+  color: #f5f5f2;
+  border-color: #aaa9a3 !important;
+}
+
+.collections-page .collection-showcase-bg,
+.collections-page .collection-showcase-shade,
+.collections-page .collection-showcase::after {
+  display: block !important;
+}
+
+.collections-page .collection-carousel-label { color: #c6c6c1; }
+.collections-page .collection-carousel-label b { color: var(--accent); }
+.collections-page .collection-arrow {
+  color: #fff;
+  border-color: #ffffff52 !important;
+  background: #090a0b8f !important;
+  backdrop-filter: blur(12px);
+}
+
+/* Contraste y profundidad originales del carrusel oscuro. */
+.collections-page .collection-slide {
+  background: #171819 !important;
+  box-shadow: 0 32px 70px #0009 !important;
+}
+
+.collections-page .collection-slide.is-active {
+  box-shadow: 0 42px 90px #000c !important;
+}
+
+.collections-page .collection-slide[data-position="-1"] img,
+.collections-page .collection-slide[data-position="1"] img {
+  filter: grayscale(.8) brightness(.56) !important;
+}
+
+.collections-page .collection-slide.is-active img {
+  transform: scale(1.025) !important;
+}
+
+.collections-page .collection-active-copy {
+  color: #f5f5f2;
+  text-shadow: 0 3px 22px #000 !important;
+}
+
+.collections-page .collection-active-copy h2 {
+  color: #f5f5f2;
+}
+
+.collections-page .collection-active-copy .light-button {
+  border-color: #fff !important;
+  background: #fff !important;
+  color: #111214 !important;
+}
+
+/* El encabezado acompaña el lienzo oscuro de Colecciones. */
+html body.collections-page .nav.catalog-nav,
+html body.collections-page .nav.catalog-nav.fixed {
+  background: #0a0b0c !important;
+  color: #fff !important;
+  border-bottom-color: #2a2b2b !important;
+}
+
+html body.collections-page .nav.catalog-nav .desktop-nav a,
+html body.collections-page .nav.catalog-nav .nav-actions,
+html body.collections-page .nav.catalog-nav .auth-action {
+  color: #fff !important;
+}
+
+html body.collections-page .nav.catalog-nav > .brand.brand--wordmark img {
+  filter: brightness(0) invert(1) !important;
+}
+
+html body.collections-page .nav.catalog-nav .nav-actions button span {
+  background: #fff !important;
+}
+
+/* En teléfonos la primera pantalla queda completamente oscura: la sección
+   siguiente no debe asomarse como una franja blanca. */
+@media (max-width:700px) {
+  .collections-page {
+    background: #0a0b0c;
+  }
+
+  .collections-page .collection-showcase {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+  }
+
+  .collections-page .collection-message {
+    background: #0a0b0c !important;
+    border-top: 0 !important;
   }
 }
 

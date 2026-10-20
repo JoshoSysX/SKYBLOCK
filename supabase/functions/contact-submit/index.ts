@@ -45,12 +45,13 @@ Deno.serve(async (request) => {
 
     const ip=(request.headers.get('cf-connecting-ip')||request.headers.get('x-forwarded-for')?.split(',')[0]||'desconocida').trim()
     const secret=Deno.env.get('TURNSTILE_SECRET_KEY')
-    const serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    // Supabase usa `SUPABASE_SECRET_KEY` en la configuración actual; se conserva
+    // la clave histórica como compatibilidad para proyectos ya desplegados.
+    const serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||Deno.env.get('SUPABASE_SECRET_KEY')
     if(!secret||!serviceKey) throw new Error('Configuración de seguridad incompleta')
     const verificationBody=new FormData()
     verificationBody.append('secret',secret)
     verificationBody.append('response',turnstileToken)
-    if(ip!=='desconocida') verificationBody.append('remoteip',ip)
     const verificationResponse=await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{method:'POST',body:verificationBody})
     const verification=await verificationResponse.json()
     if(!verificationResponse.ok||!verification?.success||!['skyblocktpp.com','www.skyblocktpp.com'].includes(String(verification.hostname||'')))
